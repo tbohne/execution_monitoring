@@ -4,7 +4,7 @@ import smach
 import threading
 import smach_ros
 from std_msgs.msg import String
-from arox_operation import Operation_StateMachine
+from plan_executor import PlanExecutionStateMachine
 
 class Contingency(smach.State):
     def __init__(self):
@@ -61,7 +61,7 @@ class ExecutionMonitoringStateMachine(smach.StateMachine):
 
         with self:
 
-            self.add('OPERATION', Operation_StateMachine(),
+            self.add('OPERATION', PlanExecutionStateMachine(),
                     transitions={'shutdown':'SHUTDOWN',
                                  'operation':'OPERATION',
                                  'contingency':'CONTINGENCY',
