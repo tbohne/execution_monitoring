@@ -40,7 +40,7 @@ class Idle(smach.State):
         try:
             res = rospy.ServiceProxy('arox_planner/get_plan', get_plan)()
             if res.succeeded:
-                return res.plan.actions
+                return res.generated_plan.actions
             return None                
         except rospy.ServiceException as e:
             print("service call failed: %s", e)
@@ -61,13 +61,13 @@ class Idle(smach.State):
                 plan_remaining = plan_initial
                 publish_state_of_ongoing_operation("undocking")
                 return 'execute_plan'
-            return 'wait_for_plan'
+            return 'idle'
          
         else:
             if completed_tasks == len(plan_initial):
                 rospy.loginfo("completed plan, waiting for new plan..")
                 time.sleep(3)
-                return 'wait_for_plan'
+                return 'idle'
                
             else:
                 rospy.loginfo("continuing preempted plan..")
@@ -110,7 +110,7 @@ class ExecutePlan(smach.State):
         if action.name == "drive_to" or action.name == "drive_to_container":
 
             if action.name == "drive_to_container":
-                action = arox_action()
+                action = action()
                 action.str_args.append("wgs84")
                 action.flt_args.append(52.3203191407)
                 action.flt_args.append(8.153625154949)
