@@ -6,11 +6,10 @@ import time
 import numpy as np
 from osgeo import osr
 from tf.transformations import quaternion_from_euler
-from arox_planning.srv import get_plan ,set_plan
+from plan_generation.srv import get_plan
+from plan_generation.msg import action
 from arox_navigation_flex.msg import drive_to_goalAction
 from arox_navigation_flex.msg import drive_to_goalGoal as dtg_Goal
-from std_msgs.msg import String
-from arox_planning.msg import arox_action
 from arox_performance_parameters.msg import arox_operational_param
 from arox_performance_parameters.msg import arox_battery_params
 
@@ -36,16 +35,6 @@ class Idle(smach.State):
     def __init__(self):
         smach.State.__init__(self, outcomes=['idle', 'execute_plan'], output_keys=['plan'])
 
-    def set_plan(self):
-        rospy.wait_for_service('arox_planner/set_fakeplan')
-        try:
-            if rospy.ServiceProxy('arox_planner/set_fakeplan', set_plan)().succeeded:
-                return True
-            return None
-        except rospy.ServiceException as e:
-            print("service call failed: %s", e)
-            return None
-
     def get_plan(self):
         rospy.wait_for_service('arox_planner/get_plan')
         try:
@@ -64,7 +53,6 @@ class Idle(smach.State):
             rospy.loginfo ("no active plan..")
             plan_initial = []
             publish_state_of_ongoing_operation("waiting")
-            self.set_plan()
             plan = self.get_plan()
             
             if plan != None:
