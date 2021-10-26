@@ -8,7 +8,7 @@ from plan_executor import PlanExecutionStateMachine
 
 class Contingency(smach.State):
     def __init__(self):
-        smach.State.__init__(self, outcomes=["catastrophe", "shutdown", "charge"])
+        smach.State.__init__(self, outcomes=["catastrophe", "operation"])
 
     def execute(self, userdata):
         rospy.loginfo("contingency resolved, continuing normal operation..")
@@ -21,24 +21,6 @@ class Catastrophe(smach.State):
     def execute(self, userdata):
         rospy.loginfo("catastrophe processed, shutting down..")
         return "shutdown"
-
-class Dock(smach.State):
-    def __init__(self):
-        smach.State.__init__(self, outcomes=["operation", "shutdown"])
-
-    def execute(self, userdata):
-        rospy.loginfo("docking - start charging...")
-        rospy.set_param("charging_mode", True)
-        charge_mode = rospy.get_param("charging_mode")
-        
-        while charge_mode:
-            charge_mode = rospy.get_param("charging_mode")
-            rospy.loginfo("charging in progress...")
-            rospy.sleep(2)
-
-        if not charge_mode:
-            rospy.loginfo("charging finished..")
-            return "operation"
             
 class Shutdown(smach.State):
     def __init__(self):
@@ -62,16 +44,13 @@ class ExecutionMonitoringStateMachine(smach.StateMachine):
         with self:
 
             self.add('OPERATION', PlanExecutionStateMachine(),
-                    transitions={'shutdown':'SHUTDOWN',
-                                 'operation':'OPERATION',
+                    transitions={'operation':'OPERATION',
                                  'contingency':'CONTINGENCY',
-                                 'catastrophe':'CATASTROPHE',
-                                 'dock':'DOCK',
-                                 'preempted':'shutdown'})
+                                 'catastrophe':'CATASTROPHE'})
 
             self.add('CONTINGENCY', Contingency(),
-                    transitions={'charge':'DOCK',
-                                 'catastrophe':'CATASTROPHE'})
+                    transitions={'catastrophe':'CATASTROPHE',
+                                 'operation':'OPERATION'})
             
             self.add('CATASTROPHE', Catastrophe(),
                     transitions={'shutdown':'SHUTDOWN'})
@@ -79,9 +58,6 @@ class ExecutionMonitoringStateMachine(smach.StateMachine):
             self.add('SHUTDOWN', Shutdown(),
                     transitions={'shutdown':'shutdown'})
 
-            self.add('DOCK', Dock(),
-                    transitions={'shutdown':'SHUTDOWN',
-                                 'operation':'OPERATION'})
 
 def node():
     """
