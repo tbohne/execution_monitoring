@@ -13,27 +13,13 @@ from arox_navigation_flex.msg import drive_to_goalGoal as dtg_Goal
 from arox_performance_parameters.msg import arox_operational_param
 from arox_performance_parameters.msg import arox_battery_params
 
+# TODO: put into parameter in launch file
 BASE_POSE = [52.3203191407, 8.153625154949, 270]
-plan_remaining = []
-plan_initial = []
-completed_tasks = 0
-
-
-def publish_state_of_ongoing_operation(mode):
-    global plan_initial, plan_remaining, completed_tasks
-    operation_pub = rospy.Publisher('arox/ongoing_operation', arox_operational_param, queue_size=1)
-    msg = arox_operational_param()
-    msg.operation_mode = mode
-    msg.total_tasks = len(plan_initial)
-    msg.ongoing_task = len(plan_initial) - len(plan_remaining)
-    msg.rewards_gained = completed_tasks
-    operation_pub.publish(msg)
-
 
 class Idle(smach.State):
     
     def __init__(self):
-        smach.State.__init__(self, outcomes=['idle', 'execute_plan'], output_keys=['plan'])
+        smach.State.__init__(self, outcomes=['idle', 'execute_plan'], input_keys=['input_plan'], output_keys=['output_plan'])
 
     def get_plan(self):
         rospy.wait_for_service('arox_planner/get_plan')
@@ -47,33 +33,19 @@ class Idle(smach.State):
             return None
 
     def execute(self, userdata):
-        global plan_initial, plan_remaining, completed_tasks
 
-        if len(plan_initial) == 0:
-            rospy.loginfo ("no active plan..")
-            plan_initial = []
-            publish_state_of_ongoing_operation("waiting")
-            plan = self.get_plan()
-            
-            if plan != None:
-                plan_initial = plan[:]
-                userdata.plan = plan
-                plan_remaining = plan_initial
-                publish_state_of_ongoing_operation("undocking")
-                return 'execute_plan'
+        if len(userdata.keys()) > 0 and len(userdata.input_plan) > 0:
+            rospy.loginfo("continuing preempted plan..")
+            userdata.output_plan = userdata.input_plan
+            return 'execute_plan'
+        
+        rospy.loginfo ("no active plan..")
+        plan = self.get_plan()
+        if plan != None:
+            userdata.output_plan = plan
+            return 'execute_plan'
+        else:    
             return 'idle'
-         
-        else:
-            if completed_tasks == len(plan_initial):
-                rospy.loginfo("completed plan, waiting for new plan..")
-                time.sleep(3)
-                return 'idle'
-               
-            else:
-                rospy.loginfo("continuing preempted plan..")
-                publish_state_of_ongoing_operation("undocking")
-                userdata.plan = plan_remaining
-                return 'execute_plan'
 
 
 class ExecutePlan(smach.State):
@@ -83,37 +55,38 @@ class ExecutePlan(smach.State):
                                    input_keys=['plan'])
 
         rospy.Subscriber("/arox/battery_param", arox_battery_params, self.battery_callback, queue_size=1)
+        self.operation_pub = rospy.Publisher('arox/ongoing_operation', arox_operational_param, queue_size=1)
         self.battery_discharged = False
+        self.remaining_tasks = 0
+        self.plan = []
+        self.completed_tasks = 0
+
+    def publish_state_of_ongoing_operation(self, mode):
+        msg = arox_operational_param()
+        msg.operation_mode = mode
+        msg.total_tasks = self.remaining_tasks
+        msg.ongoing_task = self.completed_tasks + 1
+        msg.rewards_gained = self.completed_tasks
+        self.operation_pub.publish(msg)
 
     def battery_callback(self, data):
-        global plan_remaining
-
         if data.charge == 0.0:
             self.battery_discharged = True
             rospy.loginfo("battery completely discharged..")
-            plan_remaining_length = len(self.plan) + 1
-            plan_remaining = plan_initial[-plan_remaining_length:]
-            publish_state_of_ongoing_operation("dead")
             client = actionlib.SimpleActionClient('drive_to_goal', drive_to_goalAction)
             client.cancel_all_goals()
-            return 'shutdown'
 
-    @staticmethod
-    def perform_action(action):
-        """
-        TODO: add doc
-        """
+    def perform_action(self, action):
         global BASE_POSE
-
         rospy.loginfo("performing action %s..", action.name)
 
         # moving actions
         if action.name == "drive_to" or action.name == "return_to_base":
 
+            self.publish_state_of_ongoing_operation("moving")
+
             if action.name == "return_to_base":
                 action.pose = BASE_POSE
-
-            publish_state_of_ongoing_operation("processing")
             
             client = actionlib.SimpleActionClient('drive_to_goal', drive_to_goalAction)
             action_goal = dtg_Goal()
@@ -138,7 +111,6 @@ class ExecutePlan(smach.State):
             client.wait_for_server()
             client.send_goal(action_goal)
             rospy.loginfo("goal sent, wait for accomplishment")
-            publish_state_of_ongoing_operation("traversing")
             
             success = client.wait_for_result()
             rospy.loginfo("successfully performed action: %s", success)
@@ -146,12 +118,14 @@ class ExecutePlan(smach.State):
             return success
 
         elif action.name == "scan":
+            self.publish_state_of_ongoing_operation("scanning")
             rospy.loginfo("start scanning procedure..")
             rospy.sleep(3)
             rospy.loginfo("scanning procedure finished..")
             return True
 
         elif action.name == "charge":
+            self.publish_state_of_ongoing_operation("charging")
             rospy.loginfo("start docking procedure..")
             rospy.set_param("charging_mode", True)
             charge_mode = rospy.get_param("charging_mode")
@@ -169,8 +143,9 @@ class ExecutePlan(smach.State):
         return False
                 
     def execute(self, userdata):
-        global plan_remaining, completed_tasks
+
         self.plan = userdata.plan
+        self.remaining_tasks = len(userdata.plan)
         
         if self.preempt_requested():
             return 'preemption'
@@ -180,14 +155,13 @@ class ExecutePlan(smach.State):
             rospy.loginfo("executing plan with length %s..", len(self.plan))
             
             action = self.plan.pop(0)
-            plan_remaining = self.plan
             if not self.battery_discharged:
                 action_successfully_performed = self.perform_action(action)
             else:
                 return 'hard_failure'
             
             if action_successfully_performed:
-                completed_tasks += 1
+                self.completed_tasks += 1
                 return 'success'
             else:
                 return 'soft_failure'
@@ -205,11 +179,14 @@ class PlanExecutionStateMachine(smach.StateMachine):
         with self:
             self.add('IDLE', Idle(),
                     transitions={'idle':'IDLE',
-                                 'execute_plan':'EXECUTE_PLAN'})
+                                 'execute_plan':'EXECUTE_PLAN'},
+                    remapping={'sm_input':'input_plan',
+                               'output_plan':'sm_input'})
 
             self.add('EXECUTE_PLAN', ExecutePlan(),
                     transitions={'complete':'operation',
                                  'soft_failure':'contingency',
                                  'hard_failure':'catastrophe',
                                  'success':'EXECUTE_PLAN',
-                                 'preemption':'IDLE'})
+                                 'preemption':'IDLE'},
+                    remapping={'plan':'sm_input'})
