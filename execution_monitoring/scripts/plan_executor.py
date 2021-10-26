@@ -16,7 +16,6 @@ from arox_performance_parameters.msg import arox_battery_params
 BASE_POSE = [52.3203191407, 8.153625154949, 270]
 plan_remaining = []
 plan_initial = []
-battery_dead = False
 completed_tasks = 0
 
 
@@ -84,12 +83,13 @@ class ExecutePlan(smach.State):
                                    input_keys=['plan'])
 
         rospy.Subscriber("/arox/battery_param", arox_battery_params, self.battery_callback, queue_size=1)
+        self.battery_discharged = False
 
     def battery_callback(self, data):
-        global battery_dead, plan_remaining
+        global plan_remaining
 
         if data.charge == 0.0:
-            battery_dead = True
+            self.battery_discharged = True
             rospy.loginfo("battery completely discharged..")
             plan_remaining_length = len(self.plan) + 1
             plan_remaining = plan_initial[-plan_remaining_length:]
@@ -103,7 +103,7 @@ class ExecutePlan(smach.State):
         """
         TODO: add doc
         """
-        global battery_dead, BASE_POSE
+        global BASE_POSE
 
         rospy.loginfo("performing action %s..", action.name)
 
@@ -181,7 +181,10 @@ class ExecutePlan(smach.State):
             
             action = self.plan.pop(0)
             plan_remaining = self.plan
-            action_successfully_performed = self.perform_action(action)
+            if not self.battery_discharged:
+                action_successfully_performed = self.perform_action(action)
+            else:
+                return 'hard_failure'
             
             if action_successfully_performed:
                 completed_tasks += 1
