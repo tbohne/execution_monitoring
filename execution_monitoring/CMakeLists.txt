@@ -11,9 +11,6 @@ find_package(catkin REQUIRED COMPONENTS
   roscpp
   rospy
   std_msgs
-  message_generation
-  actionlib_msgs
-  geometry_msgs
 )
 
 ## System dependencies are found with CMake's conventions
@@ -50,10 +47,9 @@ catkin_python_setup()
 ##   * add every package in MSG_DEP_SET to generate_messages(DEPENDENCIES ...)
 
 ## Generate messages in the 'msg' folder
-add_message_files(
-  FILES
-  PointArray.msg
-)
+# add_message_files(
+#   FILES
+# )
 
 ## Generate services in the 'srv' folder
 # add_service_files(
@@ -63,18 +59,14 @@ add_message_files(
 # )
 
 ## Generate actions in the 'action' folder
-add_action_files(
-  FILES
-  Dock.action
-)
+# add_action_files(
+#   FILES
+# )
 
 ## Generate added messages and services with any dependencies listed here
-generate_messages(
-  DEPENDENCIES
-  std_msgs
-  actionlib_msgs
-  geometry_msgs
-)
+# generate_messages(
+#   DEPENDENCIES
+# )
 
 ################################################
 ## Declare ROS dynamic reconfigure parameters ##
