@@ -1,13 +1,11 @@
 #!/usr/bin/env python
 import smach
-import actionlib 
+import actionlib
 import rospy
-import time
 import numpy as np
 from osgeo import osr
 from tf.transformations import quaternion_from_euler
 from plan_generation.srv import get_plan
-from plan_generation.msg import action
 from arox_navigation_flex.msg import drive_to_goalAction
 from arox_navigation_flex.msg import drive_to_goalGoal as dtg_Goal
 from arox_performance_parameters.msg import arox_operational_param
@@ -17,9 +15,8 @@ from arox_performance_parameters.msg import arox_battery_params
 BASE_POSE = [52.3203191407, 8.153625154949, 270]
 
 class Idle(smach.State):
-    
     def __init__(self):
-        smach.State.__init__(self, outcomes=['idle', 'execute_plan'], input_keys=['input_plan'], output_keys=['output_plan'])
+        smach.State.__init__(self, outcomes=['idle', 'execute_plan', 'shutdown'], input_keys=['input_plan'], output_keys=['output_plan'])
 
     def get_plan(self):
         rospy.wait_for_service('arox_planner/get_plan')
@@ -33,28 +30,33 @@ class Idle(smach.State):
             return None
 
     def execute(self, userdata):
+        rospy.loginfo("executing IDLE state..")
+
+        # if LTA episode ends: return "shutdown", e.g. via topic
 
         if len(userdata.keys()) > 0 and len(userdata.input_plan) > 0:
             rospy.loginfo("continuing preempted plan..")
             userdata.output_plan = userdata.input_plan
-            return 'execute_plan'
+            return "execute_plan"
         
-        rospy.loginfo ("no active plan..")
+        rospy.loginfo ("waiting for available plan from plan provider..")
         plan = self.get_plan()
         if plan != None:
+            rospy.loginfo("received plan..")
             userdata.output_plan = plan
-            return 'execute_plan'
-        else:    
-            return 'idle'
+            return "execute_plan"
+        else:
+            rospy.loginfo("waiting for plan..")
+            return "idle"
 
 
 class ExecutePlan(smach.State):
 
     def __init__(self):
-        smach.State.__init__(self, outcomes=['complete', 'soft_failure', 'hard_failure', 'success', 'preemption'],
+        smach.State.__init__(self, outcomes=['action_complete', 'plan_complete', 'soft_failure', 'hard_failure'],
                                    input_keys=['plan'])
 
-        rospy.Subscriber("/arox/battery_param", arox_battery_params, self.battery_callback, queue_size=1)
+        rospy.Subscriber('/arox/battery_param', arox_battery_params, self.battery_callback, queue_size=1)
         self.operation_pub = rospy.Publisher('arox/ongoing_operation', arox_operational_param, queue_size=1)
         self.battery_discharged = False
         self.remaining_tasks = 0
@@ -91,7 +93,7 @@ class ExecutePlan(smach.State):
             client = actionlib.SimpleActionClient('drive_to_goal', drive_to_goalAction)
             action_goal = dtg_Goal()
             # TODO: could we use wgs84 here?
-            action_goal.target_pose.header.frame_id= 'utm'
+            action_goal.target_pose.header.frame_id = "utm"
 
             # the coordinates in the plan are wgs84 - transform
             source = osr.SpatialReference()
@@ -110,8 +112,7 @@ class ExecutePlan(smach.State):
             action_goal.target_pose.pose.orientation.w = q[3]
             client.wait_for_server()
             client.send_goal(action_goal)
-            rospy.loginfo("goal sent, wait for accomplishment")
-            
+            rospy.loginfo("goal sent, wait for accomplishment..")
             success = client.wait_for_result()
             rospy.loginfo("successfully performed action: %s", success)
 
@@ -143,50 +144,51 @@ class ExecutePlan(smach.State):
         return False
                 
     def execute(self, userdata):
+        rospy.loginfo("executing EXECUTE_PLAN state..")
 
         self.plan = userdata.plan
         self.remaining_tasks = len(userdata.plan)
         
-        if self.preempt_requested():
-            return 'preemption'
-        elif len(self.plan) == 0:            
-            return 'complete'
+        if len(self.plan) == 0:
+            rospy.loginfo("plan successfully executed..")
+            return "plan_complete"
         else:
-            rospy.loginfo("executing plan with length %s..", len(self.plan))
-            
+            rospy.loginfo("executing plan - remaining actions: %s", len(self.plan))
             action = self.plan.pop(0)
             if not self.battery_discharged:
                 action_successfully_performed = self.perform_action(action)
             else:
-                return 'hard_failure'
+                rospy.loginfo("hard failure..")
+                return "hard_failure"
             
             if action_successfully_performed:
+                rospy.loginfo("action successfully completed - executing rest of plan..")
                 self.completed_tasks += 1
-                return 'success'
+                return "action_complete"
             else:
-                return 'soft_failure'
+                rospy.loginfo("soft failure..")
+                return "soft_failure"
 
 
-class PlanExecutionStateMachine(smach.StateMachine):
+class OperationStateMachine(smach.StateMachine):
     def __init__(self):
-
-        super(PlanExecutionStateMachine, self).__init__(
-            outcomes=['operation', 'contingency', 'catastrophe', 'shutdown'],
+        super(OperationStateMachine, self).__init__(
+            outcomes=['contingency', 'catastrophe', 'shutdown'],
             input_keys=[],
             output_keys=[]
         )
 
         with self:
             self.add('IDLE', Idle(),
-                    transitions={'idle':'IDLE',
-                                 'execute_plan':'EXECUTE_PLAN'},
-                    remapping={'sm_input':'input_plan',
-                               'output_plan':'sm_input'})
+                    transitions={'idle': 'IDLE',
+                                 'execute_plan': 'EXECUTE_PLAN',
+                                 'shutdown': 'shutdown'},
+                    remapping={'sm_input': 'input_plan',
+                               'output_plan': 'sm_input'})
 
             self.add('EXECUTE_PLAN', ExecutePlan(),
-                    transitions={'complete':'operation',
-                                 'soft_failure':'contingency',
-                                 'hard_failure':'catastrophe',
-                                 'success':'EXECUTE_PLAN',
-                                 'preemption':'IDLE'},
-                    remapping={'plan':'sm_input'})
+                    transitions={'action_complete': 'EXECUTE_PLAN',
+                                 'plan_complete': 'IDLE',
+                                 'soft_failure': 'contingency',
+                                 'hard_failure': 'catastrophe'},
+                    remapping={'plan': 'sm_input'})

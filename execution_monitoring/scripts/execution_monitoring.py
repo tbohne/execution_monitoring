@@ -2,37 +2,53 @@
 import rospy
 import smach
 from std_msgs.msg import String
-from plan_executor import PlanExecutionStateMachine
+from operation import OperationStateMachine
 
 class Contingency(smach.State):
     def __init__(self):
-        smach.State.__init__(self, outcomes=["catastrophe", "operation"])
+        smach.State.__init__(self, outcomes=['normal_operation', 'catastrophe'])
 
     def execute(self, userdata):
+        rospy.loginfo("executing CONTINGENCY state..")
+
+        # normal_operation case:
+        #   - if problem resolved: return "normal_operation"
+
+        # catastrophe case:
+        #   - if minor issue couldn't be handled / something went wrong: return "catastrophe"
+
+        # default for now:
         rospy.loginfo("contingency resolved, continuing normal operation..")
-        return "operation"
+        return "normal_operation"
 
 class Catastrophe(smach.State):
     def __init__(self):
-        smach.State.__init__(self, outcomes=["shutdown"])
+        smach.State.__init__(self, outcomes=['shutdown'])
 
     def execute(self, userdata):
+        rospy.loginfo("executing CATASTROPHE state..")
+
+        # do everyting that is still possible:
+        #   - communicate problem
+        #   - save state
+        #   - ...
         rospy.loginfo("catastrophe processed, shutting down..")
         return "shutdown"
             
 class Shutdown(smach.State):
     def __init__(self):
-        smach.State.__init__(self, outcomes=["shutdown"])
-        self.pub = rospy.Publisher('/arox/shutdown_trigger',String,queue_size=1)
+        smach.State.__init__(self, outcomes=['shutdown'])
+        self.pub = rospy.Publisher('/arox/shutdown_trigger', String, queue_size=1)
 
-    def execute(self, ud):
+    def execute(self, userdata):
+        rospy.loginfo("executing SHUTDOWN state..")
+        rospy.loginfo("system shuts down..")
         self.pub.publish("shutdown")       
         return "shutdown"
 
 class ExecutionMonitoringStateMachine(smach.StateMachine):
     
     def __init__(self):
-
         super(ExecutionMonitoringStateMachine, self).__init__(
             outcomes=['shutdown'],
             input_keys=[],
@@ -40,29 +56,26 @@ class ExecutionMonitoringStateMachine(smach.StateMachine):
         )
 
         with self:
-
-            self.add('OPERATION', PlanExecutionStateMachine(),
-                    transitions={'operation':'OPERATION',
-                                 'contingency':'CONTINGENCY',
-                                 'catastrophe':'CATASTROPHE',
-                                 'shutdown':'SHUTDOWN'})
+            self.add('NORMAL_OPERATION', OperationStateMachine(),
+                    transitions={'contingency': 'CONTINGENCY',
+                                 'catastrophe': 'CATASTROPHE',
+                                 'shutdown': 'SHUTDOWN'})
 
             self.add('CONTINGENCY', Contingency(),
-                    transitions={'catastrophe':'CATASTROPHE',
-                                 'operation':'OPERATION'})
+                    transitions={'normal_operation': 'NORMAL_OPERATION',
+                                 'catastrophe': 'CATASTROPHE'})
             
             self.add('CATASTROPHE', Catastrophe(),
                     transitions={'shutdown':'SHUTDOWN'})
 
             self.add('SHUTDOWN', Shutdown(),
-                    transitions={'shutdown':'shutdown'})
-
+                    transitions={'shutdown': 'shutdown'})
 
 def node():
     """
-    Plan execution and monitoring node.
+    High-level execution monitoring node.
     """
-    rospy.init_node("execution_monitoring")
+    rospy.init_node('execution_monitoring')
 
     sm = ExecutionMonitoringStateMachine()
     outcome = sm.execute()
