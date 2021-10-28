@@ -13,3 +13,5 @@
 `rosrun execution_monitoring execution_monitoring.py`
 
 ## Architecture
+
+![](SMACH.jpg)

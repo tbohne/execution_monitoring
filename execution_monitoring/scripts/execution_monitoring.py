@@ -4,6 +4,7 @@ import smach
 from std_msgs.msg import String
 from operation import OperationStateMachine
 
+
 class Contingency(smach.State):
     def __init__(self):
         smach.State.__init__(self, outcomes=['normal_operation', 'catastrophe'])
@@ -21,6 +22,7 @@ class Contingency(smach.State):
         rospy.loginfo("contingency resolved, continuing normal operation..")
         return "normal_operation"
 
+
 class Catastrophe(smach.State):
     def __init__(self):
         smach.State.__init__(self, outcomes=['shutdown'])
@@ -28,13 +30,14 @@ class Catastrophe(smach.State):
     def execute(self, userdata):
         rospy.loginfo("executing CATASTROPHE state..")
 
-        # do everyting that is still possible:
+        # do everything that is still possible:
         #   - communicate problem
         #   - save state
         #   - ...
         rospy.loginfo("catastrophe processed, shutting down..")
         return "shutdown"
-            
+
+
 class Shutdown(smach.State):
     def __init__(self):
         smach.State.__init__(self, outcomes=['shutdown'])
@@ -43,11 +46,12 @@ class Shutdown(smach.State):
     def execute(self, userdata):
         rospy.loginfo("executing SHUTDOWN state..")
         rospy.loginfo("system shuts down..")
-        self.pub.publish("shutdown")       
+        self.pub.publish("shutdown")
         return "shutdown"
 
+
 class ExecutionMonitoringStateMachine(smach.StateMachine):
-    
+
     def __init__(self):
         super(ExecutionMonitoringStateMachine, self).__init__(
             outcomes=['shutdown'],
@@ -57,19 +61,20 @@ class ExecutionMonitoringStateMachine(smach.StateMachine):
 
         with self:
             self.add('NORMAL_OPERATION', OperationStateMachine(),
-                    transitions={'contingency': 'CONTINGENCY',
-                                 'catastrophe': 'CATASTROPHE',
-                                 'shutdown': 'SHUTDOWN'})
+                     transitions={'contingency': 'CONTINGENCY',
+                                  'catastrophe': 'CATASTROPHE',
+                                  'shutdown': 'SHUTDOWN'})
 
             self.add('CONTINGENCY', Contingency(),
-                    transitions={'normal_operation': 'NORMAL_OPERATION',
-                                 'catastrophe': 'CATASTROPHE'})
-            
+                     transitions={'normal_operation': 'NORMAL_OPERATION',
+                                  'catastrophe': 'CATASTROPHE'})
+
             self.add('CATASTROPHE', Catastrophe(),
-                    transitions={'shutdown':'SHUTDOWN'})
+                     transitions={'shutdown': 'SHUTDOWN'})
 
             self.add('SHUTDOWN', Shutdown(),
-                    transitions={'shutdown': 'shutdown'})
+                     transitions={'shutdown': 'shutdown'})
+
 
 def node():
     """
