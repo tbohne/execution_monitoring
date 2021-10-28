@@ -1,8 +1,6 @@
 #!/usr/bin/env python
 import rospy
 import smach
-import threading
-import smach_ros
 from std_msgs.msg import String
 from plan_executor import PlanExecutionStateMachine
 
@@ -46,7 +44,8 @@ class ExecutionMonitoringStateMachine(smach.StateMachine):
             self.add('OPERATION', PlanExecutionStateMachine(),
                     transitions={'operation':'OPERATION',
                                  'contingency':'CONTINGENCY',
-                                 'catastrophe':'CATASTROPHE'})
+                                 'catastrophe':'CATASTROPHE',
+                                 'shutdown':'SHUTDOWN'})
 
             self.add('CONTINGENCY', Contingency(),
                     transitions={'catastrophe':'CATASTROPHE',
@@ -66,16 +65,9 @@ def node():
     rospy.init_node("execution_monitoring")
 
     sm = ExecutionMonitoringStateMachine()
-    smach_ros.set_preempt_handler(sm)
-    
-    intro_serv = smach_ros.IntrospectionServer('execution_monitoring', sm, '/SM_ROOT')
-    intro_serv.start()
-
-    smach_thread = threading.Thread(target=sm.execute)
-    smach_thread.start()
-    
+    outcome = sm.execute()
+    rospy.loginfo("outcome: %s", outcome)
     rospy.spin()
-    smach_thread.join()
 
 
 if __name__ == '__main__':

@@ -171,7 +171,7 @@ class PlanExecutionStateMachine(smach.StateMachine):
     def __init__(self):
 
         super(PlanExecutionStateMachine, self).__init__(
-            outcomes=['operation', 'catastrophe', 'contingency'],
+            outcomes=['operation', 'contingency', 'catastrophe', 'shutdown'],
             input_keys=[],
             output_keys=[]
         )
