@@ -1,6 +1,6 @@
 # Execution Monitoring Node
 
-**High level state machine providing plan execution and monitoring for LTA plant observation with a mobile robot.**
+**High-level state machine providing plan execution and monitoring for LTA plant observation with a mobile robot.**
 
 ## Dependencies
 
@@ -11,3 +11,5 @@
 ## Usage
 
 `rosrun execution_monitoring execution_monitoring.py`
+
+## Architecture
