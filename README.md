@@ -12,6 +12,10 @@
 
 `rosrun execution_monitoring execution_monitoring.py`
 
+## Visualize State of Hierarchical SMACH
+
+`rosrun smach_viewer smach_viewer.py`
+
 ## Architecture
 
 ![](img/SMACH_complete.png)
