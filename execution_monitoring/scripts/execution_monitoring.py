@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 import rospy
 import smach
+import smach_ros
 from std_msgs.msg import String
 from operation import OperationStateMachine
 
@@ -83,6 +84,8 @@ def node():
     rospy.init_node('execution_monitoring')
 
     sm = ExecutionMonitoringStateMachine()
+    sis = smach_ros.IntrospectionServer('execution_monitoring', sm, '/SM_ROOT')
+    sis.start()
     outcome = sm.execute()
     rospy.loginfo("outcome: %s", outcome)
     rospy.spin()
