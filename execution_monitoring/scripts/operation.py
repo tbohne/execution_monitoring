@@ -17,7 +17,7 @@ BASE_POSE = [52.3203191407, 8.153625154949, 270]
 
 class Idle(smach.State):
     def __init__(self):
-        smach.State.__init__(self, outcomes=['idle', 'execute_plan', 'shutdown'], input_keys=['input_plan'],
+        smach.State.__init__(self, outcomes=['waiting_for_plan', 'plan_received', 'end_of_episode_signal'], input_keys=['input_plan'],
                              output_keys=['output_plan'])
 
     @staticmethod
@@ -35,28 +35,28 @@ class Idle(smach.State):
     def execute(self, userdata):
         rospy.loginfo("executing IDLE state..")
 
-        # if LTA episode ends: return "shutdown", e.g. via topic
+        # if LTA episode ends: return "end_of_episode_signal", e.g. via topic
 
         if len(userdata.keys()) > 0 and len(userdata.input_plan) > 0:
             rospy.loginfo("continuing preempted plan..")
             userdata.output_plan = userdata.input_plan
-            return "execute_plan"
+            return "plan_received"
 
         rospy.loginfo("waiting for available plan from plan provider..")
         plan = self.get_plan()
         if plan is not None:
             rospy.loginfo("received plan..")
             userdata.output_plan = plan
-            return "execute_plan"
+            return "plan_received"
         else:
             rospy.loginfo("waiting for plan..")
-            return "idle"
+            return "waiting_for_plan"
 
 
 class ExecutePlan(smach.State):
 
     def __init__(self):
-        smach.State.__init__(self, outcomes=['action_complete', 'plan_complete', 'soft_failure', 'hard_failure'],
+        smach.State.__init__(self, outcomes=['action_completed', 'plan_completed', 'soft_failure', 'hard_failure'],
                              input_keys=['plan'])
 
         rospy.Subscriber('/arox/battery_param', arox_battery_params, self.battery_callback, queue_size=1)
@@ -154,7 +154,7 @@ class ExecutePlan(smach.State):
 
         if len(self.plan) == 0:
             rospy.loginfo("plan successfully executed..")
-            return "plan_complete"
+            return "plan_completed"
         else:
             rospy.loginfo("executing plan - remaining actions: %s", len(self.plan))
             action = self.plan.pop(0)
@@ -167,7 +167,7 @@ class ExecutePlan(smach.State):
             if action_successfully_performed:
                 rospy.loginfo("action successfully completed - executing rest of plan..")
                 self.completed_tasks += 1
-                return "action_complete"
+                return "action_completed"
             else:
                 rospy.loginfo("soft failure..")
                 return "soft_failure"
@@ -176,22 +176,22 @@ class ExecutePlan(smach.State):
 class OperationStateMachine(smach.StateMachine):
     def __init__(self):
         super(OperationStateMachine, self).__init__(
-            outcomes=['contingency', 'catastrophe', 'shutdown'],
+            outcomes=['minor_complication', 'critical_complication', 'end_of_episode'],
             input_keys=[],
             output_keys=[]
         )
 
         with self:
             self.add('IDLE', Idle(),
-                     transitions={'idle': 'IDLE',
-                                  'execute_plan': 'EXECUTE_PLAN',
-                                  'shutdown': 'shutdown'},
+                     transitions={'waiting_for_plan': 'IDLE',
+                                  'plan_received': 'EXECUTE_PLAN',
+                                  'end_of_episode_signal': 'end_of_episode'},
                      remapping={'sm_input': 'input_plan',
                                 'output_plan': 'sm_input'})
 
             self.add('EXECUTE_PLAN', ExecutePlan(),
-                     transitions={'action_complete': 'EXECUTE_PLAN',
-                                  'plan_complete': 'IDLE',
-                                  'soft_failure': 'contingency',
-                                  'hard_failure': 'catastrophe'},
+                     transitions={'action_completed': 'EXECUTE_PLAN',
+                                  'plan_completed': 'IDLE',
+                                  'soft_failure': 'minor_complication',
+                                  'hard_failure': 'critical_complication'},
                      remapping={'plan': 'sm_input'})

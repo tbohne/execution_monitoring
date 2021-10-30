@@ -8,25 +8,25 @@ from operation import OperationStateMachine
 
 class Contingency(smach.State):
     def __init__(self):
-        smach.State.__init__(self, outcomes=['normal_operation', 'catastrophe'])
+        smach.State.__init__(self, outcomes=['solved', 'aggravated'])
 
     def execute(self, userdata):
         rospy.loginfo("executing CONTINGENCY state..")
 
-        # normal_operation case:
-        #   - if problem resolved: return "normal_operation"
+        # solved case:
+        #   - if problem resolved: return "solved"
 
-        # catastrophe case:
-        #   - if minor issue couldn't be handled / something went wrong: return "catastrophe"
+        # aggravated case:
+        #   - if minor issue couldn't be handled / something went wrong: return "aggravated"
 
         # default for now:
-        rospy.loginfo("contingency resolved, continuing normal operation..")
-        return "normal_operation"
+        rospy.loginfo("contingency solved, continuing normal operation..")
+        return "solved"
 
 
 class Catastrophe(smach.State):
     def __init__(self):
-        smach.State.__init__(self, outcomes=['shutdown'])
+        smach.State.__init__(self, outcomes=['damage_control_performed'])
 
     def execute(self, userdata):
         rospy.loginfo("executing CATASTROPHE state..")
@@ -36,45 +36,45 @@ class Catastrophe(smach.State):
         #   - save state
         #   - ...
         rospy.loginfo("catastrophe processed, shutting down..")
-        return "shutdown"
+        return "damage_control_performed"
 
 
 class Shutdown(smach.State):
     def __init__(self):
-        smach.State.__init__(self, outcomes=['shutdown'])
+        smach.State.__init__(self, outcomes=['data_management_completed'])
         self.pub = rospy.Publisher('/arox/shutdown_trigger', String, queue_size=1)
 
     def execute(self, userdata):
         rospy.loginfo("executing SHUTDOWN state..")
         rospy.loginfo("system shuts down..")
         self.pub.publish("shutdown")
-        return "shutdown"
+        return "data_management_completed"
 
 
 class ExecutionMonitoringStateMachine(smach.StateMachine):
 
     def __init__(self):
         super(ExecutionMonitoringStateMachine, self).__init__(
-            outcomes=['shutdown'],
+            outcomes=['system_deactivated'],
             input_keys=[],
             output_keys=[]
         )
 
         with self:
             self.add('NORMAL_OPERATION', OperationStateMachine(),
-                     transitions={'contingency': 'CONTINGENCY',
-                                  'catastrophe': 'CATASTROPHE',
-                                  'shutdown': 'SHUTDOWN'})
+                     transitions={'minor_complication': 'CONTINGENCY',
+                                  'critical_complication': 'CATASTROPHE',
+                                  'end_of_episode': 'SHUTDOWN'})
 
             self.add('CONTINGENCY', Contingency(),
-                     transitions={'normal_operation': 'NORMAL_OPERATION',
-                                  'catastrophe': 'CATASTROPHE'})
+                     transitions={'solved': 'NORMAL_OPERATION',
+                                  'aggravated': 'CATASTROPHE'})
 
             self.add('CATASTROPHE', Catastrophe(),
-                     transitions={'shutdown': 'SHUTDOWN'})
+                     transitions={'damage_control_performed': 'SHUTDOWN'})
 
             self.add('SHUTDOWN', Shutdown(),
-                     transitions={'shutdown': 'shutdown'})
+                     transitions={'data_management_completed': 'system_deactivated'})
 
 
 def node():
@@ -84,7 +84,7 @@ def node():
     rospy.init_node('execution_monitoring')
 
     sm = ExecutionMonitoringStateMachine()
-    sis = smach_ros.IntrospectionServer('execution_monitoring', sm, '/SM_ROOT')
+    sis = smach_ros.IntrospectionServer('execution_monitoring', sm, '/EXECUTION_MONITORING')
     sis.start()
     outcome = sm.execute()
     rospy.loginfo("outcome: %s", outcome)
