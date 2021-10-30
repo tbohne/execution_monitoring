@@ -14,4 +14,6 @@
 
 ## Architecture
 
-![](SMACH.jpg)
+![](img/SMACH.jpg)
+![](img/SMACH_complete.png)
+![](img/SMACH_low_level.png)
