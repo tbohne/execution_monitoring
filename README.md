@@ -18,5 +18,5 @@
 
 ## Architecture
 
-![](img/SMACH_complete.png)
-![](img/SMACH_low_level.png)
+- high level: ![](img/SMACH_high_level.png)
+- low level: ![](img/SMACH_low_level.png)
