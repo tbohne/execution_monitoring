@@ -17,7 +17,7 @@ BASE_POSE = [52.3203191407, 8.153625154949, 270]
 
 class Idle(smach.State):
     def __init__(self):
-        smach.State.__init__(self, outcomes=['waiting_for_plan', 'plan_received', 'end_of_episode_signal'], input_keys=['input_plan'],
+        smach.State.__init__(self, outcomes=['waiting_for_plan', 'plan_received', 'end_of_episode_signal', 'external_problem'], input_keys=['input_plan'],
                              output_keys=['output_plan'])
 
     @staticmethod
@@ -34,6 +34,11 @@ class Idle(smach.State):
 
     def execute(self, userdata):
         rospy.loginfo("executing IDLE state..")
+
+        if self.preempt_requested():
+            rospy.loginfo("external problem detected by monitoring procedures - preempting normal operation..")
+            self.service_preempt()
+            return 'external_problem'
 
         # if LTA episode ends: return "end_of_episode_signal", e.g. via topic
 
@@ -56,7 +61,7 @@ class Idle(smach.State):
 class ExecutePlan(smach.State):
 
     def __init__(self):
-        smach.State.__init__(self, outcomes=['action_completed', 'plan_completed', 'soft_failure', 'hard_failure'],
+        smach.State.__init__(self, outcomes=['action_completed', 'plan_completed', 'soft_failure', 'hard_failure', 'external_problem'],
                              input_keys=['plan'])
 
         rospy.Subscriber('/arox/battery_param', arox_battery_params, self.battery_callback, queue_size=1)
@@ -149,6 +154,11 @@ class ExecutePlan(smach.State):
     def execute(self, userdata):
         rospy.loginfo("executing EXECUTE_PLAN state..")
 
+        if self.preempt_requested():
+            rospy.loginfo("external problem detected by monitoring procedures - preempting normal operation..")
+            self.service_preempt()
+            return 'external_problem'
+
         self.plan = userdata.plan
         self.remaining_tasks = len(userdata.plan)
 
@@ -176,7 +186,7 @@ class ExecutePlan(smach.State):
 class OperationStateMachine(smach.StateMachine):
     def __init__(self):
         super(OperationStateMachine, self).__init__(
-            outcomes=['minor_complication', 'critical_complication', 'end_of_episode'],
+            outcomes=['minor_complication', 'critical_complication', 'end_of_episode', 'preempted'],
             input_keys=[],
             output_keys=[]
         )
@@ -185,7 +195,8 @@ class OperationStateMachine(smach.StateMachine):
             self.add('IDLE', Idle(),
                      transitions={'waiting_for_plan': 'IDLE',
                                   'plan_received': 'EXECUTE_PLAN',
-                                  'end_of_episode_signal': 'end_of_episode'},
+                                  'end_of_episode_signal': 'end_of_episode',
+                                  'external_problem': 'preempted'},
                      remapping={'sm_input': 'input_plan',
                                 'output_plan': 'sm_input'})
 
@@ -193,5 +204,6 @@ class OperationStateMachine(smach.StateMachine):
                      transitions={'action_completed': 'EXECUTE_PLAN',
                                   'plan_completed': 'IDLE',
                                   'soft_failure': 'minor_complication',
-                                  'hard_failure': 'critical_complication'},
+                                  'hard_failure': 'critical_complication',
+                                  'external_problem': 'preempted'},
                      remapping={'plan': 'sm_input'})
