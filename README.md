@@ -15,8 +15,8 @@
 ## Monitoring States
 
 - manually trigger *CONTINGENCY* or *CATASTROPHE*:
-    - **contingency detected**: `rostopic pub "/contingency_preemption" std_msgs/String contingency`
-    - **catastrophe detected**: `rostopic pub "/catastrophe_preemption" std_msgs/String catastrophe`
+    - **contingency detected**: `rostopic pub -1 "/contingency_preemption" std_msgs/String contingency`
+    - **catastrophe detected**: `rostopic pub -1 "/catastrophe_preemption" std_msgs/String catastrophe`
 
 ## Visualize State of Hierarchical SMACH
 
