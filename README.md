@@ -12,6 +12,12 @@
 
 `rosrun execution_monitoring execution_monitoring.py`
 
+## Monitoring States
+
+- manually trigger *CONTINGENCY* or *CATASTROPHE*:
+    - **contingency detected**: `rostopic pub "/contingency_preemption" std_msgs/String contingency`
+    - **catastrophe detected**: `rostopic pub "/catastrophe_preemption" std_msgs/String catastrophe`
+
 ## Visualize State of Hierarchical SMACH
 
 `rosrun smach_viewer smach_viewer.py`
