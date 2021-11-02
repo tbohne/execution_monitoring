@@ -17,7 +17,8 @@ BASE_POSE = [52.3203191407, 8.153625154949, 270]
 
 class Idle(smach.State):
     def __init__(self):
-        smach.State.__init__(self, outcomes=['waiting_for_plan', 'plan_received', 'end_of_episode_signal', 'external_problem'], input_keys=['input_plan'],
+        smach.State.__init__(self, outcomes=['waiting_for_plan', 'plan_received', 'end_of_episode_signal', 'external_problem'], 
+                             input_keys=['input_plan'],
                              output_keys=['output_plan'])
 
     @staticmethod
@@ -42,7 +43,8 @@ class Idle(smach.State):
 
         # if LTA episode ends: return "end_of_episode_signal", e.g. via topic
 
-        if len(userdata.keys()) > 0 and len(userdata.input_plan) > 0:
+        rospy.loginfo("input_plan: %s", userdata.input_plan)
+        if len(userdata.input_plan) > 0:
             rospy.loginfo("continuing preempted plan..")
             userdata.output_plan = userdata.input_plan
             return "plan_received"
@@ -68,7 +70,6 @@ class ExecutePlan(smach.State):
         self.operation_pub = rospy.Publisher('arox/ongoing_operation', arox_operational_param, queue_size=1)
         self.battery_discharged = False
         self.remaining_tasks = 0
-        self.plan = []
         self.completed_tasks = 0
 
     def publish_state_of_ongoing_operation(self, mode):
@@ -159,15 +160,14 @@ class ExecutePlan(smach.State):
             self.service_preempt()
             return 'external_problem'
 
-        self.plan = userdata.plan
         self.remaining_tasks = len(userdata.plan)
 
-        if len(self.plan) == 0:
+        if len(userdata.plan) == 0:
             rospy.loginfo("plan successfully executed..")
             return "plan_completed"
         else:
-            rospy.loginfo("executing plan - remaining actions: %s", len(self.plan))
-            action = self.plan.pop(0)
+            rospy.loginfo("executing plan - remaining actions: %s", len(userdata.plan))
+            action = userdata.plan.pop(0)
             if not self.battery_discharged:
                 action_successfully_performed = self.perform_action(action)
             else:
@@ -191,13 +191,15 @@ class OperationStateMachine(smach.StateMachine):
             output_keys=[]
         )
 
+        self.userdata.sm_input = []
+
         with self:
             self.add('IDLE', Idle(),
                      transitions={'waiting_for_plan': 'IDLE',
                                   'plan_received': 'EXECUTE_PLAN',
                                   'end_of_episode_signal': 'end_of_episode',
                                   'external_problem': 'preempted'},
-                     remapping={'sm_input': 'input_plan',
+                     remapping={'input_plan': 'sm_input',
                                 'output_plan': 'sm_input'})
 
             self.add('EXECUTE_PLAN', ExecutePlan(),
