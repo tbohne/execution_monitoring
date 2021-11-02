@@ -22,15 +22,17 @@ class Idle(smach.State):
                              output_keys=['output_plan'])
 
     @staticmethod
-    def get_plan():
-        rospy.wait_for_service('arox_planner/get_plan')
+    def get_plan():        
         try:
+            rospy.wait_for_service('arox_planner/get_plan', timeout=5)
             res = rospy.ServiceProxy('arox_planner/get_plan', get_plan)()
             if res.succeeded:
                 return res.generated_plan.actions
             return None
         except rospy.ServiceException as e:
             print("service call failed: %s", e)
+            return None
+        except rospy.ROSException:
             return None
 
     def execute(self, userdata):
