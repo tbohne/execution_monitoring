@@ -4,7 +4,7 @@ import smach
 import smach_ros
 from std_msgs.msg import String
 from operation import OperationStateMachine
-
+from actionlib_msgs.msg import GoalID
 
 class Contingency(smach.State):
     def __init__(self):
@@ -126,6 +126,13 @@ class ExecutionMonitoringStateMachine(smach.StateMachine):
         rospy.loginfo("monitoring callback executed..")
         rospy.loginfo("userdata: %s", userdata)
         rospy.loginfo("msg: %s", msg)
+
+        # TODO: stop all move_base running goals here?
+        
+        cancel_pub = rospy.Publisher("/move_base_flex/move_base/cancel", GoalID, queue_size=1)
+        cancel_msg = GoalID()
+        cancel_pub.publish(cancel_msg)
+
         return False
 
 
