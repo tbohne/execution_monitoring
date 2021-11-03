@@ -2,6 +2,7 @@
 import rospy
 import actionlib
 from execution_monitoring.msg import ScanAction, ScanResult
+from sensor_msgs.msg import LaserScan
 
 class DummyScanner():
 
@@ -10,11 +11,26 @@ class DummyScanner():
         self.server = actionlib.SimpleActionServer('dummy_scanner', ScanAction, execute_cb=self.execute_cb, auto_start=False)
         self.result = ScanResult()
         self.server.start()
-        
+
     def execute_cb(self, goal):
+        # TODO put name of the mission in goal to set it as file name of the scan results
+        file_name = "test.txt"
         rospy.loginfo(goal)
         rospy.loginfo("start scanning procedure..")
-        rospy.sleep(10)
+
+        try:
+            # create a new subscription to the topic, receive one message, then unsubscribe
+            scan = rospy.wait_for_message("/scanVelodyne", LaserScan, timeout=60)
+        except rospy.ROSException as e:
+            rospy.loginfo("problem retrieving laser scan: %s", e)
+
+        if scan:
+            rospy.loginfo("recorded scan..")
+            rospy.loginfo("scan header: %s", scan.header)
+            # TODO: replace absolute path - should be launch parameter
+            with open("/home/docker/catkin_ws/src/execution_monitoring/execution_monitoring/scans/" + file_name, 'w') as out_file:
+                out_file.write(str(scan.header))
+
         self.result.result = "scanning successfully completed"
         self.server.set_succeeded(self.result)
         rospy.loginfo("scanning completed..")
