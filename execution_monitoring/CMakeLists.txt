@@ -162,6 +162,7 @@ catkin_install_python(PROGRAMS
   scripts/high_level_smach.py
   scripts/operation.py
   scripts/dummy_scanner.py
+  scripts/fake_riegl_pub.py
   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
 
