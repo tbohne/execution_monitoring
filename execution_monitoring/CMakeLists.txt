@@ -157,6 +157,7 @@ include_directories(
 catkin_install_python(PROGRAMS
   scripts/execution_monitoring.py
   scripts/operation.py
+  scripts/dummy_scanner.py
   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
 
