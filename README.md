@@ -10,7 +10,7 @@
 
 ## Usage
 
-`rosrun execution_monitoring execution_monitoring.py`
+`rosrun execution_monitoring high_level_smach.py`
 
 ## Monitoring States
 
