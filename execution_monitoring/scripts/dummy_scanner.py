@@ -19,9 +19,8 @@ class DummyScanner():
         rospy.loginfo("start scanning procedure..")
 
         try:
-            # TODO: should actually subscribe to the RIEGL when it's available
             # create a new subscription to the topic, receive one message, then unsubscribe
-            scan = rospy.wait_for_message("/scanVelodyne", LaserScan, timeout=60)
+            scan = rospy.wait_for_message("/RIEGL", LaserScan, timeout=60)
         except rospy.ROSException as e:
             rospy.loginfo("problem retrieving laser scan: %s", e)
 
