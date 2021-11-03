@@ -8,6 +8,7 @@ from tf.transformations import quaternion_from_euler
 from plan_generation.srv import get_plan
 from arox_navigation_flex.msg import drive_to_goalAction
 from arox_navigation_flex.msg import drive_to_goalGoal as dtg_Goal
+from execution_monitoring.msg import ScanAction, ScanGoal
 from arox_performance_parameters.msg import arox_operational_param
 from arox_performance_parameters.msg import arox_battery_params
 
@@ -132,9 +133,15 @@ class ExecutePlan(smach.State):
         elif action.name == "scan":
             self.publish_state_of_ongoing_operation("scanning")
             rospy.loginfo("start scanning procedure..")
-            rospy.sleep(3)
-            rospy.loginfo("scanning procedure finished..")
-            return True
+            client = actionlib.SimpleActionClient('dummy_scanner', ScanAction)
+            action_goal = ScanGoal()
+            client.wait_for_server()
+            client.send_goal(action_goal)
+            rospy.loginfo("goal sent, wait for accomplishment..")
+            success = client.wait_for_result()
+            rospy.loginfo("successfully performed action: %s", success)
+            rospy.loginfo(client.get_result())
+            return success
 
         elif action.name == "charge":
             self.publish_state_of_ongoing_operation("charging")
