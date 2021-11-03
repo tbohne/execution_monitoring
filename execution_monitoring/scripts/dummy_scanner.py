@@ -19,17 +19,21 @@ class DummyScanner():
         rospy.loginfo("start scanning procedure..")
 
         try:
+            # TODO: should actually subscribe to the RIEGL when it's available
             # create a new subscription to the topic, receive one message, then unsubscribe
             scan = rospy.wait_for_message("/scanVelodyne", LaserScan, timeout=60)
         except rospy.ROSException as e:
             rospy.loginfo("problem retrieving laser scan: %s", e)
 
+        rospy.sleep(3)
+
         if scan:
             rospy.loginfo("recorded scan..")
             rospy.loginfo("scan header: %s", scan.header)
             # TODO: replace absolute path - should be launch parameter
-            with open("/home/docker/catkin_ws/src/execution_monitoring/execution_monitoring/scans/" + file_name, 'w') as out_file:
+            with open("/home/docker/catkin_ws/src/execution_monitoring/execution_monitoring/scans/" + file_name, 'a') as out_file:
                 out_file.write(str(scan.header))
+                out_file.write("\n############################################\n############################################\n")
 
         self.result.result = "scanning successfully completed"
         self.server.set_succeeded(self.result)
