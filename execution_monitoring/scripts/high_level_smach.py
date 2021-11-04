@@ -12,6 +12,7 @@ class Contingency(smach.State):
         smach.State.__init__(self, outcomes=['solved', 'aggravated'])
         self.interrupt_reason = ""
         self.interrupt_reason_sub = rospy.Subscriber('/interrupt_reason', String, self.interrupt_reason_callback, queue_size=1)
+        self.sensor_failure_resolver_pub = rospy.Publisher('/resolve_sensor_failure', String, queue_size=1)
 
     def interrupt_reason_callback(self, reason):
         self.interrupt_reason = reason.data
@@ -19,6 +20,9 @@ class Contingency(smach.State):
     def execute(self, userdata):
         rospy.loginfo("executing CONTINGENCY state..")
         rospy.loginfo("reason for contingency: %s", self.interrupt_reason)
+
+        if self.interrupt_reason == "sensor_failure":
+            self.sensor_failure_resolver_pub.publish("")
 
         # solved case:
         #   - if problem resolved: return "solved"

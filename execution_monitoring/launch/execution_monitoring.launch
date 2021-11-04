@@ -7,6 +7,7 @@
     <node pkg="execution_monitoring" type="dummy_scanner.py" name="dummy_scanner" output="screen" />
     <node pkg="execution_monitoring" type="fake_riegl_pub.py" name="fake_riegl_pub" output="screen" />
     <node pkg="execution_monitoring" type="monitoring.py" name="monitoring" output="screen" />
+    <node pkg="execution_monitoring" type="sensor_failure_resolver.py" name="sensor_failure_resolver" output="screen" />
 
     <include file="$(find plan_generation)/launch/plan_generation.launch" />
 </launch>

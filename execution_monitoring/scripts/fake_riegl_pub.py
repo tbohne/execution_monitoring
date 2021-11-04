@@ -12,7 +12,7 @@ class FakeRiegl:
 
     def __init__(self):
         self.simulate_sensor_failure = False
-        self.sensor_failure_sub = rospy.Subscriber("/simulate_sensor_failure", String, self.toggle_sensor_failure_callback, queue_size=1)
+        self.sensor_failure_sub = rospy.Subscriber("/toggle_simulated_sensor_failure", String, self.toggle_sensor_failure_callback, queue_size=1)
         self.scan_action_sub = rospy.Subscriber('/scan_action', String, self.action_callback, queue_size=1)
         self.scan_pub = rospy.Publisher("/RIEGL", LaserScan, queue_size=1)
 
