@@ -24,7 +24,7 @@
 ## Communication with Human Operator
 
 - robot requests help: `rostopic echo "/request_help"`
-- human operator indicates that the problem is solved: `rostopic pub -1 /problem_solved std_msgs/String ''`
+- human operator indicates that the problem is solved: `rostopic pub -1 /problem_solved std_msgs/String solved`
 
 ## Monitoring States
 

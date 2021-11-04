@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 import rospy
-from std_msgs.msg import String
+from std_msgs.msg import String, Bool
 
 class SensorFailureResolver:
 
@@ -8,6 +8,7 @@ class SensorFailureResolver:
         self.resolve_sub = rospy.Subscriber('/resolve_sensor_failure', String, self.resolve_callback, queue_size=1)
         self.toggle_sim_sensor_failure_pub = rospy.Publisher("/toggle_simulated_sensor_failure", String, queue_size=1)
         self.human_operator_pub = rospy.Publisher("/request_help", String, queue_size=1)
+        self.success_pub = rospy.Publisher('/resolve_sensor_failure_success', Bool, queue_size=1)
         self.human_operator_sub = rospy.Subscriber('/problem_solved', String, self.solved_by_human_callback, queue_size=1)
         self.problem_resolved = False
 
@@ -17,14 +18,15 @@ class SensorFailureResolver:
         rospy.loginfo("not able to handle - communicating problem to human operator..")
         self.human_operator_pub.publish("sensor failure detected - preempted NORMAL_OPERATION - need help")
 
-        # TODO:  when it takes too long it should go to CATASTROPHE
+        # TODO: when it takes too long it should go to CATASTROPHE
         while not self.problem_resolved:
             rospy.loginfo("waiting for human operator to solve the problem..")
             rospy.sleep(30)
         self.toggle_sim_sensor_failure_pub.publish("")
+        self.success_pub.publish(True)
         rospy.loginfo("sensor failure resolved..")
 
-    def solved_by_human_callback(self):
+    def solved_by_human_callback(self, msg):
         self.problem_resolved = True
 
 def node():

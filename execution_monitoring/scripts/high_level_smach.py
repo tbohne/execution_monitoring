@@ -2,7 +2,7 @@
 import rospy
 import smach
 import smach_ros
-from std_msgs.msg import String
+from std_msgs.msg import String, Bool
 from operation import OperationStateMachine
 from actionlib_msgs.msg import GoalID
 
@@ -12,11 +12,16 @@ class Contingency(smach.State):
     def __init__(self):
         smach.State.__init__(self, outcomes=['solved', 'aggravated'])
         self.interrupt_reason = ""
+        self.successfully_resolved = False
         self.interrupt_reason_sub = rospy.Subscriber('/interrupt_reason', String, self.interrupt_reason_callback, queue_size=1)
         self.sensor_failure_resolver_pub = rospy.Publisher('/resolve_sensor_failure', String, queue_size=1)
+        self.sensor_failure_resolver_success_sub = rospy.Subscriber('/resolve_sensor_failure_success', Bool, self.resolve_sensor_failure_success_callback, queue_size=1)
 
     def interrupt_reason_callback(self, reason):
         self.interrupt_reason = reason.data
+
+    def resolve_sensor_failure_success_callback(self, res):
+        self.successfully_resolved = res.data
 
     def execute(self, userdata):
         rospy.loginfo("executing CONTINGENCY state..")
@@ -25,16 +30,16 @@ class Contingency(smach.State):
         if self.interrupt_reason == "sensor_failure":
             self.sensor_failure_resolver_pub.publish("")
 
+        # TODO: implement time limit -> if exceeded, transition to catastrophe
+        while not self.successfully_resolved:
+            rospy.sleep(30)
+
         # solved case:
         #   - if problem resolved: return "solved"
 
         # aggravated case:
         #   - if minor issue couldn't be handled / something went wrong: return "aggravated"
 
-        # default for now:
-        for _ in range(10):
-            rospy.loginfo("#####################################################")
-            rospy.sleep(2)
         rospy.loginfo("contingency solved, continuing normal operation..")
         return "solved"
 
