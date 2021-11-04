@@ -6,6 +6,7 @@ from std_msgs.msg import String
 from operation import OperationStateMachine
 from actionlib_msgs.msg import GoalID
 
+
 class Contingency(smach.State):
 
     def __init__(self):

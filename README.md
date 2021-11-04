@@ -21,6 +21,11 @@
 
 - **sensor failure:** `rostopic pub -1 /toggle_simulated_sensor_failure std_msgs/String fail`
 
+## Communication with Human Operator
+
+- robot requests help: `rostopic echo "/request_help"`
+- human operator indicates that the problem is solved: `rostopic pub -1 /problem_solved std_msgs/String ''`
+
 ## Monitoring States
 
 - manually trigger *CONTINGENCY* or *CATASTROPHE*:
