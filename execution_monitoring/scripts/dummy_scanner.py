@@ -3,6 +3,7 @@ import rospy
 import actionlib
 from execution_monitoring.msg import ScanAction, ScanResult
 from sensor_msgs.msg import LaserScan
+from std_msgs.msg import String
 
 class DummyScanner():
 
@@ -44,6 +45,7 @@ def node():
     Dummy node to simulate the scanning procedure, i.e. to scan on command.
     """
     rospy.init_node('dummy_scanner')
+    rospy.wait_for_message('SMACH_runnning', String)
     server = DummyScanner()
     rospy.spin()
 

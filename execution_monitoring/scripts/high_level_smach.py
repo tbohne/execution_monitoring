@@ -145,6 +145,13 @@ def node():
     sm = ExecutionMonitoringStateMachine()
     sis = smach_ros.IntrospectionServer('execution_monitoring', sm, '/EXECUTION_MONITORING')
     sis.start()
+
+    # wait to start and notify corresponding nodes
+    for _ in range(3):
+        pub = rospy.Publisher('SMACH_runnning', String, queue_size=1)
+        pub.publish("execution monitoring SMACH runs")
+        rospy.sleep(1)
+
     outcome = sm.execute()
     rospy.loginfo("outcome: %s", outcome)
     rospy.spin()
