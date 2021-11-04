@@ -19,7 +19,7 @@
 
 ## Simulate LTA problems
 
-- **sensor failure:** `rostopic pub -1 /simulate_sensor_failure std_msgs/String fail`
+- **sensor failure:** `rostopic pub -1 /toggle_simulated_sensor_failure std_msgs/String fail`
 
 ## Monitoring States
 
