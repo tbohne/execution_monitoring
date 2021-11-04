@@ -17,6 +17,10 @@
 - **with launch file (including plan generation)**:
     - `roslaunch execution_monitoring execution_monitoring.launch`
 
+## Simulate LTA problems
+
+- **sensor failure:** `rostopic pub -1 /simulate_sensor_failure std_msgs/String fail`
+
 ## Monitoring States
 
 - manually trigger *CONTINGENCY* or *CATASTROPHE*:
