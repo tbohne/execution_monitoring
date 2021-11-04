@@ -19,8 +19,8 @@ class FakeRiegl:
 
         :param scan: laser scan
         """
-        rospy.loginfo("receiving laser scan..")
-        rospy.loginfo("seq: %s", scan.header.seq)
+        # rospy.loginfo("receiving laser scan..")
+        # rospy.loginfo("seq: %s", scan.header.seq)
         self.scan_pub.publish(scan)
 
 def node():
