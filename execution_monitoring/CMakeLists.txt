@@ -163,6 +163,7 @@ catkin_install_python(PROGRAMS
   scripts/operation.py
   scripts/dummy_scanner.py
   scripts/fake_riegl_pub.py
+  scripts/monitoring.py
   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
 

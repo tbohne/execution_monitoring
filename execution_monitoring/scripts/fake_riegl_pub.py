@@ -13,20 +13,15 @@ class FakeRiegl:
     def __init__(self):
         self.simulate_sensor_failure = False
         self.sensor_failure_sub = rospy.Subscriber("/simulate_sensor_failure", String, self.toggle_sensor_failure_callback, queue_size=1)
-        self.scan_sub = rospy.Subscriber("/scanVelodyne", LaserScan, self.scan_callback, queue_size=1)
+        self.scan_action_sub = rospy.Subscriber('/scan_action', String, self.action_callback, queue_size=1)
         self.scan_pub = rospy.Publisher("/RIEGL", LaserScan, queue_size=1)
 
     def toggle_sensor_failure_callback(self, msg):
         self.simulate_sensor_failure = not self.simulate_sensor_failure
 
-    def scan_callback(self, scan):
-        """
-        Is called whenever a new laser scan arrives.
-
-        :param scan: laser scan
-        """
-        # rospy.loginfo("receiving laser scan..")
-        # rospy.loginfo("seq: %s", scan.header.seq)
+    def action_callback(self, msg):
+        # create a new subscription to the topic, receive one message, then unsubscribe
+        scan = rospy.wait_for_message("/scanVelodyne", LaserScan, timeout=60)
         if not self.simulate_sensor_failure:
             self.scan_pub.publish(scan)
 

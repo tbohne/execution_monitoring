@@ -10,6 +10,7 @@ class DummyScanner():
     def __init__(self):
         rospy.loginfo("initializing dummy scanner -  waiting for tasks..")
         self.server = actionlib.SimpleActionServer('dummy_scanner', ScanAction, execute_cb=self.execute_cb, auto_start=False)
+        self.perform_action_pub = rospy.Publisher('/scan_action', String, queue_size=1)
         self.result = ScanResult()
         self.server.start()
 
@@ -18,15 +19,16 @@ class DummyScanner():
         file_name = "test.txt"
         rospy.loginfo(goal)
         rospy.loginfo("start scanning procedure..")
+        scan = None
 
         try:
+            self.perform_action_pub.publish("action")
             # create a new subscription to the topic, receive one message, then unsubscribe
             scan = rospy.wait_for_message("/RIEGL", LaserScan, timeout=60)
         except rospy.ROSException as e:
             rospy.loginfo("problem retrieving laser scan: %s", e)
-
         rospy.sleep(3)
-
+        
         if scan:
             rospy.loginfo("recorded scan..")
             rospy.loginfo("scan header: %s", scan.header)
