@@ -10,9 +10,12 @@
 
 ## Usage
 
-- run high-level execution monitoring state machine: `rosrun execution_monitoring high_level_smach.py`
-- run action server providing the dummy scanner: `rosrun execution_monitoring dummy_scanner.py`
-- run fake RIEGL publisher (republishes Velodyne): `rosrun execution_monitoring fake_riegl_pub.py`
+- **manual:**
+    - run high-level execution monitoring state machine: `rosrun execution_monitoring high_level_smach.py`
+    - run action server providing the dummy scanner: `rosrun execution_monitoring dummy_scanner.py`
+    - run fake RIEGL publisher (republishes Velodyne): `rosrun execution_monitoring fake_riegl_pub.py`
+- **with launch file (including plan generation)**:
+    - `roslaunch execution_monitoring execution_monitoring.launch`
 
 ## Monitoring States
 
