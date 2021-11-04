@@ -18,7 +18,7 @@ class SensorMonitoring:
             scan = rospy.wait_for_message("/RIEGL", LaserScan, timeout=60)
         except rospy.ROSException as e:
             rospy.loginfo("SENSOR FAILURE  DETECTED..")
-            self.contingency_pub.publish("contingency")
+            self.contingency_pub.publish("sensor_failure")
 
 def node():
     rospy.init_node('monitoring')

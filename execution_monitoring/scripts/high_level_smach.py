@@ -7,11 +7,18 @@ from operation import OperationStateMachine
 from actionlib_msgs.msg import GoalID
 
 class Contingency(smach.State):
+
     def __init__(self):
         smach.State.__init__(self, outcomes=['solved', 'aggravated'])
+        self.interrupt_reason = ""
+        self.interrupt_reason_sub = rospy.Subscriber('/interrupt_reason', String, self.interrupt_reason_callback, queue_size=1)
+
+    def interrupt_reason_callback(self, reason):
+        self.interrupt_reason = reason.data
 
     def execute(self, userdata):
         rospy.loginfo("executing CONTINGENCY state..")
+        rospy.loginfo("reason for contingency: %s", self.interrupt_reason)
 
         # solved case:
         #   - if problem resolved: return "solved"
@@ -28,11 +35,18 @@ class Contingency(smach.State):
 
 
 class Catastrophe(smach.State):
+
     def __init__(self):
         smach.State.__init__(self, outcomes=['damage_control_performed'])
+        self.interrupt_reason = ""
+        self.interrupt_reason_sub = rospy.Subscriber('/interrupt_reason', String, self.interrupt_reason_callback, queue_size=1)
+
+    def interrupt_reason_callback(self, reason):
+        self.interrupt_reason = reason.data
 
     def execute(self, userdata):
         rospy.loginfo("executing CATASTROPHE state..")
+        rospy.loginfo("reason for catastrophe: %s", self.interrupt_reason)
 
         # do everything that is still possible:
         #   - communicate problem
@@ -65,6 +79,8 @@ class ExecutionMonitoringStateMachine(smach.StateMachine):
             input_keys=[],
             output_keys=[]
         )
+
+        self.interrupt_reason_pub = rospy.Publisher('/interrupt_reason', String, queue_size=1)
 
         operation_monitoring = smach.Concurrence(outcomes=['minor_complication', 'critical_complication', 'end_of_episode'],
                                                  default_outcome='end_of_episode',
@@ -123,12 +139,9 @@ class ExecutionMonitoringStateMachine(smach.StateMachine):
         """
         Needs to return False when we want the monitoring state to terminate.
         """
-        rospy.loginfo("monitoring callback executed..")
-        rospy.loginfo("userdata: %s", userdata)
-        rospy.loginfo("msg: %s", msg)
+        self.interrupt_reason_pub.publish(msg)
 
         # TODO: stop all move_base running goals here?
-        
         cancel_pub = rospy.Publisher("/move_base_flex/move_base/cancel", GoalID, queue_size=1)
         cancel_msg = GoalID()
         cancel_pub.publish(cancel_msg)
