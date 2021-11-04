@@ -74,6 +74,7 @@ class ExecutePlan(smach.State):
         self.battery_discharged = False
         self.remaining_tasks = 0
         self.completed_tasks = 0
+        self.latest_action = None
 
     def publish_state_of_ongoing_operation(self, mode):
         msg = arox_operational_param()
@@ -164,11 +165,6 @@ class ExecutePlan(smach.State):
     def execute(self, userdata):
         rospy.loginfo("executing EXECUTE_PLAN state..")
 
-        if self.preempt_requested():
-            rospy.loginfo("external problem detected by monitoring procedures - preempting normal operation..")
-            self.service_preempt()
-            return 'external_problem'
-
         self.remaining_tasks = len(userdata.plan)
 
         if len(userdata.plan) == 0:
@@ -177,11 +173,19 @@ class ExecutePlan(smach.State):
         else:
             rospy.loginfo("executing plan - remaining actions: %s", len(userdata.plan))
             action = userdata.plan.pop(0)
+            self.latest_action = action
             if not self.battery_discharged:
                 action_successfully_performed = self.perform_action(action)
             else:
                 rospy.loginfo("hard failure..")
                 return "hard_failure"
+
+            if self.preempt_requested():
+                rospy.loginfo("external problem detected by monitoring procedures - preempting normal operation..")
+                # last action should be repeated
+                userdata.plan.insert(0, self.latest_action)
+                self.service_preempt()
+                return 'external_problem'
 
             if action_successfully_performed:
                 rospy.loginfo("action successfully completed - executing rest of plan..")
