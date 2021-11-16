@@ -23,7 +23,11 @@
 
 ## Simulate LTA problems
 
-- **sensor failure:** `rostopic pub -1 /toggle_simulated_sensor_failure std_msgs/String fail`
+- **sensor failures**
+    - **total sensor failur:** `rostopic pub -1 /toggle_simulated_sensor_failure std_msgs/String fail`
+    - **empty list of range values:** `rostopic pub -1 /toggle_simulated_empty_ranges std_msgs/String fail`
+    - **look to the sky:** `rostopic pub -1 /toggle_simulated_look_to_sky std_msgs/String fail`
+    - **repeated scan:** `rostopic pub -1 /toggle_simulated_scan_repetition std_msgs/String fail`
 
 ## Communication with Human Operator
 
