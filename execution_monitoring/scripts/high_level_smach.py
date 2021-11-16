@@ -5,6 +5,7 @@ import smach_ros
 from std_msgs.msg import String, Bool
 from operation import OperationStateMachine
 from actionlib_msgs.msg import GoalID
+from execution_monitoring import config
 
 
 class Contingency(smach.State):
@@ -27,12 +28,18 @@ class Contingency(smach.State):
         rospy.loginfo("executing CONTINGENCY state..")
         rospy.loginfo("reason for contingency: %s", self.interrupt_reason)
 
-        if self.interrupt_reason == "sensor_failure":
-            self.sensor_failure_resolver_pub.publish("")
+        if self.interrupt_reason == config.SENSOR_FAILURE_ONE:
+            self.sensor_failure_resolver_pub.publish(config.SENSOR_FAILURE_ONE)
+        elif self.interrupt_reason == config.SENSOR_FAILURE_TWO:
+            self.sensor_failure_resolver_pub.publish(config.SENSOR_FAILURE_TWO)
+        elif self.interrupt_reason == config.SENSOR_FAILURE_THREE:
+            self.sensor_failure_resolver_pub.publish(config.SENSOR_FAILURE_THREE)
+        elif self.interrupt_reason == config.SENSOR_FAILURE_FOUR:
+            self.sensor_failure_resolver_pub.publish(config.SENSOR_FAILURE_FOUR)
 
         # TODO: implement time limit -> if exceeded, transition to catastrophe
         while not self.successfully_resolved:
-            rospy.sleep(30)
+            rospy.sleep(5)
 
         # solved case:
         #   - if problem resolved: return "solved"
