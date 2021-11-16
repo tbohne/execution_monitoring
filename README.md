@@ -12,7 +12,8 @@
 
 - **manual:**
     - run high-level execution monitoring state machine: `rosrun execution_monitoring high_level_smach.py`
-    - run action server providing the dummy scanner (republishes Velodyne): `rosrun execution_monitoring dummy_scanner.py`
+    - run action server providing the dummy scanner: `rosrun execution_monitoring dummy_scanner.py`
+    - run fake RIEGL publisher republishes Velodyne scans): `rosrun execution_monitoring republish_velodyne.py`
     - run monitoring node: `rosrun execution_monitoring monitoring.py`
     - run resolver node: `rosrun execution_monitoring resolver.py`
 - **with launch file (including plan generation)**:
