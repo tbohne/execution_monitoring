@@ -20,7 +20,7 @@ class RepublishVelodyne:
     def toggle_sensor_failure_callback(self, msg):
         self.simulate_sensor_failure = not self.simulate_sensor_failure
 
-    def action_callback(self):
+    def action_callback(self, msg):
         # create a new subscription to the topic, receive one message, then unsubscribe
         scan = rospy.wait_for_message("/scanVelodyne", LaserScan, timeout=60)
         if not self.simulate_sensor_failure:
