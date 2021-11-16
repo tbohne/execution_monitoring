@@ -30,7 +30,7 @@ class SensorFailureResolver:
         self.problem_resolved = True
 
 def node():
-    rospy.init_node('sensor_failure_resolver')
+    rospy.init_node('failure_resolver')
     rospy.wait_for_message('SMACH_runnning', String)
     SensorFailureResolver()
     rospy.spin()

@@ -163,7 +163,7 @@ catkin_install_python(PROGRAMS
   scripts/operation.py
   scripts/dummy_scanner.py
   scripts/monitoring.py
-  scripts/sensor_failure_resolver.py
+  scripts/resolver.py
   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
 
