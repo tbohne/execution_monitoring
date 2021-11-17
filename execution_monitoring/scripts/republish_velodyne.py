@@ -62,7 +62,6 @@ class RepublishVelodyne:
                 else:
                     rospy.loginfo("cannot simulate scan repitition failure - there is no previous scan - wait until there is one..")
             
-            rospy.loginfo("publishing scan with: %s", scan.header)
             self.scan_pub.publish(scan)
         else:
             rospy.loginfo("SIMULATING TOTAL SENSOR FAILURE..")

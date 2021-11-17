@@ -16,14 +16,19 @@ class SensorMonitoring:
         self.scan_action_sub = rospy.Subscriber('/scan_action', String, self.sensor_failure_monitoring, queue_size=1)
         self.previous_scan = None
 
+    def compute_scan_hash(self, scan):
+        scan_str = str(scan.header.stamp.secs) + str(scan.header.stamp.nsecs) + scan.header.frame_id + str(scan.angle_min) \
+            + str(scan.angle_max) + str(scan.angle_increment) + str(scan.time_increment) + str(scan.scan_time) + str(scan.range_min) \
+            + str(scan.range_max) + str(scan.ranges)
+
+        return hashlib.sha224(scan_str.encode('utf-8')).hexdigest()
+
     def repeated_scan(self, scan):
-        new_scan_str = str(scan.header.stamp.secs) + str(scan.header.stamp.nsecs) + scan.header.frame_id
-        prev_scan_str = str(self.previous_scan.header.stamp.secs) + str(self.previous_scan.header.stamp.nsecs) + self.previous_scan.header.frame_id
-        new_hash = hashlib.sha224(new_scan_str.encode('utf-8')).hexdigest()
-        prev_hash = hashlib.sha224(prev_scan_str.encode('utf-8')).hexdigest()
-        rospy.loginfo("new hash: %s", new_hash)
-        rospy.loginfo("prev hash: %s", prev_hash)
-        return new_hash == prev_hash
+        new_scan_hash = self.compute_scan_hash(scan)
+        prev_scan_hash = self.compute_scan_hash(self.previous_scan)
+        rospy.loginfo("new hash: %s", new_scan_hash)
+        rospy.loginfo("prev hash: %s", prev_scan_hash)
+        return new_scan_hash == prev_scan_hash
 
     def sensor_failure_monitoring(self, msg):
         rospy.loginfo("start sensor monitoring..")
@@ -48,10 +53,6 @@ class SensorMonitoring:
                 elif self.previous_scan and self.repeated_scan(scan):
                     rospy.loginfo("sensor failure detected: %s", config.SENSOR_FAILURE_FOUR)
                     self.contingency_pub.publish(config.SENSOR_FAILURE_FOUR)
-
-                rospy.loginfo("monitoring: curr scan: %s", scan.header)
-                if self.previous_scan:
-                    rospy.loginfo("monitoring: prev scan: %s", self.previous_scan.header)
 
             self.previous_scan = scan
         else:
