@@ -20,6 +20,7 @@ class FallbackResolver:
     def request_fallback(self, msg):
         rospy.loginfo("fallback requested.. communicating problem to human operator..")
         rospy.loginfo("problem: %s", msg.data)
+        self.problem_resolved = False
         self.human_operator_pub.publish(msg.data)
 
         # TODO: when it takes too long it should go to CATASTROPHE
@@ -100,7 +101,6 @@ class SensorFailureResolver:
 
         if self.problem_resolved:
             self.success_pub.publish(True)
-    
 
 def node():
     rospy.init_node('failure_resolver')

@@ -27,6 +27,7 @@ class Contingency(smach.State):
     def execute(self, userdata):
         rospy.loginfo("executing CONTINGENCY state..")
         rospy.loginfo("reason for contingency: %s", self.interrupt_reason)
+        self.successfully_resolved = False
 
         if self.interrupt_reason == config.SENSOR_FAILURE_ONE:
             self.sensor_failure_resolver_pub.publish(config.SENSOR_FAILURE_ONE)
