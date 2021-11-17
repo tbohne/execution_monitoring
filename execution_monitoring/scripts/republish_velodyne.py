@@ -52,7 +52,7 @@ class RepublishVelodyne:
 
             if self.simulate_look_to_sky:
                 rospy.loginfo("SIMULATING LOOK TO SKY FAILURE")
-                fake_ranges = [scan.range_max for _ in range(len(scan.ranges))]
+                fake_ranges = [float('inf') for _ in range(len(scan.ranges))]
                 scan.ranges = fake_ranges
 
             if self.simulate_scan_repetition:
