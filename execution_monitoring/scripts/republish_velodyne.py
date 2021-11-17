@@ -18,7 +18,7 @@ class RepublishVelodyne:
         self.simulate_look_to_sky = False
         self.simulate_scan_repetition = False
 
-        self.last_scan = None
+        self.previous_scan = None
 
         rospy.Subscriber("/toggle_simulated_sensor_failure", String, self.toggle_sensor_failure_callback, queue_size=1)
         rospy.Subscriber("/toggle_simulated_empty_ranges", String, self.toggle_empty_ranges_callback, queue_size=1)
@@ -48,28 +48,26 @@ class RepublishVelodyne:
             # no total sensor failure
             if self.simulate_empty_ranges:
                 rospy.loginfo("SIMULATING EMPTY RANGES FAILURE")
-                rospy.loginfo("ranges: %s", scan.ranges)
-                rospy.loginfo("setting ranges to empty list..")
                 scan.ranges = []
-                rospy.loginfo("ranges: %s", scan.ranges)
 
             if self.simulate_look_to_sky:
                 rospy.loginfo("SIMULATING LOOK TO SKY FAILURE")
-                rospy.loginfo("setting ranges to max_val..")
-                for i in range(len(scan.ranges)):
-                    scan.ranges[i] = scan.range_max
-                rospy.loginfo("ranges: %s", scan.ranges)
+                fake_ranges = [scan.range_max for _ in range(len(scan.ranges))]
+                scan.ranges = fake_ranges
 
             if self.simulate_scan_repetition:
-                rospy.loginfo("SIMULATING SCAN REPETITION FAILURE")
-                rospy.loginfo("setting scan to the last one")
-                scan = self.last_scan
+                if self.previous_scan:
+                    rospy.loginfo("SIMULATING SCAN REPETITION FAILURE")
+                    scan = self.previous_scan
+                else:
+                    rospy.loginfo("cannot simulate scan repitition failure - there is no previous scan - wait until there is one..")
             
+            rospy.loginfo("publishing scan with: %s", scan.header)
             self.scan_pub.publish(scan)
         else:
             rospy.loginfo("SIMULATING TOTAL SENSOR FAILURE..")
 
-        self.last_scan = scan
+        self.previous_scan = scan
 
 
 def node():
