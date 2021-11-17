@@ -5,6 +5,9 @@ from std_msgs.msg import String
 from execution_monitoring import config
 import hashlib
 
+# TODO: implement with dynamic reconfigure
+SCAN_VALUES_LB_PERCENTAGE = 5
+
 class SensorMonitoring:
 
     def __init__(self):
@@ -38,12 +41,8 @@ class SensorMonitoring:
                 rospy.loginfo("sensor failure detected: %s", config.SENSOR_FAILURE_TWO)
                 self.contingency_pub.publish(config.SENSOR_FAILURE_TWO)
             else:
-                all_max = True
-                for val in scan.ranges:
-                    if val != scan.range_max:
-                        all_max = False
-                        break
-                if all_max:
+                feasible_scans = [s for s in scan.ranges if s != float('inf')]
+                if float(len(feasible_scans)) / float(len(scan.ranges)) * 100.0 < SCAN_VALUES_LB_PERCENTAGE:
                     rospy.loginfo("sensor failure detected: %s", config.SENSOR_FAILURE_THREE)
                     self.contingency_pub.publish(config.SENSOR_FAILURE_THREE)
                 elif self.previous_scan and self.repeated_scan(scan):
