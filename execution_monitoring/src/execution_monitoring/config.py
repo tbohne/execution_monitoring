@@ -7,3 +7,4 @@ SENSOR_FAILURE_FOUR = "repeated scan"
 
 SCAN_PATH = "/home/docker/catkin_ws/src/execution_monitoring/execution_monitoring/scans/"
 SCAN_TIME_LIMIT = 60
+SCAN_FILE_EXTENSION = ".txt"

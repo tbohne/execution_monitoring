@@ -14,16 +14,17 @@ class DataMonitoring:
     
     def count_scan_entries(self):
         scan_cnt = 0
-        with open(config.SCAN_PATH + self.mission_name + ".txt", 'r') as scan_log_file:
+        with open(config.SCAN_PATH + self.mission_name + config.SCAN_FILE_EXTENSION, 'r') as scan_log_file:
             for l in scan_log_file.readlines():
                 # new scan begins
                 if "header" in l:
                     scan_cnt += 1
         return scan_cnt
 
+    # TODO: pretty specific what happens there, should be part of an optional specific module
     def data_management_failure_monitoring(self, msg):
         rospy.loginfo("start data management monitoring..")
-        log_file = Path(config.SCAN_PATH + self.mission_name + ".txt")
+        log_file = Path(config.SCAN_PATH + self.mission_name + config.SCAN_FILE_EXTENSION)
         scan_cnt_before = 0
         if log_file.is_file():
             rospy.loginfo("reading file before scan logging..")

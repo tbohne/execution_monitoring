@@ -43,9 +43,13 @@ class DummyScanner():
             if self.mission_name == "":
                 self.mission_name = "unknown"
                 rospy.loginfo("no mission name published - storing scans in %s", config.SCAN_PATH + self.mission_name + ".txt")
-            with open(config.SCAN_PATH + self.mission_name + ".txt", 'a') as out_file:
-                out_file.write(str(scan))
-                out_file.write("\n############################################\n############################################\n")
+
+            try:
+                with open(config.SCAN_PATH + self.mission_name + config.SCAN_FILE_EXTENSION, 'a') as out_file:
+                    out_file.write(str(scan))
+                    out_file.write("\n############################################\n############################################\n")
+            except Exception as e:
+                rospy.loginfo("EXCEPTION during scan logging: %s", e)
 
         self.result.result = "scanning successfully completed"
         self.server.set_succeeded(self.result)
