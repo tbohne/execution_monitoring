@@ -64,7 +64,7 @@ class SensorMonitoring:
 def node():
     rospy.init_node('sensor_monitoring')
     rospy.wait_for_message('SMACH_runnning', String)
-    rospy.loginfo("launch monitoring..")
+    rospy.loginfo("launch sensor monitoring..")
     SensorMonitoring()
     rospy.spin()
 

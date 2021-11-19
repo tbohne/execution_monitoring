@@ -163,6 +163,7 @@ catkin_install_python(PROGRAMS
   scripts/operation.py
   scripts/dummy_scanner.py
   scripts/sensor_monitoring.py
+  scripts/data_monitoring.py
   scripts/resolver.py
   scripts/republish_velodyne.py
   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
