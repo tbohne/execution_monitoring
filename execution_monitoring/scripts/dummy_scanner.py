@@ -13,14 +13,17 @@ class DummyScanner():
     def __init__(self):
         rospy.loginfo("initializing dummy scanner - waiting for tasks..")
         self.perform_action_pub = rospy.Publisher('/scan_action', String, queue_size=1)
+        self.mission_name_sub = rospy.Subscriber('/mission_name', String, self.mission_name_callback, queue_size=1)
         self.server = actionlib.SimpleActionServer('dummy_scanner', ScanAction, execute_cb=self.execute_cb, auto_start=False)
         self.result = ScanResult()
+        self.mission_name = ""
         self.server.start()
+
+    def mission_name_callback(self, mission_name):
+        self.mission_name = mission_name.data.strip().replace(" ", "_").replace(",", "_").replace("__", "_").replace(":", "_")
 
     def execute_cb(self, goal):
         # TODO put name of the mission in goal to set it as file name of the scan results
-        file_name = "test.txt"
-        rospy.loginfo(goal)
         rospy.loginfo("start scanning procedure..")
         scan = None
 
@@ -36,8 +39,12 @@ class DummyScanner():
             rospy.loginfo("recorded scan..")
             rospy.loginfo("scan header: %s", scan.header)
             # TODO: replace absolute path - should be launch parameter
-            with open("/home/docker/catkin_ws/src/execution_monitoring/execution_monitoring/scans/" + file_name, 'a') as out_file:
-                out_file.write(str(scan.header))
+            scan_path = "/home/docker/catkin_ws/src/execution_monitoring/execution_monitoring/scans/"
+            if self.mission_name == "":
+                self.mission_name = "unknown"
+                rospy.loginfo("no mission name published - storing scans in %s", scan_path + self.mission_name + ".txt")
+            with open(scan_path + self.mission_name + ".txt", 'a') as out_file:
+                out_file.write(str(scan))
                 out_file.write("\n############################################\n############################################\n")
 
         self.result.result = "scanning successfully completed"

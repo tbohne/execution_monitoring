@@ -11,6 +11,8 @@ from arox_navigation_flex.msg import drive_to_goalGoal as dtg_Goal
 from execution_monitoring.msg import ScanAction, ScanGoal
 from arox_performance_parameters.msg import arox_operational_param
 from arox_performance_parameters.msg import arox_battery_params
+from std_msgs.msg import String
+from datetime import datetime
 
 # TODO: put into parameter in launch file
 BASE_POSE = [52.3203191407, 8.153625154949, 270]
@@ -21,6 +23,8 @@ class Idle(smach.State):
         smach.State.__init__(self, outcomes=['waiting_for_plan', 'plan_received', 'end_of_episode_signal', 'external_problem'], 
                              input_keys=['input_plan'],
                              output_keys=['output_plan'])
+        
+        self.mission_name_pub = rospy.Publisher('/mission_name', String, queue_size=1)
 
     @staticmethod
     def get_plan():        
@@ -57,6 +61,7 @@ class Idle(smach.State):
         if plan is not None:
             rospy.loginfo("received plan..")
             userdata.output_plan = plan
+            self.mission_name_pub.publish(datetime.fromtimestamp(rospy.get_time()).strftime("%A, %B %d, %Y %I:%M:%S"))
             return "plan_received"
         else:
             rospy.loginfo("waiting for plan..")
