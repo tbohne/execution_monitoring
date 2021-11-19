@@ -4,6 +4,7 @@ import actionlib
 from execution_monitoring.msg import ScanAction, ScanResult
 from sensor_msgs.msg import LaserScan
 from std_msgs.msg import String
+from execution_monitoring import util, config
 
 class DummyScanner():
     """
@@ -20,7 +21,7 @@ class DummyScanner():
         self.server.start()
 
     def mission_name_callback(self, mission_name):
-        self.mission_name = mission_name.data.strip().replace(" ", "_").replace(",", "_").replace("__", "_").replace(":", "_")
+        self.mission_name = util.parse_mission_name(mission_name)
 
     def execute_cb(self, goal):
         # TODO put name of the mission in goal to set it as file name of the scan results
@@ -30,7 +31,7 @@ class DummyScanner():
         try:
             self.perform_action_pub.publish("action")
             # create a new subscription to the topic, receive one message, then unsubscribe
-            scan = rospy.wait_for_message("/RIEGL", LaserScan, timeout=60)
+            scan = rospy.wait_for_message("/RIEGL", LaserScan, timeout=config.SCAN_TIME_LIMIT)
         except rospy.ROSException as e:
             rospy.loginfo("problem retrieving laser scan: %s", e)
         rospy.sleep(3)
@@ -39,11 +40,10 @@ class DummyScanner():
             rospy.loginfo("recorded scan..")
             rospy.loginfo("scan header: %s", scan.header)
             # TODO: replace absolute path - should be launch parameter
-            scan_path = "/home/docker/catkin_ws/src/execution_monitoring/execution_monitoring/scans/"
             if self.mission_name == "":
                 self.mission_name = "unknown"
-                rospy.loginfo("no mission name published - storing scans in %s", scan_path + self.mission_name + ".txt")
-            with open(scan_path + self.mission_name + ".txt", 'a') as out_file:
+                rospy.loginfo("no mission name published - storing scans in %s", config.SCAN_PATH + self.mission_name + ".txt")
+            with open(config.SCAN_PATH + self.mission_name + ".txt", 'a') as out_file:
                 out_file.write(str(scan))
                 out_file.write("\n############################################\n############################################\n")
 
