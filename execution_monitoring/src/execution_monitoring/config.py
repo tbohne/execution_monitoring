@@ -5,6 +5,11 @@ SENSOR_FAILURE_TWO = "empty list of range values"
 SENSOR_FAILURE_THREE = "look to the sky"
 SENSOR_FAILURE_FOUR = "repeated scan"
 
+DATA_MANAGEMENT_FAILURE_ONE = "full memory"
+DATA_MANAGEMENT_FAILURE_TWO = "scan not logged correctly"
+
 SCAN_PATH = "/home/docker/catkin_ws/src/execution_monitoring/execution_monitoring/scans/"
 SCAN_TIME_LIMIT = 60
 SCAN_FILE_EXTENSION = ".txt"
+
+MONITOR_DRIVE = "/"
