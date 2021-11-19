@@ -162,7 +162,7 @@ catkin_install_python(PROGRAMS
   scripts/high_level_smach.py
   scripts/operation.py
   scripts/dummy_scanner.py
-  scripts/monitoring.py
+  scripts/sensor_monitoring.py
   scripts/resolver.py
   scripts/republish_velodyne.py
   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}

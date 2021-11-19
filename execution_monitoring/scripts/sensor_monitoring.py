@@ -8,36 +8,6 @@ import hashlib
 # TODO: implement with dynamic reconfigure
 SCAN_VALUES_LB_PERCENTAGE = 5
 
-class DataManagementMonitoring:
-
-    def __init__(self):
-        self.contingency_pub = rospy.Publisher('/contingency_preemption', String, queue_size=1)
-        self.catastrophe_pub = rospy.Publisher('/catastrophe_preemption', String, queue_size=1)
-        self.scan_action_sub = rospy.Subscriber('/scan_action', String, self.data_management_failure_monitoring, queue_size=1)
-        self.mission_name_sub = rospy.Subscriber('/mission_name', String, self.mission_name_callback, queue_size=1)
-
-    def data_management_failure_monitoring(self, msg):
-        rospy.loginfo("start data management monitoring..")
-        # read file - count current entries
-        # wait a minute or so
-        # count entries again - should be one more -> check the latest..
-
-        rospy.loginfor("reading file before scan logging..")
-        with open(config.SCAN_PATH + self.mission_name + ".txt", 'r') as scan_log_file:
-            for l in scan_log_file.readlines():
-                rospy.loginfo(l)
-
-        rospy.sleep(config.SCAN_TIME_LIMIT)
-
-        rospy.loginfor("reading file after scan logging..")
-        with open(config.SCAN_PATH + self.mission_name + ".txt", 'r') as scan_log_file:
-            for l in scan_log_file.readlines():
-                rospy.loginfo(l)
-
-
-    def mission_name_callback(self, mission_name):
-        self.mission_name = util.parse_mission_name(mission_name)
-
 
 class SensorMonitoring:
 
@@ -89,14 +59,13 @@ class SensorMonitoring:
         else:
             rospy.loginfo("sensor failure detected: %s", config.SENSOR_FAILURE_ONE)
             self.contingency_pub.publish(config.SENSOR_FAILURE_ONE)
-    
+
 
 def node():
-    rospy.init_node('monitoring')
+    rospy.init_node('sensor_monitoring')
     rospy.wait_for_message('SMACH_runnning', String)
     rospy.loginfo("launch monitoring..")
     SensorMonitoring()
-    DataManagementMonitoring()
     rospy.spin()
 
 if __name__ == '__main__':
