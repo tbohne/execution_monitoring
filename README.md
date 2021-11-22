@@ -24,10 +24,16 @@
 ## Simulate LTA problems
 
 - **sensor failures**
-    - **total sensor failur:** `rostopic pub -1 /toggle_simulated_total_sensor_failure std_msgs/String fail`
+    - **total sensor failure:** `rostopic pub -1 /toggle_simulated_total_sensor_failure std_msgs/String fail`
     - **empty list of range values:** `rostopic pub -1 /toggle_simulated_empty_ranges std_msgs/String fail`
     - **predominantly impermissible values:** `rostopic pub -1 /toggle_simulated_impermissible_ranges std_msgs/String fail`
     - **repeated scan:** `rostopic pub -1 /toggle_simulated_scan_repetition std_msgs/String fail`
+- **connection failures**
+    - **WiFi failures**
+        - **poor link quality:** `rostopic pub -1 /toggle_simulated_bad_wifi_link std_msgs/String fail`
+        - **poor signal:** `rostopic pub -1 /toggle_simulated_bad_wifi_signal std_msgs/String fail`
+        - **poor bit rate:** `rostopic pub -1 /toggle_simulated_bad_wifi_bit_rate std_msgs/String fail`
+        - **disconnect:** `rostopic pub -1 /toggle_simulated_wifi_disconnect std_msgs/String fail`
 
 ## Communication with Human Operator
 
