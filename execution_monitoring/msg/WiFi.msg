@@ -1,0 +1,3 @@
+float32 link_quality
+float32 signal_level
+float32 bit_rate

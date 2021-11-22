@@ -12,6 +12,7 @@ find_package(catkin REQUIRED COMPONENTS
   rospy
   std_msgs
   actionlib_msgs
+  message_generation
 )
 
 ## System dependencies are found with CMake's conventions
@@ -48,9 +49,10 @@ catkin_python_setup()
 ##   * add every package in MSG_DEP_SET to generate_messages(DEPENDENCIES ...)
 
 ## Generate messages in the 'msg' folder
-# add_message_files(
-#   FILES
-# )
+add_message_files(
+  FILES
+  WiFi.msg
+)
 
 ## Generate services in the 'srv' folder
 # add_service_files(
@@ -104,7 +106,7 @@ generate_messages(
 catkin_package(
 #  INCLUDE_DIRS include
 #  LIBRARIES execution_monitoring
-  CATKIN_DEPENDS roscpp rospy std_msgs actionlib_msgs
+  CATKIN_DEPENDS roscpp rospy std_msgs actionlib_msgs message_runtime
 #  DEPENDS system_lib
 )
 
@@ -164,6 +166,7 @@ catkin_install_python(PROGRAMS
   scripts/dummy_scanner.py
   scripts/sensor_monitoring.py
   scripts/data_monitoring.py
+  scripts/connection_monitoring.py
   scripts/resolver.py
   scripts/republish_velodyne.py
   scripts/os_specific/wifi_monitor.py
