@@ -166,6 +166,7 @@ catkin_install_python(PROGRAMS
   scripts/data_monitoring.py
   scripts/resolver.py
   scripts/republish_velodyne.py
+  scripts/os_specific/wifi_monitor.py
   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
 
