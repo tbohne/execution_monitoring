@@ -6,6 +6,11 @@ SENSOR_FAILURE_TWO = "empty list of range values"
 SENSOR_FAILURE_THREE = "look to the sky"
 SENSOR_FAILURE_FOUR = "repeated scan"
 
+# CONNECTION FAILURES
+CONNECTION_FAILURE_ONE = "wifi_bad_link"
+CONNECTION_FAILURE_TWO = "wifi_bad_signal"
+CONNECTION_FAILURE_THREE = "wifi_bad_bit_rate"
+
 # DATA MANAGEMENT FAILURES
 DATA_MANAGEMENT_FAILURE_ONE = "full memory"
 DATA_MANAGEMENT_FAILURE_TWO = "scan not logged correctly"
