@@ -11,6 +11,13 @@ class ConnectionMonitoring:
         self.catastrophe_pub = rospy.Publisher('/catastrophe_preemption', String, queue_size=1)
         self.wifi_info_sub = rospy.Subscriber('/wifi_connectivity_info', WiFi, self.wifi_callback, queue_size=1)
 
+    def check_disconnect(self, wifi_info):
+        if wifi_info.link_quality == wifi_info.signal_level == wifi_info.bit_rate == 0:
+            rospy.loginfo("detected wifi disconnect..")
+            self.contingency_pub.publish(config.CONNECTION_FAILURE_FOUR)
+            return True
+        return False
+
     def check_link_quality(self, link_quality):
         if link_quality < 5:
             rospy.loginfo("detected critically bad wifi link of %s%% - should be fixed..", link_quality)
@@ -39,9 +46,10 @@ class ConnectionMonitoring:
     def wifi_callback(self, wifi_info):
         rospy.loginfo("receiving new wifi info..")
         rospy.loginfo("link quality: %s%%, signal level: %s dBm, bit rate: %s Mb/s",  "{:4.2f}".format(wifi_info.link_quality),  "{:4.2f}".format(wifi_info.signal_level),  "{:4.2f}".format(wifi_info.bit_rate))
-        self.check_link_quality(wifi_info.link_quality)
-        self.check_signal_level(wifi_info.signal_level)
-        self.check_bit_rate(wifi_info.bit_rate)
+        if not self.check_disconnect(wifi_info):
+            self.check_link_quality(wifi_info.link_quality)
+            self.check_signal_level(wifi_info.signal_level)
+            self.check_bit_rate(wifi_info.bit_rate)
 
 def node():
     rospy.init_node('connection_monitoring')
