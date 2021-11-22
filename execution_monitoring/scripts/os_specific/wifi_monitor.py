@@ -7,6 +7,24 @@ from execution_monitoring.msg import WiFi
 from execution_monitoring import config
 
 class WiFiMonitor:
+    """
+    Operating system specific node that transfers information about the wifi connection into the ROS world.
+    Expected format and information: WiFi.msg
+    
+        - link_quality (%): measure of how good the link is (including signal strength, speed, packet loss, retries, etc.)
+        - signal_level (dBm): received signal strength indication (RSSI)
+            - dBm (decibel-milliwatts) - commonly used metric to measure wifi signal strength or power
+            - [https://www.netspotapp.com/what-is-rssi-level.html]
+            - -50 dBm excellent
+            - -60 dBm very good
+            - -70 dBm good
+            - -80 dBm low
+            - -90 dBm ver low
+            - -100 dBm no signal       
+        - bit_rate (Mb/s): speed at which bits are transmitted over the medium
+
+    If the wifi is not connected at all, such an OS-specific wifi connection monitoring node is expected to set all three values to 0.
+    """
 
     def __init__(self):
         self.wifi_info_pub = rospy.Publisher('/wifi_connectivity_info', WiFi, queue_size=1)
