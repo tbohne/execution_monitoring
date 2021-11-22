@@ -3,13 +3,18 @@
 # SCAN FAILURES
 SENSOR_FAILURE_ONE = "total sensor failure"
 SENSOR_FAILURE_TWO = "empty list of range values"
-SENSOR_FAILURE_THREE = "look to the sky"
+SENSOR_FAILURE_THREE = "predominantly infeasible range values (inf)"
 SENSOR_FAILURE_FOUR = "repeated scan"
 
 # CONNECTION FAILURES
-CONNECTION_FAILURE_ONE = "wifi_bad_link"
-CONNECTION_FAILURE_TWO = "wifi_bad_signal"
-CONNECTION_FAILURE_THREE = "wifi_bad_bit_rate"
+CONNECTION_FAILURE_ONE = "bad wifi link"
+CONNECTION_FAILURE_TWO = "bad wifi signal"
+CONNECTION_FAILURE_THREE = "bad wifi bitrate"
+CONNECTION_FAILURE_FOUR = "wifi disconnect"
+BAD_WIFI_LINK_QUALITY = 2
+BAD_WIFI_SIGNAL_LEVEL = -100
+BAD_WIFI_BIT_RATE = 0.1
+WIFI_DISCONNECT = 0
 
 # DATA MANAGEMENT FAILURES
 DATA_MANAGEMENT_FAILURE_ONE = "full memory"
