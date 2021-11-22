@@ -11,7 +11,7 @@ class ConnectionMonitoring:
 
     def wifi_callback(self, wifi_info):
         rospy.loginfo("receiving new wifi info..")
-        rospy.loginfo(wifi_info)
+        rospy.loginfo("link quality: %s%%, signal level: %s dBm, bit rate: %s Mb/s",  "{:4.2f}".format(wifi_info.link_quality),  "{:4.2f}".format(wifi_info.signal_level),  "{:4.2f}".format(wifi_info.bit_rate))
 
 def node():
     rospy.init_node('connection_monitoring')

@@ -15,12 +15,12 @@ class WiFiMonitor:
     def now(self):
         return datetime.datetime.now().strftime("%Y-%m-%d %H:%M")
 
-    def parse_relevant_parameters(selfl, iwconfig_input):
+    def parse_relevant_parameters(self, iwconfig_input):
         first = re.search(r"Link Quality.*", iwconfig_input).group(0).strip().split("  ")
         sec = re.search(r"Bit Rate.*", iwconfig_input).group(0).strip().split("  ")
         link_quality, link_quality_UB = first[0].split("=")[1].split("/")
-        link_quality_percentage = round(float(link_quality) / float(link_quality_UB) * 100, 2)
-        signal_level = int(first[1].split("=")[1].split(" ")[0])
+        link_quality_percentage = float(link_quality) / float(link_quality_UB) * 100
+        signal_level = float(first[1].split("=")[1].split(" ")[0])
         bit_rate = float(sec[0].split("=")[1].split(" ")[0])
         return link_quality_percentage, signal_level, bit_rate
 
@@ -29,7 +29,7 @@ class WiFiMonitor:
             p = subprocess.Popen(["iwconfig", config.WIFI_INTERFACE], stdout=subprocess.PIPE)
             out, err = p.communicate()
             link_quality, signal_level, bit_rate = self.parse_relevant_parameters(out)
-            rospy.loginfo("%s --- link quality: %s%%, signal level: %s dBm, bit rate: %s Mb/s", self.now(), link_quality, signal_level, bit_rate)
+            rospy.loginfo("%s --- link quality: %s%%, signal level: %s dBm, bit rate: %s Mb/s", self.now(), "{:4.2f}".format(link_quality), "{:4.2f}".format(signal_level), "{:4.2f}".format(bit_rate))
 
             wifi_msg = WiFi()
             wifi_msg.link_quality = link_quality
