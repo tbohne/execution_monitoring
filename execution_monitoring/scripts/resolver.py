@@ -41,9 +41,9 @@ class SensorFailureResolver:
     def __init__(self):
         self.resolve_sub = rospy.Subscriber('/resolve_sensor_failure', String, self.resolve_callback, queue_size=1)
         self.fallback_sub = rospy.Subscriber("/fallback_success", Bool, self.fallback_callback, queue_size=1)
-        self.toggle_sensor_failure_one_pub = rospy.Publisher("/toggle_simulated_sensor_failure", String, queue_size=1)
+        self.toggle_sensor_failure_one_pub = rospy.Publisher("/toggle_simulated_total_sensor_failure", String, queue_size=1)
         self.toggle_sensor_failure_two_pub = rospy.Publisher("/toggle_simulated_empty_ranges", String, queue_size=1)
-        self.toggle_sensor_failure_three_pub = rospy.Publisher("/toggle_simulated_look_to_sky", String, queue_size=1)
+        self.toggle_sensor_failure_three_pub = rospy.Publisher("/toggle_simulated_impermissible_ranges", String, queue_size=1)
         self.toggle_sensor_failure_four_pub = rospy.Publisher("/toggle_simulated_scan_repetition", String, queue_size=1)
         self.success_pub = rospy.Publisher('/resolve_sensor_failure_success', Bool, queue_size=1)
         self.fallback_pub = rospy.Publisher('/request_fallback', String, queue_size=1)

@@ -20,9 +20,9 @@ class RepublishVelodyne:
 
         self.previous_scan = None
 
-        rospy.Subscriber("/toggle_simulated_sensor_failure", String, self.toggle_sensor_failure_callback, queue_size=1)
+        rospy.Subscriber("/toggle_simulated_total_sensor_failure", String, self.toggle_sensor_failure_callback, queue_size=1)
         rospy.Subscriber("/toggle_simulated_empty_ranges", String, self.toggle_empty_ranges_callback, queue_size=1)
-        rospy.Subscriber("/toggle_simulated_look_to_sky", String, self.toggle_look_to_sky_callback, queue_size=1)
+        rospy.Subscriber("/toggle_simulated_impermissible_ranges", String, self.toggle_look_to_sky_callback, queue_size=1)
         rospy.Subscriber("/toggle_simulated_scan_repetition", String, self.toggle_scan_repetition_callback, queue_size=1)
 
         self.scan_action_sub = rospy.Subscriber('/scan_action', String, self.action_callback, queue_size=1)
