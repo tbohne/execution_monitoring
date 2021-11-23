@@ -74,12 +74,20 @@ class ExecutePlan(smach.State):
         smach.State.__init__(self, outcomes=['action_completed', 'plan_completed', 'soft_failure', 'hard_failure', 'external_problem'],
                              input_keys=['plan'])
 
+        self.interrupt_active_goals_sub = rospy.Subscriber('/interrupt_active_goals', String, self.interrupt_active_goals, queue_size=1)
+        self.drive_to_goal_client = actionlib.SimpleActionClient('drive_to_goal', drive_to_goalAction)
+        self.scan_client = actionlib.SimpleActionClient('dummy_scanner', ScanAction)
+
         rospy.Subscriber('/arox/battery_param', arox_battery_params, self.battery_callback, queue_size=1)
         self.operation_pub = rospy.Publisher('arox/ongoing_operation', arox_operational_param, queue_size=1)
         self.battery_discharged = False
         self.remaining_tasks = 0
         self.completed_tasks = 0
         self.latest_action = None
+
+    def interrupt_active_goals(self, msg):
+        self.drive_to_goal_client.cancel_all_goals()
+        self.scan_client.cancel_all_goals()
 
     def publish_state_of_ongoing_operation(self, mode):
         msg = arox_operational_param()
@@ -93,8 +101,6 @@ class ExecutePlan(smach.State):
         if data.charge == 0.0:
             self.battery_discharged = True
             rospy.loginfo("battery completely discharged..")
-            client = actionlib.SimpleActionClient('drive_to_goal', drive_to_goalAction)
-            client.cancel_all_goals()
 
     def perform_action(self, action):
         global BASE_POSE
@@ -108,7 +114,6 @@ class ExecutePlan(smach.State):
             if action.name == "return_to_base":
                 action.pose = BASE_POSE
 
-            client = actionlib.SimpleActionClient('drive_to_goal', drive_to_goalAction)
             action_goal = dtg_Goal()
             # TODO: could we use wgs84 here?
             action_goal.target_pose.header.frame_id = "utm"
@@ -128,10 +133,10 @@ class ExecutePlan(smach.State):
             action_goal.target_pose.pose.orientation.y = q[1]
             action_goal.target_pose.pose.orientation.z = q[2]
             action_goal.target_pose.pose.orientation.w = q[3]
-            client.wait_for_server()
-            client.send_goal(action_goal)
+            self.drive_to_goal_client.wait_for_server()
+            self.drive_to_goal_client.send_goal(action_goal)
             rospy.loginfo("goal sent, wait for accomplishment..")
-            success = client.wait_for_result()
+            success = self.drive_to_goal_client.wait_for_result()
             rospy.loginfo("successfully performed action: %s", success)
 
             return success
@@ -139,14 +144,13 @@ class ExecutePlan(smach.State):
         elif action.name == "scan":
             self.publish_state_of_ongoing_operation("scanning")
             rospy.loginfo("start scanning procedure..")
-            client = actionlib.SimpleActionClient('dummy_scanner', ScanAction)
             action_goal = ScanGoal()
-            client.wait_for_server()
-            client.send_goal(action_goal)
+            self.scan_client.wait_for_server()
+            self.scan_client.send_goal(action_goal)
             rospy.loginfo("goal sent, wait for accomplishment..")
-            success = client.wait_for_result()
+            success = self.scan_client.wait_for_result()
             rospy.loginfo("successfully performed action: %s", success)
-            rospy.loginfo(client.get_result())
+            rospy.loginfo(self.scan_client.get_result())
             return success
 
         elif action.name == "charge":
