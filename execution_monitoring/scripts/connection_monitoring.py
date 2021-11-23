@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 import rospy
-from std_msgs.msg import String
+from std_msgs.msg import String, Bool
 from execution_monitoring.msg import WiFi
 from execution_monitoring import util, config
 
@@ -10,11 +10,17 @@ class ConnectionMonitoring:
         self.contingency_pub = rospy.Publisher('/contingency_preemption', String, queue_size=1)
         self.catastrophe_pub = rospy.Publisher('/catastrophe_preemption', String, queue_size=1)
         self.wifi_info_sub = rospy.Subscriber('/wifi_connectivity_info', WiFi, self.wifi_callback, queue_size=1)
+        self.resolve_sub = rospy.Subscriber('/resolve_wifi_failure_success', Bool, self.resolve_callback, queue_size=1)
+        self.active_monitoring = True
+
+    def resolve_callback(self, msg):
+        self.active_monitoring = True
 
     def check_disconnect(self, wifi_info):
         if wifi_info.link_quality == wifi_info.signal_level == wifi_info.bit_rate == 0:
             rospy.loginfo("detected wifi disconnect..")
             self.contingency_pub.publish(config.CONNECTION_FAILURE_FOUR)
+            self.active_monitoring = False
             return True
         return False
 
@@ -22,6 +28,7 @@ class ConnectionMonitoring:
         if link_quality < 5:
             rospy.loginfo("detected critically bad wifi link of %s%% - should be fixed..", link_quality)
             self.contingency_pub.publish(config.CONNECTION_FAILURE_ONE)
+            self.active_monitoring = False
         elif link_quality < 25:
             rospy.loginfo("detected bad wifi link of %s%%..", link_quality)
         elif link_quality < 50:
@@ -31,6 +38,7 @@ class ConnectionMonitoring:
         if signal_level < -95:
             rospy.loginfo("detected critically bad wifi signal level of %s dBm - no signal..", signal_level)
             self.contingency_pub.publish(config.CONNECTION_FAILURE_TWO)
+            self.active_monitoring = False
         elif signal_level < -85:
             rospy.loginfo("detected very low wifi signal level of %s dBm", signal_level)
         elif signal_level < -75:
@@ -40,20 +48,22 @@ class ConnectionMonitoring:
         if bit_rate < 1:
             rospy.loginfo("detected critically bad wifi bit rate of %s Mb/s", bit_rate)
             self.contingency_pub.publish(config.CONNECTION_FAILURE_THREE)
+            self.active_monitoring = False
         elif bit_rate < 20:
             rospy.loginfo("detected rather low wifi bit rate of %s Mb/s", bit_rate)
 
     def wifi_callback(self, wifi_info):
-        rospy.loginfo("receiving new wifi info..")
-        rospy.loginfo("link quality: %s%%, signal level: %s dBm, bit rate: %s Mb/s",  "{:4.2f}".format(wifi_info.link_quality),  "{:4.2f}".format(wifi_info.signal_level),  "{:4.2f}".format(wifi_info.bit_rate))
-        if not self.check_disconnect(wifi_info):
-            self.check_link_quality(wifi_info.link_quality)
-            self.check_signal_level(wifi_info.signal_level)
-            self.check_bit_rate(wifi_info.bit_rate)
+        if self.active_monitoring:
+            rospy.loginfo("receiving new wifi info..")
+            rospy.loginfo("link quality: %s%%, signal level: %s dBm, bit rate: %s Mb/s",  "{:4.2f}".format(wifi_info.link_quality),  "{:4.2f}".format(wifi_info.signal_level),  "{:4.2f}".format(wifi_info.bit_rate))
+            if not self.check_disconnect(wifi_info):
+                self.check_link_quality(wifi_info.link_quality)
+                self.check_signal_level(wifi_info.signal_level)
+                self.check_bit_rate(wifi_info.bit_rate)
 
 def node():
     rospy.init_node('connection_monitoring')
-    # rospy.wait_for_message('SMACH_runnning', String)
+    rospy.wait_for_message('SMACH_runnning', String)
     rospy.loginfo("launch connection monitoring..")
     ConnectionMonitoring()
     rospy.spin()
