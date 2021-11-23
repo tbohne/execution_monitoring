@@ -36,6 +36,73 @@ class FallbackResolver:
         self.problem_resolved = True
 
 
+class WiFiFailureResolver:
+
+    def __init__(self):
+        self.resolve_sub = rospy.Subscriber('/resolve_wifi_failure', String, self.resolve_callback, queue_size=1)
+        self.fallback_sub = rospy.Subscriber("/fallback_success", Bool, self.fallback_callback, queue_size=1)
+        self.success_pub = rospy.Publisher('/resolve_wifi_failure_success', Bool, queue_size=1)
+        self.fallback_pub = rospy.Publisher('/request_fallback', String, queue_size=1)
+        self.toggle_wifi_failure_one_pub = rospy.Publisher("/toggle_simulated_bad_wifi_link", String, queue_size=1)
+        self.toggle_wifi_failure_two_pub = rospy.Publisher("/toggle_simulated_bad_wifi_signal", String, queue_size=1)
+        self.toggle_wifi_failure_three_pub = rospy.Publisher("/toggle_simulated_bad_wifi_bit_rate", String, queue_size=1)
+        self.toggle_wifi_failure_four_pub = rospy.Publisher("/toggle_simulated_wifi_disconnect", String, queue_size=1)
+        self.problem_resolved = False
+
+    def resolve_callback(self, msg):
+        rospy.loginfo("launch wifi failure resolver..")
+        rospy.loginfo("type of wifi failure: %s", msg.data)
+        self.problem_resolved = False
+
+        # different types of resolution are required based on the type of issue
+        if msg.data == config.CONNECTION_FAILURE_ONE:
+            self.resolve_type_one_failure(config.CONNECTION_FAILURE_ONE)
+        elif msg.data == config.CONNECTION_FAILURE_TWO:
+            self.resolve_type_two_failure(config.CONNECTION_FAILURE_TWO)
+        elif msg.data == config.CONNECTION_FAILURE_THREE:
+            self.resolve_type_three_failure(config.CONNECTION_FAILURE_THREE)
+        elif msg.data == config.CONNECTION_FAILURE_FOUR:
+            self.resolve_type_four_failure(config.CONNECTION_FAILURE_FOUR)
+
+        if self.problem_resolved:
+            self.success_pub.publish(True)
+
+    def fallback_callback(self, msg):
+        if msg.data:
+            rospy.loginfo("solved by fallback resolver: %s", msg.data)
+            self.problem_resolved = True
+        else:
+            rospy.loginfo("fallback solution was not successful..")
+
+    def resolve_type_one_failure(self, msg):
+        rospy.loginfo("resolve type one failure..")
+        self.fallback_pub.publish(msg)
+        while not self.problem_resolved:
+            rospy.sleep(5)
+        self.toggle_wifi_failure_one_pub.publish("")
+
+    def resolve_type_two_failure(self, msg):
+        rospy.loginfo("resolve type two failure..")
+        self.fallback_pub.publish(msg)
+        while not self.problem_resolved:
+            rospy.sleep(5)
+        self.toggle_wifi_failure_two_pub.publish("")
+
+    def resolve_type_three_failure(self, msg):
+        rospy.loginfo("resolve type three failure..")
+        self.fallback_pub.publish(msg)
+        while not self.problem_resolved:
+            rospy.sleep(5)
+        self.toggle_wifi_failure_three_pub.publish("")
+
+    def resolve_type_four_failure(self, msg):
+        rospy.loginfo("resolve type four failure..")
+        self.fallback_pub.publish(msg)
+        while not self.problem_resolved:
+            rospy.sleep(5)
+        self.toggle_wifi_failure_four_pub.publish("")
+
+
 class SensorFailureResolver:
 
     def __init__(self):
@@ -106,6 +173,7 @@ def node():
     rospy.init_node('failure_resolver')
     rospy.wait_for_message('SMACH_runnning', String)
     SensorFailureResolver()
+    WiFiFailureResolver()
     FallbackResolver()
     rospy.spin()
 
