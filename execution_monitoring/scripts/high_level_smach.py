@@ -16,12 +16,14 @@ class Contingency(smach.State):
         self.successfully_resolved = False
         self.interrupt_reason_sub = rospy.Subscriber('/interrupt_reason', String, self.interrupt_reason_callback, queue_size=1)
         self.sensor_failure_resolver_pub = rospy.Publisher('/resolve_sensor_failure', String, queue_size=1)
-        self.sensor_failure_resolver_success_sub = rospy.Subscriber('/resolve_sensor_failure_success', Bool, self.resolve_sensor_failure_success_callback, queue_size=1)
+        self.wifi_failure_resolver_pub = rospy.Publisher('/resolve_wifi_failure', String, queue_size=1)
+        self.sensor_failure_resolver_success_sub = rospy.Subscriber('/resolve_sensor_failure_success', Bool, self.resolve_failure_success_callback, queue_size=1)
+        self.wifi_failure_resolver_success_sub = rospy.Subscriber('/resolve_wifi_failure_success', Bool, self.resolve_failure_success_callback, queue_size=1)
 
     def interrupt_reason_callback(self, reason):
         self.interrupt_reason = reason.data
 
-    def resolve_sensor_failure_success_callback(self, res):
+    def resolve_failure_success_callback(self, res):
         self.successfully_resolved = res.data
 
     def execute(self, userdata):
@@ -37,6 +39,16 @@ class Contingency(smach.State):
             self.sensor_failure_resolver_pub.publish(config.SENSOR_FAILURE_THREE)
         elif self.interrupt_reason == config.SENSOR_FAILURE_FOUR:
             self.sensor_failure_resolver_pub.publish(config.SENSOR_FAILURE_FOUR)
+        elif self.interrupt_reason == config.CONNECTION_FAILURE_ONE:
+            self.wifi_failure_resolver_pub.publish(config.CONNECTION_FAILURE_ONE)
+        elif self.interrupt_reason == config.CONNECTION_FAILURE_TWO:
+            self.wifi_failure_resolver_pub.publish(config.CONNECTION_FAILURE_TWO)
+        elif self.interrupt_reason == config.CONNECTION_FAILURE_THREE:
+            self.wifi_failure_resolver_pub.publish(config.CONNECTION_FAILURE_THREE)
+        elif self.interrupt_reason == config.CONNECTION_FAILURE_FOUR:
+            self.wifi_failure_resolver_pub.publish(config.CONNECTION_FAILURE_FOUR)
+        else:
+            rospy.loginfo("unkonwn interrupt reason: %s", self.interrupt_reason)
 
         # TODO: implement time limit -> if exceeded, transition to catastrophe
         while not self.successfully_resolved:
@@ -99,6 +111,7 @@ class ExecutionMonitoringStateMachine(smach.StateMachine):
         )
 
         self.interrupt_reason_pub = rospy.Publisher('/interrupt_reason', String, queue_size=1)
+        self.interrupt_active_goals_pub = rospy.Publisher('/interrupt_active_goals', String, queue_size=1)
 
         operation_monitoring = smach.Concurrence(outcomes=['minor_complication', 'critical_complication', 'end_of_episode'],
                                                  default_outcome='end_of_episode',
@@ -158,12 +171,7 @@ class ExecutionMonitoringStateMachine(smach.StateMachine):
         Needs to return False when we want the monitoring state to terminate.
         """
         self.interrupt_reason_pub.publish(msg)
-
-        # TODO: stop all move_base running goals here?
-        cancel_pub = rospy.Publisher("/move_base_flex/move_base/cancel", GoalID, queue_size=1)
-        cancel_msg = GoalID()
-        cancel_pub.publish(cancel_msg)
-
+        self.interrupt_active_goals_pub.publish("interrupt all running goals..")
         return False
 
 
