@@ -57,10 +57,6 @@ class WiFiFailureResolver(GeneralFailureResolver):
         super(WiFiFailureResolver, self).__init__()
         self.resolve_sub = rospy.Subscriber('/resolve_wifi_failure', String, self.resolve_callback, queue_size=1)
         self.success_pub = rospy.Publisher('/resolve_wifi_failure_success', Bool, queue_size=1)
-        self.toggle_wifi_failure_one_pub = rospy.Publisher("/toggle_simulated_bad_wifi_link", String, queue_size=1)
-        self.toggle_wifi_failure_two_pub = rospy.Publisher("/toggle_simulated_bad_wifi_signal", String, queue_size=1)
-        self.toggle_wifi_failure_three_pub = rospy.Publisher("/toggle_simulated_bad_wifi_bit_rate", String, queue_size=1)
-        self.toggle_wifi_failure_four_pub = rospy.Publisher("/toggle_simulated_wifi_disconnect", String, queue_size=1)
 
     def resolve_callback(self, msg):
         rospy.loginfo("launch wifi failure resolver..")
@@ -85,28 +81,24 @@ class WiFiFailureResolver(GeneralFailureResolver):
         self.fallback_pub.publish(msg)
         while not self.problem_resolved:
             rospy.sleep(5)
-        self.toggle_wifi_failure_one_pub.publish("")
 
     def resolve_type_two_failure(self, msg):
         rospy.loginfo("resolve type two failure..")
         self.fallback_pub.publish(msg)
         while not self.problem_resolved:
             rospy.sleep(5)
-        self.toggle_wifi_failure_two_pub.publish("")
 
     def resolve_type_three_failure(self, msg):
         rospy.loginfo("resolve type three failure..")
         self.fallback_pub.publish(msg)
         while not self.problem_resolved:
             rospy.sleep(5)
-        self.toggle_wifi_failure_three_pub.publish("")
 
     def resolve_type_four_failure(self, msg):
         rospy.loginfo("resolve type four failure..")
         self.fallback_pub.publish(msg)
         while not self.problem_resolved:
             rospy.sleep(5)
-        self.toggle_wifi_failure_four_pub.publish("")
 
 
 class SensorFailureResolver(GeneralFailureResolver):
@@ -115,10 +107,6 @@ class SensorFailureResolver(GeneralFailureResolver):
         super(SensorFailureResolver, self).__init__()
         self.resolve_sub = rospy.Subscriber('/resolve_sensor_failure', String, self.resolve_callback, queue_size=1)
         self.success_pub = rospy.Publisher('/resolve_sensor_failure_success', Bool, queue_size=1)
-        self.toggle_sensor_failure_one_pub = rospy.Publisher("/toggle_simulated_total_sensor_failure", String, queue_size=1)
-        self.toggle_sensor_failure_two_pub = rospy.Publisher("/toggle_simulated_empty_ranges", String, queue_size=1)
-        self.toggle_sensor_failure_three_pub = rospy.Publisher("/toggle_simulated_impermissible_ranges", String, queue_size=1)
-        self.toggle_sensor_failure_four_pub = rospy.Publisher("/toggle_simulated_scan_repetition", String, queue_size=1)
 
     def resolve_callback(self, msg):
         rospy.loginfo("launch sensor failure resolver..")
@@ -143,28 +131,24 @@ class SensorFailureResolver(GeneralFailureResolver):
         self.fallback_pub.publish(msg)
         while not self.problem_resolved:
             rospy.sleep(5)
-        self.toggle_sensor_failure_one_pub.publish("")
 
     def resolve_type_two_failure(self, msg):
         rospy.loginfo("resolve type two failure..")
         self.fallback_pub.publish(msg)
         while not self.problem_resolved:
             rospy.sleep(5)
-        self.toggle_sensor_failure_two_pub.publish("")
 
     def resolve_type_three_failure(self, msg):
         rospy.loginfo("resolve type three failure..")
         self.fallback_pub.publish(msg)
         while not self.problem_resolved:
             rospy.sleep(5)
-        self.toggle_sensor_failure_three_pub.publish("")
 
     def resolve_type_four_failure(self, msg):
         rospy.loginfo("resolve type four failure..")
         self.fallback_pub.publish(msg)
         while not self.problem_resolved:
             rospy.sleep(5)
-        self.toggle_sensor_failure_four_pub.publish("")
 
 
 def node():
