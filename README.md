@@ -34,6 +34,9 @@
         - **poor signal:** `rostopic pub -1 /toggle_simulated_bad_wifi_signal std_msgs/String fail`
         - **poor bit rate:** `rostopic pub -1 /toggle_simulated_bad_wifi_bit_rate std_msgs/String fail`
         - **disconnect:** `rostopic pub -1 /toggle_simulated_wifi_disconnect std_msgs/String fail`
+- **data management failures**
+    - **full memory:** prepare full USB stick and configure `MONITOR_DRIVE` (path to monitor) accordinglly
+    - **scan logging failure:** `rostopic pub -1 /toggle_simulated_scan_logging_failure std_msgs/String fail`
 
 ## Communication with Human Operator
 
