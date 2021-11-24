@@ -46,14 +46,14 @@ class DataMonitoring:
 
     def drive_capacity_check(self):
         disk_use = psutil.disk_usage(config.MONITOR_DRIVE)
-        if disk_use.percent > 99.9:
+        if disk_use.percent > 99.0:
             rospy.loginfo("full memory - cannot save further scans")
             self.contingency_pub.publish(config.DATA_MANAGEMENT_FAILURE_ONE)
-        elif disk_use.percent > 95:
+        elif disk_use.percent > 95.0:
             rospy.loginfo("scans should be backed up externally soon")
-        elif disk_use.percent > 90:
+        elif disk_use.percent > 90.0:
             rospy.loginfo("scans should be backed up externally soon")
-        if disk_use.percent > 90:
+        if disk_use.percent > 90.0:
             rospy.loginfo("drive capacity: %s", str(disk_use.total / (1024.0 ** 3)) + " GB")
             rospy.loginfo("percentage used: %s", disk_use.percent)
 

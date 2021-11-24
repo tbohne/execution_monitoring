@@ -20,14 +20,14 @@ WIFI_DISCONNECT = 0
 DATA_MANAGEMENT_FAILURE_ONE = "full memory"
 DATA_MANAGEMENT_FAILURE_TWO = "scan not logged correctly"
 
-# SCAN SETTINGS
-SCAN_PATH = "/home/docker/catkin_ws/src/execution_monitoring/execution_monitoring/scans/"
-SCAN_TIME_LIMIT = 60
-SCAN_FILE_EXTENSION = ".txt"
-
 # DATA MANAGEMENT SETTINGS
 MONITOR_DRIVE = "/"
 ENABLE_SPECIFIC_LASER_SCAN_CHECK = True
+
+# SCAN SETTINGS
+SCAN_PATH = MONITOR_DRIVE + "/home/docker/catkin_ws/src/execution_monitoring/execution_monitoring/scans/"
+SCAN_TIME_LIMIT = 60
+SCAN_FILE_EXTENSION = ".txt"
 
 # WIFI MONITORING
 WIFI_INTERFACE = "wlx3c1e045678a2"
