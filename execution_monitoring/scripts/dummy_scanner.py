@@ -15,6 +15,8 @@ class DummyScanner():
         rospy.loginfo("initializing dummy scanner - waiting for tasks..")
         self.perform_action_pub = rospy.Publisher('/scan_action', String, queue_size=1)
         self.mission_name_sub = rospy.Subscriber('/mission_name', String, self.mission_name_callback, queue_size=1)
+        rospy.Subscriber("/toggle_simulated_scan_logging_failure", String, self.toggle_scan_failure_callback, queue_size=1)
+        self.simulate_scan_logging_failure = False
         self.server = actionlib.SimpleActionServer('dummy_scanner', ScanAction, execute_cb=self.execute_cb, auto_start=False)
         self.result = ScanResult()
         self.mission_name = ""
@@ -23,11 +25,12 @@ class DummyScanner():
     def mission_name_callback(self, mission_name):
         self.mission_name = util.parse_mission_name(mission_name)
 
+    def toggle_scan_failure_callback(self, msg):
+        self.simulate_scan_logging_failure = not self.simulate_scan_logging_failure
+
     def execute_cb(self, goal):
-        # TODO put name of the mission in goal to set it as file name of the scan results
         rospy.loginfo("start scanning procedure..")
         scan = None
-
         try:
             self.perform_action_pub.publish("action")
             # create a new subscription to the topic, receive one message, then unsubscribe
@@ -39,17 +42,19 @@ class DummyScanner():
         if scan:
             rospy.loginfo("recorded scan..")
             rospy.loginfo("scan header: %s", scan.header)
-            # TODO: replace absolute path - should be launch parameter
             if self.mission_name == "":
                 self.mission_name = "unknown"
                 rospy.loginfo("no mission name published - storing scans in %s", config.SCAN_PATH + self.mission_name + ".txt")
 
-            try:
-                with open(config.SCAN_PATH + self.mission_name + config.SCAN_FILE_EXTENSION, 'a') as out_file:
-                    out_file.write(str(scan))
-                    out_file.write("\n############################################\n############################################\n")
-            except Exception as e:
-                rospy.loginfo("EXCEPTION during scan logging: %s", e)
+            if not self.simulate_scan_logging_failure:
+                try:
+                    with open(config.SCAN_PATH + self.mission_name + config.SCAN_FILE_EXTENSION, 'a') as out_file:
+                        out_file.write(str(scan))
+                        out_file.write("\n############################################\n############################################\n")
+                except Exception as e:
+                    rospy.loginfo("EXCEPTION during scan logging: %s", e)
+            else:
+                self.simulate_scan_logging_failure = False
 
         self.result.result = "scanning successfully completed"
         self.server.set_succeeded(self.result)
