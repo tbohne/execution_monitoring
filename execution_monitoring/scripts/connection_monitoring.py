@@ -35,11 +35,11 @@ class ConnectionMonitoring:
             rospy.loginfo("detected below-average wifi link quality of %s%%..", link_quality)
 
     def check_signal_level(self, signal_level):
-        if signal_level < -95:
+        if signal_level <= -90:
             rospy.loginfo("detected critically bad wifi signal level of %s dBm - no signal..", signal_level)
             self.contingency_pub.publish(config.CONNECTION_FAILURE_TWO)
             self.active_monitoring = False
-        elif signal_level < -85:
+        elif signal_level <= -80:
             rospy.loginfo("detected very low wifi signal level of %s dBm", signal_level)
         elif signal_level < -75:
             rospy.loginfo("detected low wifi signal level of %s dBm", signal_level)

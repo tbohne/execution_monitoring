@@ -20,7 +20,7 @@ class WiFiMonitor:
             - -60 dBm very good
             - -70 dBm good
             - -80 dBm low
-            - -90 dBm ver low
+            - -90 dBm very low
             - -100 dBm no signal
         - bit_rate (Mb/s): speed at which bits are transmitted over the medium
 
