@@ -61,7 +61,7 @@ def node():
     Dummy node to simulate the scanning procedure, i.e. to scan on command.
     """
     rospy.init_node('dummy_scanner')
-    #rospy.wait_for_message('SMACH_runnning', String)
+    rospy.wait_for_message('SMACH_runnning', String)
     server = DummyScanner()
     rospy.spin()
 
