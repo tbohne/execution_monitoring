@@ -10,6 +10,7 @@ class DataMonitoring:
     def __init__(self):
         self.contingency_pub = rospy.Publisher('/contingency_preemption', String, queue_size=1)
         self.catastrophe_pub = rospy.Publisher('/catastrophe_preemption', String, queue_size=1)
+        self.robot_info_pub = rospy.Publisher('/robot_info', String, queue_size=1)
         self.scan_action_sub = rospy.Subscriber('/scan_action', String, self.data_management_failure_monitoring, queue_size=1)
         self.mission_name_sub = rospy.Subscriber('/mission_name', String, self.mission_name_callback, queue_size=1)
 
@@ -51,11 +52,15 @@ class DataMonitoring:
             self.contingency_pub.publish(config.DATA_MANAGEMENT_FAILURE_ONE)
         elif disk_use.percent > 95.0:
             rospy.loginfo("scans should be backed up externally soon")
+            self.robot_info_pub.publish("scans should be backed up externally soon")
         elif disk_use.percent > 90.0:
             rospy.loginfo("scans should be backed up externally soon")
+            self.robot_info_pub.publish("scans should be backed up externally soon")
         if disk_use.percent > 90.0:
-            rospy.loginfo("drive capacity: %s", str(disk_use.total / (1024.0 ** 3)) + " GB")
+            used = str(disk_use.total / (1024.0 ** 3))
+            rospy.loginfo("drive capacity: %s", used + " GB")
             rospy.loginfo("percentage used: %s", disk_use.percent)
+            self.robot_info_pub.publish("drive capacity: " + str(used) + " GB, percentage used: " + str(disk_use.percent))
 
     def data_management_failure_monitoring(self, msg):
         rospy.loginfo("start data management monitoring..")

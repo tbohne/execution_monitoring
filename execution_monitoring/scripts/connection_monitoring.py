@@ -11,6 +11,7 @@ class ConnectionMonitoring:
         self.catastrophe_pub = rospy.Publisher('/catastrophe_preemption', String, queue_size=1)
         self.wifi_info_sub = rospy.Subscriber('/wifi_connectivity_info', WiFi, self.wifi_callback, queue_size=1)
         self.resolve_sub = rospy.Subscriber('/resolve_wifi_failure_success', Bool, self.resolve_callback, queue_size=1)
+        self.robot_info_pub = rospy.Publisher('/robot_info', String, queue_size=1)
         self.active_monitoring = True
 
     def resolve_callback(self, msg):
@@ -31,8 +32,10 @@ class ConnectionMonitoring:
             self.active_monitoring = False
         elif link_quality < 25:
             rospy.loginfo("detected bad wifi link of %s%%..", link_quality)
+            self.robot_info_pub.publish("detected bad wifi link of " + str(link_quality) + "%")
         elif link_quality < 50:
             rospy.loginfo("detected below-average wifi link quality of %s%%..", link_quality)
+            self.robot_info_pub.publish("detected below-average wifi link quality of " + str(link_quality) + "%")
 
     def check_signal_level(self, signal_level):
         if signal_level <= -90:
@@ -41,8 +44,10 @@ class ConnectionMonitoring:
             self.active_monitoring = False
         elif signal_level <= -80:
             rospy.loginfo("detected very low wifi signal level of %s dBm", signal_level)
+            self.robot_info_pub.publish("detected very low wifi signal level of " + str(signal_level) + "dBm")
         elif signal_level < -75:
             rospy.loginfo("detected low wifi signal level of %s dBm", signal_level)
+            self.robot_info_pub.publish("detected low wifi signal level of " + str(signal_level) + "dBm")
 
     def check_bit_rate(self, bit_rate):
         if bit_rate < 1:
@@ -51,6 +56,7 @@ class ConnectionMonitoring:
             self.active_monitoring = False
         elif bit_rate < 20:
             rospy.loginfo("detected rather low wifi bit rate of %s Mb/s", bit_rate)
+            self.robot_info_pub.publish("detected rather low wifi bit rate of " + str(bit_rate) + "Mb/s")
 
     def wifi_callback(self, wifi_info):
         if self.active_monitoring:

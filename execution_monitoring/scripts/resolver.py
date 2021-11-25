@@ -13,7 +13,8 @@ class FallbackResolver:
     def __init__(self):
         self.fallback_sub = rospy.Subscriber('/request_fallback', String, self.request_fallback, queue_size=1)
         self.human_operator_sub = rospy.Subscriber('/problem_solved', String, self.solved_by_human_callback, queue_size=1)
-        self.human_operator_pub = rospy.Publisher("/request_help", String, queue_size=1)
+        self.human_operator_contingency_pub = rospy.Publisher("/request_help_contingency", String, queue_size=1)
+        self.human_operator_catastrophe_pub = rospy.Publisher("/request_help_catastrophe", String, queue_size=1)
         self.fallback_pub = rospy.Publisher("/fallback_success", Bool, queue_size=1)
         self.problem_resolved = False
 
@@ -21,7 +22,7 @@ class FallbackResolver:
         rospy.loginfo("fallback requested.. communicating problem to human operator..")
         rospy.loginfo("problem: %s", msg.data)
         self.problem_resolved = False
-        self.human_operator_pub.publish(msg.data)
+        self.human_operator_contingency_pub.publish(msg.data)
 
         # TODO: when it takes too long it should go to CATASTROPHE
         while not self.problem_resolved:
