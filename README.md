@@ -35,10 +35,10 @@
         - **poor bit rate:** `rostopic pub -1 /toggle_simulated_bad_wifi_bit_rate std_msgs/String fail`
         - **disconnect:** `rostopic pub -1 /toggle_simulated_wifi_disconnect std_msgs/String fail`
 - **data management failures**
-    - **full memory:** prepare full USB stick and configure `MONITOR_DRIVE` (path to monitor) accordinglly
+    - **full memory:** prepare full USB flash drive and configure `MONITOR_DRIVE` (path to monitor) accordingly
         - find out device: `fdisk -l`, e.g. `/dev/sdd1`
-        - create directory for USB stick: `mkdir /mnt/usb`
-        - mount USB stick: `mount /dev/sdd1 /mnt/usb`
+        - create directory for flash drive: `mkdir /mnt/usb`
+        - mount flash drive: `mount /dev/sdd1 /mnt/usb`
         - set `MONITOR_DRIVE` to `/mnt/usb`
     - **scan logging failure:** `rostopic pub -1 /toggle_simulated_scan_logging_failure std_msgs/String fail`
 
