@@ -20,6 +20,8 @@
         - configurable via `rosrun rqt_reconfigure rqt_reconfigure`
 - **with launch file (including plan generation)**:
     - `roslaunch execution_monitoring execution_monitoring.launch`
+- OS-specific WiFi monitoring node (Ubuntu version):
+    - `rosrun execution_monitoring wifi_monitor.py `
 
 ## Simulate LTA problems
 
@@ -44,7 +46,7 @@
 
 ## Communication with Human Operator
 
-- robot requests help: `rostopic echo "/request_help"`
+- robot-human communication module: `rosrun execution_monitoring operator_communication.py`
 - human operator indicates that the problem is solved: `rostopic pub -1 /problem_solved std_msgs/String solved`
 
 ## Monitoring States
