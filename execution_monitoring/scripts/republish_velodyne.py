@@ -2,6 +2,7 @@
 import rospy
 from sensor_msgs.msg import LaserScan
 from std_msgs.msg import String
+from execution_monitoring import config
 
 class RepublishVelodyne:
     """
@@ -42,7 +43,7 @@ class RepublishVelodyne:
 
     def action_callback(self, msg):
         # create a new subscription to the topic, receive one message, then unsubscribe
-        scan = rospy.wait_for_message("/scanVelodyne", LaserScan, timeout=60)
+        scan = rospy.wait_for_message("/scanVelodyne", LaserScan, timeout=config.SCAN_TIME_LIMIT)
 
         if not self.simulate_sensor_failure:
             # no total sensor failure

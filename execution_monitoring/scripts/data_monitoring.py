@@ -20,9 +20,8 @@ class DataMonitoring:
         if log_file.is_file():
             rospy.loginfo("reading file before scan logging..")
             scan_cnt_before = self.count_scan_entries()
-        
-        # TODO: use scan time limit
-        rospy.sleep(10)
+
+        rospy.sleep(config.SCAN_TIME_LIMIT)
         rospy.loginfo("reading file after scan logging..")
         scan_cnt_after = self.count_scan_entries()
 
