@@ -18,10 +18,18 @@ class ConnectionMonitoring:
     def resolve_callback(self, msg):
         self.active_monitoring = True
 
-    def check_disconnect(self, wifi_info):
+    def check_wifi_disconnect(self, wifi_info):
         if wifi_info.link_quality == wifi_info.signal_level == wifi_info.bit_rate == 0:
             rospy.loginfo("detected wifi disconnect..")
             self.contingency_pub.publish(config.CONNECTION_FAILURE_FOUR)
+            self.active_monitoring = False
+            return True
+        return False
+
+    def check_internet_disconnect(self, internet_info):
+        if internet_info.download == internet_info.upload == 0:
+            rospy.loginfo("detected internet disconnect..")
+            self.contingency_pub.publish(config.CONNECTION_FAILURE_FIVE)
             self.active_monitoring = False
             return True
         return False
@@ -63,19 +71,36 @@ class ConnectionMonitoring:
         if self.active_monitoring:
             rospy.loginfo("receiving new wifi info..")
             rospy.loginfo("link quality: %s%%, signal level: %s dBm, bit rate: %s Mb/s",  "{:4.2f}".format(wifi_info.link_quality),  "{:4.2f}".format(wifi_info.signal_level),  "{:4.2f}".format(wifi_info.bit_rate))
-            if not self.check_disconnect(wifi_info):
+            if not self.check_wifi_disconnect(wifi_info):
                 self.check_link_quality(wifi_info.link_quality)
                 self.check_signal_level(wifi_info.signal_level)
                 self.check_bit_rate(wifi_info.bit_rate)
 
+    def check_download_speed(self, download):
+        if download < 1:
+            rospy.loginfo("detected critically bad download speed: %s Mb/s", download)
+            self.contingency_pub.publish(config.CONNECTION_FAILURE_SIX)
+            self.active_monitoring = False
+        elif download < 40:
+            rospy.loginfo("detected rather low download speed: %s Mb/s", download)
+            self.robot_info_pub.publish("detected rather low download speed of " + str(download) + " Mb/s")
+
+    def check_upload_speed(self, upload):
+        if upload < 1:
+            rospy.loginfo("detected critically bad upload speed: %s Mb/s", upload)
+            self.contingency_pub.publish(config.CONNECTION_FAILURE_SEVEN)
+            self.active_monitoring = False
+        elif upload < 10:
+            rospy.loginfo("detected rather low upload speed: %s Mb/s", upload)
+            self.robot_info_pub.publish("detected rather low upload speed of " + str(upload) + " Mb/s")
+
     def internet_callback(self, internet_info):
         if self.active_monitoring:
             rospy.loginfo("receiving new internet connection info..")
-            rospy.loginfo("download: %s, upload: %s", internet_info.download, internet_info.upload)
-            # if not self.check_disconnect(wifi_info):
-            #     self.check_link_quality(wifi_info.link_quality)
-            #     self.check_signal_level(wifi_info.signal_level)
-            #     self.check_bit_rate(wifi_info.bit_rate)
+            rospy.loginfo("download: %s Mb/s, upload: %s Mb/s", internet_info.download, internet_info.upload)
+            if not self.check_internet_disconnect(internet_info):
+                self.check_download_speed(internet_info.download)
+                self.check_upload_speed(internet_info.upload)
 
 def node():
     rospy.init_node('connection_monitoring')
