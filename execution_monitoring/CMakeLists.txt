@@ -52,6 +52,7 @@ catkin_python_setup()
 add_message_files(
   FILES
   WiFi.msg
+  Internet.msg
 )
 
 ## Generate services in the 'srv' folder
@@ -170,6 +171,7 @@ catkin_install_python(PROGRAMS
   scripts/resolver.py
   scripts/republish_velodyne.py
   scripts/operator_communication.py
+  scripts/internet_monitoring.py
   scripts/os_specific/wifi_monitor.py
   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )

@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 import rospy
 from std_msgs.msg import String, Bool
-from execution_monitoring.msg import WiFi
+from execution_monitoring.msg import WiFi, Internet
 from execution_monitoring import util, config
 
 class ConnectionMonitoring:
@@ -10,6 +10,7 @@ class ConnectionMonitoring:
         self.contingency_pub = rospy.Publisher('/contingency_preemption', String, queue_size=1)
         self.catastrophe_pub = rospy.Publisher('/catastrophe_preemption', String, queue_size=1)
         self.wifi_info_sub = rospy.Subscriber('/wifi_connectivity_info', WiFi, self.wifi_callback, queue_size=1)
+        self.internet_info_sub = rospy.Subscriber('/internet_connectivity_info', Internet, self.internet_callback, queue_size=1)
         self.resolve_sub = rospy.Subscriber('/resolve_wifi_failure_success', Bool, self.resolve_callback, queue_size=1)
         self.robot_info_pub = rospy.Publisher('/robot_info', String, queue_size=1)
         self.active_monitoring = True
@@ -66,6 +67,15 @@ class ConnectionMonitoring:
                 self.check_link_quality(wifi_info.link_quality)
                 self.check_signal_level(wifi_info.signal_level)
                 self.check_bit_rate(wifi_info.bit_rate)
+
+    def internet_callback(self, internet_info):
+        if self.active_monitoring:
+            rospy.loginfo("receiving new internet connection info..")
+            rospy.loginfo("download: %s, upload: %s", internet_info.download, internet_info.upload)
+            # if not self.check_disconnect(wifi_info):
+            #     self.check_link_quality(wifi_info.link_quality)
+            #     self.check_signal_level(wifi_info.signal_level)
+            #     self.check_bit_rate(wifi_info.bit_rate)
 
 def node():
     rospy.init_node('connection_monitoring')
