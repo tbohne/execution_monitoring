@@ -36,6 +36,8 @@ class InternetConnectionMonitor:
 
     def re_init(self, msg):
         rospy.loginfo("reinitializing internet monitoring node..%s", msg.data)
+        # wait for transition back to normal operation before trying to establish connection
+        rospy.sleep(5)
         self.connect_to_speedtest()
 
     def generate_msg(self, down, up):
