@@ -38,7 +38,7 @@ class OperatorCommunication:
 
 def node():
     rospy.init_node('operator_communication')
-    rospy.wait_for_message('SMACH_runnning', String)
+    #rospy.wait_for_message('SMACH_runnning', String)
     OperatorCommunication()
     rospy.spin()
 

@@ -3,18 +3,26 @@ import rospy
 import speedtest
 import datetime
 from execution_monitoring.msg import Internet
+from std_msgs.msg import String
 
 
 class InternetConnectionMonitor:
 
     def __init__(self):
         self.internet_info_pub = rospy.Publisher('/internet_connectivity_info', Internet, queue_size=1)
+        self.re_init_sub = rospy.Subscriber('/re_init_internet_monitoring', String, self.re_init, queue_size=1)
         try:
             self.test = speedtest.Speedtest()
             self.monitor_internet_connection()
         except Exception as e:
             rospy.loginfo("connection to speedtest API not possible: %s", e)
+            # necessary to wait for publishers / subscribers to be ready
+            rospy.sleep(3)
             self.disconnect()
+
+    def re_init(self, msg):
+        rospy.loginfo("reinitializing internet monitoring node..%s", msg.data)
+        self.__init__()
 
     def generate_msg(self, down, up):
         internet_msg = Internet()
