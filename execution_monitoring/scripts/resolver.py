@@ -86,18 +86,18 @@ class DataManagementFailureResolver(GeneralFailureResolver):
             rospy.sleep(5)
 
 
-class WiFiFailureResolver(GeneralFailureResolver):
+class ConnectionResolver(GeneralFailureResolver):
 
     def __init__(self):
-        super(WiFiFailureResolver, self).__init__()
+        super(ConnectionResolver, self).__init__()
         rospy.Subscriber('/resolve_wifi_failure', String, self.resolve_callback, queue_size=1)
         rospy.Subscriber('/resolve_internet_failure', String, self.resolve_callback, queue_size=1)
         self.success_pub = rospy.Publisher('/resolve_wifi_failure_success', Bool, queue_size=1)
         self.re_init_pub = rospy.Publisher('/re_init_internet_monitoring', String, queue_size=1)
 
     def resolve_callback(self, msg):
-        rospy.loginfo("launch wifi failure resolver..")
-        rospy.loginfo("type of wifi failure: %s", msg.data)
+        rospy.loginfo("launch connection failure resolver..")
+        rospy.loginfo("type of connection failure: %s", msg.data)
         self.problem_resolved = False
 
         # different types of resolution are required based on the type of issue
@@ -218,7 +218,7 @@ def node():
     rospy.init_node('failure_resolver')
     rospy.wait_for_message('SMACH_runnning', String)
     SensorFailureResolver()
-    WiFiFailureResolver()
+    ConnectionResolver()
     DataManagementFailureResolver()
     FallbackResolver()
     rospy.spin()
