@@ -36,7 +36,7 @@
         - **poor signal:** `rostopic pub -1 /toggle_simulated_bad_wifi_signal std_msgs/String fail`
         - **poor bit rate:** `rostopic pub -1 /toggle_simulated_bad_wifi_bit_rate std_msgs/String fail`
         - **disconnect:** `rostopic pub -1 /toggle_simulated_wifi_disconnect std_msgs/String fail`
-    - **Internet failures**
+    - **internet failures**
         - **disconnect:** just cut the connection
         - **bad download:** `rostopic pub -1 /toggle_simulated_bad_download std_msgs/String fail`
         - **bad upload:** `rostopic pub -1 /toggle_simulated_bad_upload std_msgs/String fail`
