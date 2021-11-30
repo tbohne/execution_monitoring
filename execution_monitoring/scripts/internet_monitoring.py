@@ -4,14 +4,21 @@ import speedtest
 import datetime
 from execution_monitoring.msg import Internet
 from std_msgs.msg import String
+from execution_monitoring import config
 
 
 class InternetConnectionMonitor:
 
     def __init__(self):
+        self.simulate_bad_download = False
+        self.simulate_bad_upload = False
         rospy.Subscriber('/re_init_internet_monitoring', String, self.re_init, queue_size=1)
+        rospy.Subscriber("/toggle_simulated_bad_download", String, self.toggle_bad_download_callback, queue_size=1)
+        rospy.Subscriber("/toggle_simulated_bad_upload", String, self.toggle_bad_upload_callback, queue_size=1)
         self.internet_info_pub = rospy.Publisher('/internet_connectivity_info', Internet, queue_size=1)
-        
+        self.connect_to_speedtest()
+
+    def connect_to_speedtest(self):
         try:
             self.test = speedtest.Speedtest()
             self.monitor_internet_connection()
@@ -21,14 +28,26 @@ class InternetConnectionMonitor:
             rospy.sleep(3)
             self.disconnect()
 
+    def toggle_bad_download_callback(self, msg):
+        self.simulate_bad_download = not self.simulate_bad_download
+
+    def toggle_bad_upload_callback(self, msg):
+        self.simulate_bad_upload = not self.simulate_bad_upload
+
     def re_init(self, msg):
         rospy.loginfo("reinitializing internet monitoring node..%s", msg.data)
-        self.__init__()
+        self.connect_to_speedtest()
 
     def generate_msg(self, down, up):
         internet_msg = Internet()
         internet_msg.download = down
         internet_msg.upload = up
+        if self.simulate_bad_download:
+            internet_msg.download = config.BAD_DOWNLOAD
+            self.simulate_bad_download = False
+        if self.simulate_bad_upload:
+            internet_msg.upload = config.BAD_UPLOAD
+            self.simulate_bad_upload = False
         return internet_msg
     
     def disconnect(self):
