@@ -31,6 +31,7 @@ ENABLE_SPECIFIC_LASER_SCAN_CHECK = True
 SCAN_PATH = MONITOR_DRIVE + "/home/docker/catkin_ws/src/execution_monitoring/execution_monitoring/scans/"
 SCAN_TIME_LIMIT = 60
 SCAN_FILE_EXTENSION = ".txt"
+SCAN_VALUES_LB_PERCENTAGE = 5
 
 # WIFI MONITORING
 WIFI_INTERFACE = "wlx3c1e045678a2"

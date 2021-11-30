@@ -11,8 +11,8 @@ class FallbackResolver:
     """
 
     def __init__(self):
-        self.fallback_sub = rospy.Subscriber('/request_fallback', String, self.request_fallback, queue_size=1)
-        self.human_operator_sub = rospy.Subscriber('/problem_solved', String, self.solved_by_human_callback, queue_size=1)
+        rospy.Subscriber('/request_fallback', String, self.request_fallback, queue_size=1)
+        rospy.Subscriber('/problem_solved', String, self.solved_by_human_callback, queue_size=1)
         self.human_operator_contingency_pub = rospy.Publisher("/request_help_contingency", String, queue_size=1)
         self.human_operator_catastrophe_pub = rospy.Publisher("/request_help_catastrophe", String, queue_size=1)
         self.fallback_pub = rospy.Publisher("/fallback_success", Bool, queue_size=1)
@@ -40,7 +40,7 @@ class FallbackResolver:
 class GeneralFailureResolver(object):
 
     def __init__(self):
-        self.fallback_sub = rospy.Subscriber("/fallback_success", Bool, self.fallback_callback, queue_size=1)
+        rospy.Subscriber("/fallback_success", Bool, self.fallback_callback, queue_size=1)
         self.fallback_pub = rospy.Publisher('/request_fallback', String, queue_size=1)
         self.problem_resolved = False
 
@@ -56,7 +56,7 @@ class DataManagementFailureResolver(GeneralFailureResolver):
 
     def __init__(self):
         super(DataManagementFailureResolver, self).__init__()
-        self.resolve_sub = rospy.Subscriber('/resolve_data_management_failure', String, self.resolve_callback, queue_size=1)
+        rospy.Subscriber('/resolve_data_management_failure', String, self.resolve_callback, queue_size=1)
         self.success_pub = rospy.Publisher('/resolve_data_management_failure_success', Bool, queue_size=1)
 
     def resolve_callback(self, msg):
@@ -90,8 +90,8 @@ class WiFiFailureResolver(GeneralFailureResolver):
 
     def __init__(self):
         super(WiFiFailureResolver, self).__init__()
-        self.resolve_sub = rospy.Subscriber('/resolve_wifi_failure', String, self.resolve_callback, queue_size=1)
-        self.resolve_internet_sub = rospy.Subscriber('/resolve_internet_failure', String, self.resolve_callback, queue_size=1)
+        rospy.Subscriber('/resolve_wifi_failure', String, self.resolve_callback, queue_size=1)
+        rospy.Subscriber('/resolve_internet_failure', String, self.resolve_callback, queue_size=1)
         self.success_pub = rospy.Publisher('/resolve_wifi_failure_success', Bool, queue_size=1)
         self.re_init_pub = rospy.Publisher('/re_init_internet_monitoring', String, queue_size=1)
 
@@ -168,7 +168,7 @@ class SensorFailureResolver(GeneralFailureResolver):
 
     def __init__(self):
         super(SensorFailureResolver, self).__init__()
-        self.resolve_sub = rospy.Subscriber('/resolve_sensor_failure', String, self.resolve_callback, queue_size=1)
+        rospy.Subscriber('/resolve_sensor_failure', String, self.resolve_callback, queue_size=1)
         self.success_pub = rospy.Publisher('/resolve_sensor_failure_success', Bool, queue_size=1)
 
     def resolve_callback(self, msg):

@@ -9,8 +9,9 @@ from std_msgs.msg import String
 class InternetConnectionMonitor:
 
     def __init__(self):
+        rospy.Subscriber('/re_init_internet_monitoring', String, self.re_init, queue_size=1)
         self.internet_info_pub = rospy.Publisher('/internet_connectivity_info', Internet, queue_size=1)
-        self.re_init_sub = rospy.Subscriber('/re_init_internet_monitoring', String, self.re_init, queue_size=1)
+        
         try:
             self.test = speedtest.Speedtest()
             self.monitor_internet_connection()

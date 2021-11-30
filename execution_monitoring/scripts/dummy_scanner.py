@@ -13,9 +13,9 @@ class DummyScanner():
 
     def __init__(self):
         rospy.loginfo("initializing dummy scanner - waiting for tasks..")
-        self.perform_action_pub = rospy.Publisher('/scan_action', String, queue_size=1)
-        self.mission_name_sub = rospy.Subscriber('/mission_name', String, self.mission_name_callback, queue_size=1)
+        rospy.Subscriber('/mission_name', String, self.mission_name_callback, queue_size=1)
         rospy.Subscriber("/toggle_simulated_scan_logging_failure", String, self.toggle_scan_failure_callback, queue_size=1)
+        self.perform_action_pub = rospy.Publisher('/scan_action', String, queue_size=1)
         self.simulate_scan_logging_failure = False
         self.server = actionlib.SimpleActionServer('dummy_scanner', ScanAction, execute_cb=self.execute_cb, auto_start=False)
         self.result = ScanResult()

@@ -74,11 +74,10 @@ class ExecutePlan(smach.State):
         smach.State.__init__(self, outcomes=['action_completed', 'plan_completed', 'soft_failure', 'hard_failure', 'external_problem'],
                              input_keys=['plan'])
 
-        self.interrupt_active_goals_sub = rospy.Subscriber('/interrupt_active_goals', String, self.interrupt_active_goals, queue_size=1)
+        rospy.Subscriber('/interrupt_active_goals', String, self.interrupt_active_goals, queue_size=1)
+        rospy.Subscriber('/arox/battery_param', arox_battery_params, self.battery_callback, queue_size=1)
         self.drive_to_goal_client = actionlib.SimpleActionClient('drive_to_goal', drive_to_goalAction)
         self.scan_client = actionlib.SimpleActionClient('dummy_scanner', ScanAction)
-
-        rospy.Subscriber('/arox/battery_param', arox_battery_params, self.battery_callback, queue_size=1)
         self.operation_pub = rospy.Publisher('arox/ongoing_operation', arox_operational_param, queue_size=1)
         self.battery_discharged = False
         self.remaining_tasks = 0

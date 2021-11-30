@@ -14,15 +14,15 @@ class Contingency(smach.State):
         smach.State.__init__(self, outcomes=['solved', 'aggravated'])
         self.interrupt_reason = ""
         self.successfully_resolved = False
-        self.interrupt_reason_sub = rospy.Subscriber('/interrupt_reason', String, self.interrupt_reason_callback, queue_size=1)
+        rospy.Subscriber('/interrupt_reason', String, self.interrupt_reason_callback, queue_size=1)
+        rospy.Subscriber('/resolve_sensor_failure_success', Bool, self.resolve_failure_success_callback, queue_size=1)
+        rospy.Subscriber('/resolve_wifi_failure_success', Bool, self.resolve_failure_success_callback, queue_size=1)
+        rospy.Subscriber('/resolve_internet_failure_success', Bool, self.resolve_failure_success_callback, queue_size=1)
+        rospy.Subscriber('/resolve_data_management_failure_success', Bool, self.resolve_failure_success_callback, queue_size=1)
         self.sensor_failure_resolver_pub = rospy.Publisher('/resolve_sensor_failure', String, queue_size=1)
         self.wifi_failure_resolver_pub = rospy.Publisher('/resolve_wifi_failure', String, queue_size=1)
         self.internet_failure_resolver_pub = rospy.Publisher('/resolve_internet_failure', String, queue_size=1)
         self.data_management_failure_resolver_pub = rospy.Publisher('/resolve_data_management_failure', String, queue_size=1)
-        self.sensor_failure_resolver_success_sub = rospy.Subscriber('/resolve_sensor_failure_success', Bool, self.resolve_failure_success_callback, queue_size=1)
-        self.wifi_failure_resolver_success_sub = rospy.Subscriber('/resolve_wifi_failure_success', Bool, self.resolve_failure_success_callback, queue_size=1)
-        self.internet_failure_resolver_success_sub = rospy.Subscriber('/resolve_internet_failure_success', Bool, self.resolve_failure_success_callback, queue_size=1)
-        self.data_management_failure_resolver_success_sub = rospy.Subscriber('/resolve_data_management_failure_success', Bool, self.resolve_failure_success_callback, queue_size=1)
 
     def interrupt_reason_callback(self, reason):
         self.interrupt_reason = reason.data
@@ -83,7 +83,7 @@ class Catastrophe(smach.State):
     def __init__(self):
         smach.State.__init__(self, outcomes=['damage_control_performed'])
         self.interrupt_reason = ""
-        self.interrupt_reason_sub = rospy.Subscriber('/interrupt_reason', String, self.interrupt_reason_callback, queue_size=1)
+        rospy.Subscriber('/interrupt_reason', String, self.interrupt_reason_callback, queue_size=1)
 
     def interrupt_reason_callback(self, reason):
         self.interrupt_reason = reason.data

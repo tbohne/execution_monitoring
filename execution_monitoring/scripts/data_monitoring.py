@@ -8,11 +8,11 @@ from execution_monitoring import util, config
 class DataMonitoring:
 
     def __init__(self):
+        rospy.Subscriber('/scan_action', String, self.data_management_failure_monitoring, queue_size=1)
+        rospy.Subscriber('/mission_name', String, self.mission_name_callback, queue_size=1)
         self.contingency_pub = rospy.Publisher('/contingency_preemption', String, queue_size=1)
         self.catastrophe_pub = rospy.Publisher('/catastrophe_preemption', String, queue_size=1)
         self.robot_info_pub = rospy.Publisher('/robot_info', String, queue_size=1)
-        self.scan_action_sub = rospy.Subscriber('/scan_action', String, self.data_management_failure_monitoring, queue_size=1)
-        self.mission_name_sub = rospy.Subscriber('/mission_name', String, self.mission_name_callback, queue_size=1)
 
     def specific_scan_check(self):
         log_file = Path(config.SCAN_PATH + self.mission_name + config.SCAN_FILE_EXTENSION)
