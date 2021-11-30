@@ -7,11 +7,12 @@ from execution_monitoring import util, config
 class ConnectionMonitoring:
 
     def __init__(self):
+        rospy.Subscriber('/wifi_connectivity_info', WiFi, self.wifi_callback, queue_size=1)
+        rospy.Subscriber('/internet_connectivity_info', Internet, self.internet_callback, queue_size=1)
+        rospy.Subscriber('/resolve_wifi_failure_success', Bool, self.resolve_callback, queue_size=1)
+        rospy.Subscriber('/resolve_internet_failure_success', Bool, self.resolve_callback, queue_size=1)
         self.contingency_pub = rospy.Publisher('/contingency_preemption', String, queue_size=1)
         self.catastrophe_pub = rospy.Publisher('/catastrophe_preemption', String, queue_size=1)
-        self.wifi_info_sub = rospy.Subscriber('/wifi_connectivity_info', WiFi, self.wifi_callback, queue_size=1)
-        self.internet_info_sub = rospy.Subscriber('/internet_connectivity_info', Internet, self.internet_callback, queue_size=1)
-        self.resolve_sub = rospy.Subscriber('/resolve_wifi_failure_success', Bool, self.resolve_callback, queue_size=1)
         self.robot_info_pub = rospy.Publisher('/robot_info', String, queue_size=1)
         self.active_monitoring = True
 

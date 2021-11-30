@@ -17,9 +17,11 @@ class Contingency(smach.State):
         self.interrupt_reason_sub = rospy.Subscriber('/interrupt_reason', String, self.interrupt_reason_callback, queue_size=1)
         self.sensor_failure_resolver_pub = rospy.Publisher('/resolve_sensor_failure', String, queue_size=1)
         self.wifi_failure_resolver_pub = rospy.Publisher('/resolve_wifi_failure', String, queue_size=1)
+        self.internet_failure_resolver_pub = rospy.Publisher('/resolve_internet_failure', String, queue_size=1)
         self.data_management_failure_resolver_pub = rospy.Publisher('/resolve_data_management_failure', String, queue_size=1)
         self.sensor_failure_resolver_success_sub = rospy.Subscriber('/resolve_sensor_failure_success', Bool, self.resolve_failure_success_callback, queue_size=1)
         self.wifi_failure_resolver_success_sub = rospy.Subscriber('/resolve_wifi_failure_success', Bool, self.resolve_failure_success_callback, queue_size=1)
+        self.internet_failure_resolver_success_sub = rospy.Subscriber('/resolve_internet_failure_success', Bool, self.resolve_failure_success_callback, queue_size=1)
         self.data_management_failure_resolver_success_sub = rospy.Subscriber('/resolve_data_management_failure_success', Bool, self.resolve_failure_success_callback, queue_size=1)
 
     def interrupt_reason_callback(self, reason):
@@ -53,6 +55,12 @@ class Contingency(smach.State):
             self.data_management_failure_resolver_pub.publish(config.DATA_MANAGEMENT_FAILURE_ONE)
         elif self.interrupt_reason == config.DATA_MANAGEMENT_FAILURE_TWO:
             self.data_management_failure_resolver_pub.publish(config.DATA_MANAGEMENT_FAILURE_TWO)
+        elif self.interrupt_reason == config.CONNECTION_FAILURE_FIVE:
+            self.internet_failure_resolver_pub.publish(config.CONNECTION_FAILURE_FIVE)
+        elif self.interrupt_reason == config.CONNECTION_FAILURE_SIX:
+            self.internet_failure_resolver_pub.publish(config.CONNECTION_FAILURE_SIX)
+        elif self.interrupt_reason == config.CONNECTION_FAILURE_SEVEN:
+            self.internet_failure_resolver_pub.publish(config.CONNECTION_FAILURE_SEVEN)
         else:
             rospy.loginfo("unkonwn interrupt reason: %s", self.interrupt_reason)
 
