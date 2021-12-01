@@ -1,9 +1,7 @@
 #!/usr/bin/env python
 import rospy
-import datetime
 from execution_monitoring import config
 from sensor_msgs.msg import NavSatFix
-from std_msgs.msg import String
 
 class GPSSimulator:
     """
@@ -15,15 +13,15 @@ class GPSSimulator:
         # subscribe to topic of quadrotor_gps_sim (libhector_gazebo_ros_gps.so)
         #    -> gazebo plugin that simulates GPS data
         rospy.Subscriber('/fix_plugin', NavSatFix, self.sim_gps_callback, queue_size=1)
+        self.gps_publisher = rospy.Publisher('/fix', NavSatFix, queue_size=1)
 
     def sim_gps_callback(self, nav_sat_fix):
-        rospy.loginfo("receiving gps: %s", nav_sat_fix)
+        rospy.loginfo("receiving GNSS data: %s", nav_sat_fix)
         nav_sat_fix.status.status = config.GNSS_STATUS
         nav_sat_fix.status.service = config.GNSS_SERVICE
         nav_sat_fix.position_covariance = config.GNSS_COVARIANCES
         nav_sat_fix.position_covariance_type = config.GNSS_COVARIANCE_TYPE
-        rospy.loginfo("receiving gps: %s", nav_sat_fix)
-
+        self.gps_publisher.publish(nav_sat_fix)
 
 def node():
     rospy.init_node('gps_simulator')
