@@ -1,7 +1,10 @@
 #!/usr/bin/env python
+import time
 import rospy
+from datetime import datetime
 from std_msgs.msg import String, Bool
 from execution_monitoring.msg import WiFi, Internet
+from sensor_msgs.msg import NavSatFix
 from execution_monitoring import util, config
 
 class ConnectionMonitoring:
@@ -9,12 +12,38 @@ class ConnectionMonitoring:
     def __init__(self):
         rospy.Subscriber('/wifi_connectivity_info', WiFi, self.wifi_callback, queue_size=1)
         rospy.Subscriber('/internet_connectivity_info', Internet, self.internet_callback, queue_size=1)
+        rospy.Subscriber('/fix', NavSatFix, self.gps_callback, queue_size=1)
         rospy.Subscriber('/resolve_wifi_failure_success', Bool, self.resolve_callback, queue_size=1)
         rospy.Subscriber('/resolve_internet_failure_success', Bool, self.resolve_callback, queue_size=1)
         self.contingency_pub = rospy.Publisher('/contingency_preemption', String, queue_size=1)
         self.catastrophe_pub = rospy.Publisher('/catastrophe_preemption', String, queue_size=1)
         self.robot_info_pub = rospy.Publisher('/robot_info', String, queue_size=1)
         self.active_monitoring = True
+        self.last_gps_fix_time = None
+        self.gps_timeout_monitoring()
+
+    def gps_timeout_monitoring(self):
+        while not rospy.is_shutdown():
+            if self.last_gps_fix_time is not None:
+                time_since_update = (datetime.now() - self.last_gps_fix_time).total_seconds()
+                rospy.loginfo("time since last update: %s s", time_since_update)
+                if time_since_update > config.GPS_TIMEOUT:
+                    rospy.loginfo("detected GPS timeout - no new update since %s s", time_since_update)
+            rospy.sleep(10)
+
+    def gps_callback(self, nav_sat_fix):
+        rospy.loginfo("gps monitoring..")
+        self.last_gps_fix_time = datetime.now()
+        status = nav_sat_fix.status
+        lat = nav_sat_fix.latitude
+        lng = nav_sat_fix.longitude
+        alt = nav_sat_fix.altitude
+        pos_cov = nav_sat_fix.position_covariance
+        pos_cov_type = nav_sat_fix.position_covariance_type
+        rospy.loginfo("status: %s", status)
+        rospy.loginfo("lat: %s, lng: %s", lat, lng)
+        rospy.loginfo("alt: %s", alt)
+        rospy.loginfo("position covariance: %s, type: %s", pos_cov, pos_cov_type)
 
     def resolve_callback(self, msg):
         self.active_monitoring = True
