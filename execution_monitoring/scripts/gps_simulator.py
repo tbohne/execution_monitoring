@@ -16,7 +16,7 @@ class GPSSimulator:
         self.gps_publisher = rospy.Publisher('/fix', NavSatFix, queue_size=1)
 
     def sim_gps_callback(self, nav_sat_fix):
-        rospy.loginfo("receiving GNSS data: %s", nav_sat_fix)
+        #rospy.loginfo("receiving GNSS data: %s", nav_sat_fix)
         nav_sat_fix.status.status = config.GNSS_STATUS
         nav_sat_fix.status.service = config.GNSS_SERVICE
         nav_sat_fix.position_covariance = config.GNSS_COVARIANCES

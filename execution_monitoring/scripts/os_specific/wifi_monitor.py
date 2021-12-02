@@ -98,6 +98,7 @@ class WiFiMonitor:
 def node():
     rospy.init_node('wifi_monitor')
     WiFiMonitor()
+    rospy.loginfo("launch wifi monitoring..")
     rospy.spin()
 
 if __name__ == '__main__':

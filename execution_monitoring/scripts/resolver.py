@@ -92,6 +92,7 @@ class ConnectionResolver(GeneralFailureResolver):
         super(ConnectionResolver, self).__init__()
         rospy.Subscriber('/resolve_wifi_failure', String, self.resolve_callback, queue_size=1)
         rospy.Subscriber('/resolve_internet_failure', String, self.resolve_callback, queue_size=1)
+        rospy.Subscriber('/resolve_gps_failure', String, self.resolve_callback, queue_size=1)
         self.success_pub = rospy.Publisher('/resolve_wifi_failure_success', Bool, queue_size=1)
         self.re_init_pub = rospy.Publisher('/re_init_internet_monitoring', String, queue_size=1)
 
@@ -115,6 +116,12 @@ class ConnectionResolver(GeneralFailureResolver):
             self.resolve_type_six_failure(config.CONNECTION_FAILURE_SIX)
         elif msg.data == config.CONNECTION_FAILURE_SEVEN:
             self.resolve_type_seven_failure(config.CONNECTION_FAILURE_SEVEN)
+        elif msg.data == config.CONNECTION_FAILURE_EIGHT:
+            self.resolve_type_eight_failure(config.CONNECTION_FAILURE_EIGHT)
+        elif msg.data == config.CONNECTION_FAILURE_NINE:
+            self.resolve_type_ninie_failure(config.CONNECTION_FAILURE_NINE)
+        elif msg.data == config.CONNECTION_FAILURE_TEN:
+            self.resolve_type_ten_failure(config.CONNECTION_FAILURE_TEN)
 
         if self.problem_resolved:
             self.success_pub.publish(True)
@@ -159,6 +166,24 @@ class ConnectionResolver(GeneralFailureResolver):
 
     def resolve_type_seven_failure(self, msg):
         rospy.loginfo("resolve type seven failure..")
+        self.fallback_pub.publish(msg)
+        while not self.problem_resolved:
+            rospy.sleep(5)
+
+    def resolve_type_eight_failure(self, msg):
+        rospy.loginfo("resolve type eight failure..")
+        self.fallback_pub.publish(msg)
+        while not self.problem_resolved:
+            rospy.sleep(5)
+
+    def resolve_type_nine_failure(self, msg):
+        rospy.loginfo("resolve type nine failure..")
+        self.fallback_pub.publish(msg)
+        while not self.problem_resolved:
+            rospy.sleep(5)
+
+    def resolve_type_ten_failure(self, msg):
+        rospy.loginfo("resolve type ten failure..")
         self.fallback_pub.publish(msg)
         while not self.problem_resolved:
             rospy.sleep(5)

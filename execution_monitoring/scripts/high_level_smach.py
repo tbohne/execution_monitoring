@@ -22,6 +22,7 @@ class Contingency(smach.State):
         self.sensor_failure_resolver_pub = rospy.Publisher('/resolve_sensor_failure', String, queue_size=1)
         self.wifi_failure_resolver_pub = rospy.Publisher('/resolve_wifi_failure', String, queue_size=1)
         self.internet_failure_resolver_pub = rospy.Publisher('/resolve_internet_failure', String, queue_size=1)
+        self.gps_failure_resolver_pub = rospy.Publisher('/resolve_gps_failure', String, queue_size=1)
         self.data_management_failure_resolver_pub = rospy.Publisher('/resolve_data_management_failure', String, queue_size=1)
 
     def interrupt_reason_callback(self, reason):
@@ -61,6 +62,12 @@ class Contingency(smach.State):
             self.internet_failure_resolver_pub.publish(config.CONNECTION_FAILURE_SIX)
         elif self.interrupt_reason == config.CONNECTION_FAILURE_SEVEN:
             self.internet_failure_resolver_pub.publish(config.CONNECTION_FAILURE_SEVEN)
+        elif self.interrupt_reason == config.CONNECTION_FAILURE_EIGHT:
+            self.gps_failure_resolver_pub.publish(config.CONNECTION_FAILURE_EIGHT)
+        elif self.interrupt_reason == config.CONNECTION_FAILURE_NINE:
+            self.wifi_failure_resolver_pub.publish(config.CONNECTION_FAILURE_NINE)
+        elif self.interrupt_reason == config.CONNECTION_FAILURE_TEN:
+            self.internet_failure_resolver_pub.publish(config.CONNECTION_FAILURE_TEN)
         else:
             rospy.loginfo("unkonwn interrupt reason: %s", self.interrupt_reason)
 
