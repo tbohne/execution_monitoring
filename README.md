@@ -19,6 +19,7 @@
     - run battery model (energy consumption): `rosrun arox_engine arox_battery.py`
         - configurable via `rosrun rqt_reconfigure rqt_reconfigure`
 - **with launch file (including plan generation)**:
+    - `rosrun execution_monitoring gps_simulator.py`
     - `roslaunch execution_monitoring execution_monitoring.launch`
 - OS-specific WiFi monitoring node (Ubuntu version):
     - `rosrun execution_monitoring wifi_monitor.py `
