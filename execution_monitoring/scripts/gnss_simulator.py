@@ -3,7 +3,7 @@ import rospy
 from execution_monitoring import config
 from sensor_msgs.msg import NavSatFix
 
-class GPSSimulator:
+class GNSSSimulator:
     """
     Simple node that receives the simulated GPS data from libhector_gazebo_ros_gps and acts as a "man-in-the-middle".
     Enriches the data published by libhector_gazebo_ros_gps with further information.
@@ -24,8 +24,8 @@ class GPSSimulator:
         self.gps_publisher.publish(nav_sat_fix)
 
 def node():
-    rospy.init_node('gps_simulator')
-    GPSSimulator()
+    rospy.init_node('gnss_simulator')
+    GNSSSimulator()
     rospy.spin()
 
 if __name__ == '__main__':

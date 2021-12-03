@@ -69,6 +69,7 @@ class InternetConnectionMonitor:
 def node():
     rospy.init_node('internet_monitor')
     InternetConnectionMonitor()
+    rospy.loginfo("launch internet monitoring..")
     rospy.spin()
 
 if __name__ == '__main__':
