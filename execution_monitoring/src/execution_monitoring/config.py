@@ -14,9 +14,19 @@ CONNECTION_FAILURE_FOUR = "wifi disconnect"
 CONNECTION_FAILURE_FIVE = "internet disconnect"
 CONNECTION_FAILURE_SIX = "internet connection: bad download speed"
 CONNECTION_FAILURE_SEVEN = "internet connection: bad upload speed"
-CONNECTION_FAILURE_EIGHT = "gps timeout"
+CONNECTION_FAILURE_EIGHT = "GNSS timeout"
 CONNECTION_FAILURE_NINE = "wifi timeout"
 CONNECTION_FAILURE_TEN = "internet timeout"
+CONNECTION_FAILURE_ELEVEN = "unknown GNSS status"
+CONNECTION_FAILURE_TWELVE = "GNSS unable to find position - no fix"
+CONNECTION_FAILURE_THIRTEEN = "using pure GNSS, no RTK available"
+CONNECTION_FAILURE_FOURTEEN = "unknown GNSS service"
+CONNECTION_FAILURE_FIFTEEN = "GNSS - latitude not present or infeasible"
+CONNECTION_FAILURE_SIXTEEN = "GNSS - longitude not present or infeasible"
+CONNECTION_FAILURE_SEVENTEEN = "GNSS - unknown covariance type"
+CONNECTION_FAILURE_EIGHTEEN = "GNSS - critically high covariance"
+CONNECTION_FAILURE_NINETEEN = "GNSS - critically high approximated covariance"
+CONNECTION_FAILURE_TWENTY = "GNSS - covariance progression issue (increasingly higher)"
 BAD_WIFI_LINK_QUALITY = 2
 BAD_WIFI_SIGNAL_LEVEL = -90
 BAD_WIFI_BIT_RATE = 0.1
@@ -33,6 +43,7 @@ GNSS_STATUS_FIX = 0      # unaugmented fix - found a location, using solely GPS/
 GNSS_STATUS_SBAS_FIX = 1 # with satellite-based augmentation - fix with assistance of such networks as StarFire
 GNSS_STATUS_GBAS_FIX = 2 # with ground-based augmentation - fix with assistance of such networks as DGPS or GBAS
 # GNSS SERVICE OPTIONS
+GNSS_SERVICE_INVALID = 0
 GNSS_SERVICE_GPS = 1
 GNSS_SERVICE_GLONASS = 2
 GNSS_SERVICE_COMPASS = 4
@@ -47,6 +58,15 @@ GNSS_STATUS = GNSS_STATUS_SBAS_FIX
 GNSS_SERVICE = GNSS_SERVICE_GPS
 GNSS_COVARIANCES = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
 GNSS_COVARIANCE_TYPE = GNSS_COVARIANCE_TYPE_UNKNOWN
+# other GNSS conf
+LAT_LB = -90
+LAT_UB = 90
+LNG_LB = -180
+LNG_UB = 180
+# GNSS covariance config
+HIGH_AREA_COVARIANCE = 50
+COVARIANCE_HISTORY_LENGTH = 5
+SIGNIFICANT_COVARIANCE_INCREASE = 15
 
 # DATA MANAGEMENT FAILURES
 DATA_MANAGEMENT_FAILURE_ONE = "full memory"
