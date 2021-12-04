@@ -2,7 +2,7 @@
 import time
 import rospy
 import collections
-from datetime import datetime
+from datetime import date, datetime
 from std_msgs.msg import String, Bool
 from execution_monitoring.msg import WiFi, Internet
 from sensor_msgs.msg import NavSatFix
@@ -24,6 +24,7 @@ class ConnectionMonitoring:
         self.last_wifi_msg_time = datetime.now()
         self.last_internet_msg_time = datetime.now()
         self.gnss_covariance_history = collections.deque([], config.COVARIANCE_HISTORY_LENGTH)
+        self.gnss_info_time = datetime.now()
         self.timeout_monitoring()
 
     def timeout_monitoring(self):
@@ -57,22 +58,46 @@ class ConnectionMonitoring:
 
             rospy.sleep(5)
 
-    def gnss_callback(self, nav_sat_fix):
-        rospy.loginfo("GNSS monitoring..")
-        self.last_gnss_msg_time = datetime.now()
 
-        # status monitoring
+    def good_variances(nav_sat_fix):
+        for i in range(0, len(nav_sat_fix.position_covariance), 4):
+            if nav_sat_fix.position_covariance[i] != float('nan') and nav_sat_fix.position_covariance[i] > config.GOOD_VARIANCE_UB:
+                return False
+        return True
+    
+    def estimate_gnss_quality(self, nav_sat_fix):
+        # GNSS quality estimation based on provided info
+        #   - good (status GNSS_STATUS_GBAS_FIX, cov type >= config.GNSS_COVARIANCE_TYPE_DIAGONAL_KNOWN, each variance value (diagonal) <= LOW_COV_UB)
+        #   - medium (status >= GNSS_STATUS_FIX, cov type >= config.GNSS_COVARIANCE_TYPE_APPROXIMATED, each value (diagonal) <= LOW_COV_UB)
+        #   - low (status >= GNSS_STATUS_FIX, cov type == config.GNSS_COVARIANCE_TYPE_UNKNOWN)
+
+        estimation_str = "Quality estimation of currently provided GNSS data: "
+
+        if (datetime.now() - self.gnss_info_time).total_seconds() > 60:
+            self.gnss_info_time = datetime.now()
+            # GOOD QUALITY
+            if nav_sat_fix.status.status == config.GNSS_STATUS_GBAS_FIX and nav_sat_fix.position_covariance_type >= config.GNSS_COVARIANCE_TYPE_DIAGONAL_KNOWN and self.good_variances(nav_sat_fix):
+                self.robot_info_pub.publish(estimation_str + "good")
+            # MEDIUM QUALITY
+            if nav_sat_fix.status.status >= config.GNSS_STATUS_FIX and nav_sat_fix.position_covariance_type >= config.GNSS_COVARIANCE_TYPE_APPROXIMATED and self.good_variances(nav_sat_fix):
+                self.robot_info_pub.publish(estimation_str + "medium")
+            # LOW QUALITY
+            if nav_sat_fix.status.status >= config.GNSS_STATUS_FIX and nav_sat_fix.position_covariance_type == config.GNSS_COVARIANCE_TYPE_UNKNOWN:
+                self.robot_info_pub.publish(estimation_str + "low")
+
+    def status_monitoring(self, nav_sat_fix):
         if nav_sat_fix.status.status not in [config.GNSS_STATUS_NO_FIX, config.GNSS_STATUS_FIX, config.GNSS_STATUS_SBAS_FIX, config.GNSS_STATUS_GBAS_FIX]:
             self.contingency_pub.publish(config.CONNECTION_FAILURE_ELEVEN)
         elif nav_sat_fix.status.status == config.GNSS_STATUS_NO_FIX:
             self.contingency_pub.publish(config.CONNECTION_FAILURE_TWELVE)
         elif nav_sat_fix.status.status == config.GNSS_STATUS_FIX:
             self.robot_info_pub.publish(config.CONNECTION_FAILURE_THIRTEEN)
-            
-        # service monitoring
+
+    def service_monitoring(self, nav_sat_fix):
         if nav_sat_fix.status.service not in [config.GNSS_SERVICE_GPS, config.GNSS_SERVICE_GLONASS, config.GNSS_SERVICE_COMPASS, config.GNSS_SERVICE_GALILEO]:
             self.robot_info_pub.publish(config.CONNECTION_FAILURE_FOURTEEN)
 
+    def belief_state_monitoring(self, nav_sat_fix):
         # lat / lng belief state monitoring
         if not nav_sat_fix.latitude or nav_sat_fix.latitude < config.LAT_LB or nav_sat_fix.latitude > config.LAT_UB:
             # lat (degrees): pos -> north of equator, neg -> south of equator
@@ -81,9 +106,7 @@ class ConnectionMonitoring:
             # lng (degrees): pos -> east of prime meridian, neg -> west of prime meridian
             self.contingency_pub.publish(config.CONNECTION_FAILURE_SIXTEEN)
 
-        # altitude is not monitored as it is not expected to be always provided
-
-        # covariance monitoring
+    def covariance_monitoring(self, nav_sat_fix):
         if nav_sat_fix.position_covariance_type not in [config.GNSS_COVARIANCE_TYPE_UNKNOWN, config.GNSS_COVARIANCE_TYPE_APPROXIMATED, config.GNSS_COVARIANCE_TYPE_DIAGONAL_KNOWN, config.GNSS_COVARIANCE_TYPE_KNOWN]:
             self.robot_info_pub.publish(config.CONNECTION_FAILURE_SEVENTEEN)
 
@@ -123,6 +146,15 @@ class ConnectionMonitoring:
                         # at least information, but not so critial, is only approximated
                         self.robot_info_pub.publish(config.CONNECTION_FAILURE_NINETEEN)
                         break
+
+    def gnss_callback(self, nav_sat_fix):
+        rospy.loginfo("GNSS monitoring..")
+        self.last_gnss_msg_time = datetime.now()
+        self.estimate_gnss_quality(nav_sat_fix)
+        self.status_monitoring(nav_sat_fix)
+        self.service_monitoring(nav_sat_fix)
+        self.belief_state_monitoring(nav_sat_fix)
+        self.covariance_monitoring(nav_sat_fix)
 
     def increasing_values_only(self, components):
         for i in range(1, len(components)):
