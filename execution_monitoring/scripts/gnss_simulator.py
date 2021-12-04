@@ -23,6 +23,7 @@ class GNSSSimulator:
         rospy.Subscriber("/set_simulated_no_fix", String, self.set_no_fix_callback, queue_size=1)
         rospy.Subscriber("/set_simulated_no_rtk", String, self.set_no_rtk_callback, queue_size=1)
         rospy.Subscriber("/toggle_simulated_unknown_service", String, self.toggle_unknown_service_callback, queue_size=1)
+        rospy.Subscriber("/toggle_simulated_infeasible_lat_lng", String, self.toggle_infeasible_lat_lng_callback, queue_size=1)
         self.sim_timeout = False
         self.sim_good_quality = True
         self.sim_med_quality = False
@@ -31,8 +32,12 @@ class GNSSSimulator:
         self.sim_no_fix = False
         self.sim_no_rtk = False
         self.sim_unknown_service = False
+        self.sim_infeasible_lat_lng = False
 
         self.gps_publisher = rospy.Publisher('/fix', NavSatFix, queue_size=1)
+
+    def toggle_infeasible_lat_lng_callback(self, msg):
+        self.sim_infeasible_lat_lng = not self.sim_infeasible_lat_lng
 
     def toggle_unknown_service_callback(self, msg):
         self.sim_unknown_service = not self.sim_unknown_service
@@ -105,6 +110,12 @@ class GNSSSimulator:
         if self.sim_unknown_service:
             nav_sat_fix.status.service = 3
             self.sim_unknown_service = False
+
+        # lat / lng belief state sim
+        if self.sim_infeasible_lat_lng:
+            nav_sat_fix.latitude = -120
+            nav_sat_fix.longitude = 200
+            self.sim_infeasible_lat_lng = False
 
         self.gps_publisher.publish(nav_sat_fix)
 

@@ -75,6 +75,10 @@ class Contingency(smach.State):
             self.gnss_failure_resolver_pub.publish(config.CONNECTION_FAILURE_THIRTEEN)
         elif self.interrupt_reason == config.CONNECTION_FAILURE_FOURTEEN:
             self.gnss_failure_resolver_pub.publish(config.CONNECTION_FAILURE_FOURTEEN)
+        elif self.interrupt_reason == config.CONNECTION_FAILURE_FIFTEEN:
+            self.gnss_failure_resolver_pub.publish(config.CONNECTION_FAILURE_FIFTEEN)
+        elif self.interrupt_reason == config.CONNECTION_FAILURE_SIXTEEN:
+            self.gnss_failure_resolver_pub.publish(config.CONNECTION_FAILURE_SIXTEEN)
         else:
             rospy.loginfo("unkonwn interrupt reason: %s", self.interrupt_reason)
 
