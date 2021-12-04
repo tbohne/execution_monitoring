@@ -59,7 +59,7 @@ class ConnectionMonitoring:
             rospy.sleep(5)
 
 
-    def good_variances(nav_sat_fix):
+    def good_variances(self, nav_sat_fix):
         for i in range(0, len(nav_sat_fix.position_covariance), 4):
             if nav_sat_fix.position_covariance[i] != float('nan') and nav_sat_fix.position_covariance[i] > config.GOOD_VARIANCE_UB:
                 return False
@@ -79,10 +79,10 @@ class ConnectionMonitoring:
             if nav_sat_fix.status.status == config.GNSS_STATUS_GBAS_FIX and nav_sat_fix.position_covariance_type >= config.GNSS_COVARIANCE_TYPE_DIAGONAL_KNOWN and self.good_variances(nav_sat_fix):
                 self.robot_info_pub.publish(estimation_str + "good")
             # MEDIUM QUALITY
-            if nav_sat_fix.status.status >= config.GNSS_STATUS_FIX and nav_sat_fix.position_covariance_type >= config.GNSS_COVARIANCE_TYPE_APPROXIMATED and self.good_variances(nav_sat_fix):
+            elif nav_sat_fix.status.status >= config.GNSS_STATUS_FIX and nav_sat_fix.position_covariance_type >= config.GNSS_COVARIANCE_TYPE_APPROXIMATED and self.good_variances(nav_sat_fix):
                 self.robot_info_pub.publish(estimation_str + "medium")
             # LOW QUALITY
-            if nav_sat_fix.status.status >= config.GNSS_STATUS_FIX and nav_sat_fix.position_covariance_type == config.GNSS_COVARIANCE_TYPE_UNKNOWN:
+            elif nav_sat_fix.status.status >= config.GNSS_STATUS_FIX and nav_sat_fix.position_covariance_type == config.GNSS_COVARIANCE_TYPE_UNKNOWN:
                 self.robot_info_pub.publish(estimation_str + "low")
 
     def status_monitoring(self, nav_sat_fix):
