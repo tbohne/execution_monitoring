@@ -128,6 +128,8 @@ class ConnectionResolver(GeneralFailureResolver):
             self.resolve_type_twelve_failure(config.CONNECTION_FAILURE_TWELVE)
         elif msg.data == config.CONNECTION_FAILURE_THIRTEEN:
             self.resolve_type_thirteen_failure(config.CONNECTION_FAILURE_THIRTEEN)
+        elif msg.data == config.CONNECTION_FAILURE_FOURTEEN:
+            self.resolve_type_fourteen_failure(config.CONNECTION_FAILURE_FOURTEEN)
 
         if self.problem_resolved:
             self.success_pub.publish(True)
@@ -208,6 +210,12 @@ class ConnectionResolver(GeneralFailureResolver):
 
     def resolve_type_thirteen_failure(self, msg):
         rospy.loginfo("resolve type thirteen failure..")
+        self.fallback_pub.publish(msg)
+        while not self.problem_resolved:
+            rospy.sleep(5)
+
+    def resolve_type_fourteen_failure(self, msg):
+        rospy.loginfo("resolve type fourteen failure..")
         self.fallback_pub.publish(msg)
         while not self.problem_resolved:
             rospy.sleep(5)
