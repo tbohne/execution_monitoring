@@ -19,12 +19,30 @@ class GNSSSimulator:
         rospy.Subscriber("/set_simulated_good_quality", String, self.set_good_qualitiy_callback, queue_size=1)
         rospy.Subscriber("/set_simulated_med_quality", String, self.set_med_qualitiy_callback, queue_size=1)
         rospy.Subscriber("/set_simulated_low_quality", String, self.set_low_qualitiy_callback, queue_size=1)
+        rospy.Subscriber("/set_simulated_unknown_status", String, self.set_unknown_status_callback, queue_size=1)
+        rospy.Subscriber("/set_simulated_no_fix", String, self.set_no_fix_callback, queue_size=1)
+        rospy.Subscriber("/set_simulated_no_rtk", String, self.set_no_rtk_callback, queue_size=1)
         self.sim_timeout = False
         self.sim_good_quality = True
         self.sim_med_quality = False
         self.sim_low_quality = False
+        self.sim_unknown_status = False
+        self.sim_no_fix = False
+        self.sim_no_rtk = False
 
         self.gps_publisher = rospy.Publisher('/fix', NavSatFix, queue_size=1)
+
+    def set_unknown_status_callback(self, msg):
+        self.sim_no_fix = self.sim_no_rtk = False
+        self.sim_unknown_status = True
+
+    def set_no_fix_callback(self, msg):
+        self.sim_unknown_status = self.sim_no_rtk = False
+        self.sim_no_fix = True
+
+    def set_no_rtk_callback(self, msg):
+        self.sim_unknown_status = self.sim_no_fix = False
+        self.sim_no_rtk = True
 
     def toggle_timeout_callback(self, msg):
         self.sim_timeout = not self.sim_timeout
@@ -44,12 +62,14 @@ class GNSSSimulator:
     def sim_gps_callback(self, nav_sat_fix):
         #rospy.loginfo("receiving GNSS data: %s", nav_sat_fix)
 
+        # timeout sim
         if self.sim_timeout:
             self.gnss_sub.unregister()
             rospy.sleep(config.GPS_TIMEOUT)
             self.sim_timeout = False
             self.gnss_sub = rospy.Subscriber('/fix_plugin', NavSatFix, self.sim_gps_callback, queue_size=1)
 
+        # quality sim
         if self.sim_good_quality:
             nav_sat_fix.status.status = config.GNSS_STATUS_GBAS_FIX
             nav_sat_fix.position_covariance_type = config.GNSS_COVARIANCE_TYPE_DIAGONAL_KNOWN
@@ -64,6 +84,14 @@ class GNSSSimulator:
             nav_sat_fix.status.status = config.GNSS_STATUS_FIX
             nav_sat_fix.position_covariance_type = config.GNSS_COVARIANCE_TYPE_UNKNOWN
             nav_sat_fix.status.service = config.GNSS_SERVICE_GALILEO
+
+        # status sim
+        if self.sim_unknown_status:
+            nav_sat_fix.status.status = 5
+        elif self.sim_no_fix:
+            nav_sat_fix.status.status = config.GNSS_STATUS_NO_FIX
+        elif self.sim_no_rtk:
+            nav_sat_fix.status.status = config.GNSS_STATUS_FIX
 
         self.gps_publisher.publish(nav_sat_fix)
 
