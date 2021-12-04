@@ -88,10 +88,13 @@ class GNSSSimulator:
         # status sim
         if self.sim_unknown_status:
             nav_sat_fix.status.status = 5
+            self.sim_unknown_status = False
         elif self.sim_no_fix:
             nav_sat_fix.status.status = config.GNSS_STATUS_NO_FIX
+            self.sim_no_fix = False
         elif self.sim_no_rtk:
             nav_sat_fix.status.status = config.GNSS_STATUS_FIX
+            self.sim_no_rtk = False
 
         self.gps_publisher.publish(nav_sat_fix)
 

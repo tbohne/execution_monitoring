@@ -92,8 +92,8 @@ class ConnectionResolver(GeneralFailureResolver):
         super(ConnectionResolver, self).__init__()
         rospy.Subscriber('/resolve_wifi_failure', String, self.resolve_callback, queue_size=1)
         rospy.Subscriber('/resolve_internet_failure', String, self.resolve_callback, queue_size=1)
-        rospy.Subscriber('/resolve_gps_failure', String, self.resolve_callback, queue_size=1)
-        self.success_pub = rospy.Publisher('/resolve_wifi_failure_success', Bool, queue_size=1)
+        rospy.Subscriber('/resolve_gnss_failure', String, self.resolve_callback, queue_size=1)
+        self.success_pub = rospy.Publisher('/resolve_connection_failure_success', Bool, queue_size=1)
         self.re_init_pub = rospy.Publisher('/re_init_internet_monitoring', String, queue_size=1)
 
     def resolve_callback(self, msg):
@@ -122,6 +122,12 @@ class ConnectionResolver(GeneralFailureResolver):
             self.resolve_type_ninie_failure(config.CONNECTION_FAILURE_NINE)
         elif msg.data == config.CONNECTION_FAILURE_TEN:
             self.resolve_type_ten_failure(config.CONNECTION_FAILURE_TEN)
+        elif msg.data == config.CONNECTION_FAILURE_ELEVEN:
+            self.resolve_type_eleven_failure(config.CONNECTION_FAILURE_ELEVEN)
+        elif msg.data == config.CONNECTION_FAILURE_TWELVE:
+            self.resolve_type_twelve_failure(config.CONNECTION_FAILURE_TWELVE)
+        elif msg.data == config.CONNECTION_FAILURE_THIRTEEN:
+            self.resolve_type_thirteen_failure(config.CONNECTION_FAILURE_THIRTEEN)
 
         if self.problem_resolved:
             self.success_pub.publish(True)
@@ -184,6 +190,24 @@ class ConnectionResolver(GeneralFailureResolver):
 
     def resolve_type_ten_failure(self, msg):
         rospy.loginfo("resolve type ten failure..")
+        self.fallback_pub.publish(msg)
+        while not self.problem_resolved:
+            rospy.sleep(5)
+
+    def resolve_type_eleven_failure(self, msg):
+        rospy.loginfo("resolve type eleven failure..")
+        self.fallback_pub.publish(msg)
+        while not self.problem_resolved:
+            rospy.sleep(5)
+
+    def resolve_type_twelve_failure(self, msg):
+        rospy.loginfo("resolve type twelve failure..")
+        self.fallback_pub.publish(msg)
+        while not self.problem_resolved:
+            rospy.sleep(5)
+
+    def resolve_type_thirteen_failure(self, msg):
+        rospy.loginfo("resolve type thirteen failure..")
         self.fallback_pub.publish(msg)
         while not self.problem_resolved:
             rospy.sleep(5)
