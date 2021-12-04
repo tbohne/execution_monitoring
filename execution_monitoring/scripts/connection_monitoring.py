@@ -148,7 +148,6 @@ class ConnectionMonitoring:
                         break
 
     def gnss_callback(self, nav_sat_fix):
-        rospy.loginfo("GNSS monitoring..")
         self.last_gnss_msg_time = datetime.now()
         self.estimate_gnss_quality(nav_sat_fix)
         self.status_monitoring(nav_sat_fix)
@@ -175,23 +174,25 @@ class ConnectionMonitoring:
                     return i
         
     def analyze_covariance_history(self):
-        east_components = [cov[0] for cov in self.gnss_covariance_history]
-        north_components = [cov[4] for cov in self.gnss_covariance_history]
-        up_components = [cov[8] for cov in self.gnss_covariance_history]
 
-        # what's our definition for getting worse?
-        #  - only increases
-        #  - total increase between oldest and latest larger than 15 (configurable)
+        if len(self.gnss_covariance_history) == config.COVARIANCE_HISTORY_LENGTH:
+            east_components = [cov[0] for cov in self.gnss_covariance_history]
+            north_components = [cov[4] for cov in self.gnss_covariance_history]
+            up_components = [cov[8] for cov in self.gnss_covariance_history]
 
-        if self.increasing_values_only(east_components) and self.get_latest(east_components) - self.get_oldest(east_components) > config.SIGNIFICANT_COVARIANCE_INCREASE:
-            self.contingency_pub.publish(config.CONNECTION_FAILURE_TWENTY)
-            return False
-        if self.increasing_values_only(north_components) and self.get_latest(north_components) - self.get_oldest(north_components) > config.SIGNIFICANT_COVARIANCE_INCREASE:
-            self.contingency_pub.publish(config.CONNECTION_FAILURE_TWENTY)
-            return False
-        if self.increasing_values_only(up_components) and self.get_latest(up_components) - self.get_oldest(up_components) > config.SIGNIFICANT_COVARIANCE_INCREASE:
-            self.contingency_pub.publish(config.CONNECTION_FAILURE_TWENTY)
-            return False
+            # what's our definition for getting worse?
+            #  - only increases
+            #  - total increase between oldest and latest larger than 15 (configurable)
+
+            if self.increasing_values_only(east_components) and self.get_latest(east_components) - self.get_oldest(east_components) > config.SIGNIFICANT_COVARIANCE_INCREASE:
+                self.contingency_pub.publish(config.CONNECTION_FAILURE_TWENTY)
+                return False
+            if self.increasing_values_only(north_components) and self.get_latest(north_components) - self.get_oldest(north_components) > config.SIGNIFICANT_COVARIANCE_INCREASE:
+                self.contingency_pub.publish(config.CONNECTION_FAILURE_TWENTY)
+                return False
+            if self.increasing_values_only(up_components) and self.get_latest(up_components) - self.get_oldest(up_components) > config.SIGNIFICANT_COVARIANCE_INCREASE:
+                self.contingency_pub.publish(config.CONNECTION_FAILURE_TWENTY)
+                return False
 
         return True
 
