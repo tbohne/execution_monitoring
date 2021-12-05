@@ -175,10 +175,10 @@ class ConnectionMonitoring:
     def analyze_covariance_history(self):
 
         if len(self.gnss_covariance_history) == config.COVARIANCE_HISTORY_LENGTH:
-            east_components = [cov[0] for cov in self.gnss_covariance_history]
-            north_components = [cov[4] for cov in self.gnss_covariance_history]
-            up_components = [cov[8] for cov in self.gnss_covariance_history]
-
+            east_components = [cov[0] for cov in self.gnss_covariance_history][::-1]
+            north_components = [cov[4] for cov in self.gnss_covariance_history][::-1]
+            up_components = [cov[8] for cov in self.gnss_covariance_history][::-1]
+            
             # what's our definition for getting worse?
             #  - only increases
             #  - total increase between oldest and latest larger than 15 (configurable)

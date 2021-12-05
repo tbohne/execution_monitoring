@@ -134,6 +134,14 @@ class ConnectionResolver(GeneralFailureResolver):
             self.resolve_type_fifteen_failure(config.CONNECTION_FAILURE_FIFTEEN)
         elif msg.data == config.CONNECTION_FAILURE_SIXTEEN:
             self.resolve_type_sixteen_failure(config.CONNECTION_FAILURE_SIXTEEN)
+        elif msg.data == config.CONNECTION_FAILURE_SEVENTEEN:
+            self.resolve_type_seventeen_failure(config.CONNECTION_FAILURE_SEVENTEEN)
+        elif msg.data == config.CONNECTION_FAILURE_EIGHTEEN:
+            self.resolve_type_eighteen_failure(config.CONNECTION_FAILURE_EIGHTEEN)
+        elif msg.data == config.CONNECTION_FAILURE_NINETEEN:
+            self.resolve_type_nineteen_failure(config.CONNECTION_FAILURE_NINETEEN)
+        elif msg.data == config.CONNECTION_FAILURE_TWENTY:
+            self.resolve_type_twenty_failure(config.CONNECTION_FAILURE_TWENTY)
 
         if self.problem_resolved:
             self.success_pub.publish(True)
@@ -236,6 +244,29 @@ class ConnectionResolver(GeneralFailureResolver):
         while not self.problem_resolved:
             rospy.sleep(5)
 
+    def resolve_type_seventeen_failure(self, msg):
+        rospy.loginfo("resolve type seventeen failure..")
+        self.fallback_pub.publish(msg)
+        while not self.problem_resolved:
+            rospy.sleep(5)
+
+    def resolve_type_eighteen_failure(self, msg):
+        rospy.loginfo("resolve type eighteen failure..")
+        self.fallback_pub.publish(msg)
+        while not self.problem_resolved:
+            rospy.sleep(5)
+
+    def resolve_type_nineteen_failure(self, msg):
+        rospy.loginfo("resolve type nineteen failure..")
+        self.fallback_pub.publish(msg)
+        while not self.problem_resolved:
+            rospy.sleep(5)
+
+    def resolve_type_twenty_failure(self, msg):
+        rospy.loginfo("resolve type twenty failure..")
+        self.fallback_pub.publish(msg)
+        while not self.problem_resolved:
+            rospy.sleep(5)
 
 class SensorFailureResolver(GeneralFailureResolver):
 

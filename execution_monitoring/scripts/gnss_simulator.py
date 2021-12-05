@@ -24,6 +24,7 @@ class GNSSSimulator:
         rospy.Subscriber("/set_simulated_no_rtk", String, self.set_no_rtk_callback, queue_size=1)
         rospy.Subscriber("/toggle_simulated_unknown_service", String, self.toggle_unknown_service_callback, queue_size=1)
         rospy.Subscriber("/toggle_simulated_infeasible_lat_lng", String, self.toggle_infeasible_lat_lng_callback, queue_size=1)
+        rospy.Subscriber("/toggle_simulated_cov_history_failure", String, self.toggle_cov_history_failure_callback, queue_size=1)
         self.sim_timeout = False
         self.sim_good_quality = True
         self.sim_med_quality = False
@@ -33,8 +34,12 @@ class GNSSSimulator:
         self.sim_no_rtk = False
         self.sim_unknown_service = False
         self.sim_infeasible_lat_lng = False
+        self.sim_cov_history_failure = False
 
         self.gps_publisher = rospy.Publisher('/fix', NavSatFix, queue_size=1)
+
+    def toggle_cov_history_failure_callback(self, msg):
+        self.sim_cov_history_failure = not self.sim_cov_history_failure
 
     def toggle_infeasible_lat_lng_callback(self, msg):
         self.sim_infeasible_lat_lng = not self.sim_infeasible_lat_lng
@@ -116,6 +121,21 @@ class GNSSSimulator:
             nav_sat_fix.latitude = -120
             nav_sat_fix.longitude = 200
             self.sim_infeasible_lat_lng = False
+
+        # covariance sim
+        if self.sim_cov_history_failure:
+            nav_sat_fix.position_covariance_type = config.GNSS_COVARIANCE_TYPE_DIAGONAL_KNOWN
+            east = north = up = 1.0
+
+            # fill history
+            for _ in range(config.COVARIANCE_HISTORY_LENGTH):
+                nav_sat_fix.position_covariance = [east, 0.0, 0.0, 0.0, north, 0.0, 0.0, 0.0, up]
+                east += 5.0
+                rospy.loginfo("publish: %s", nav_sat_fix.position_covariance)
+                self.gps_publisher.publish(nav_sat_fix)
+                rospy.sleep(2)
+            
+            self.sim_cov_history_failure = False
 
         self.gps_publisher.publish(nav_sat_fix)
 
