@@ -41,6 +41,18 @@
         - **disconnect:** just cut the connection
         - **bad download:** `rostopic pub -1 /toggle_simulated_bad_download std_msgs/String fail`
         - **bad upload:** `rostopic pub -1 /toggle_simulated_bad_upload std_msgs/String fail`
+    - **GNSS failures / options**
+        - **disconnect / timeout:** `rostopic pub -1 /toggle_simulated_timeout_failure std_msgs/String fail`
+        - **good quality** `rostopic pub -1 /set_simulated_good_quality std_msgs/String fail`
+        - **medium quality:** `rostopic pub -1 /set_simulated_med_quality std_msgs/String fail`
+        - **low quality:** `rostopic pub -1 /set_simulated_low_quality std_msgs/String fail`
+        - **unknown status:** `rostopic pub -1 /set_simulated_unknown_status std_msgs/String fail`
+        - **no fix:** `rostopic pub -1 /set_simulated_no_fix std_msgs/String fail`
+        - **no RTK:** `rostopic pub -1 /set_simulated_no_rtk std_msgs/String fail`
+        - **unknown service:** `rostopic pub -1 /toggle_simulated_unknown_service std_msgs/String fail`
+        - **infeasible lat / lng:** `rostopic pub -1 /toggle_simulated_infeasible_lat_lng std_msgs/String fail`
+        - **covariance history failure:** `rostopic pub -1 /toggle_simulated_cov_history_failure std_msgs/String fail`
+        - **high covariance:** `rostopic pub -1 /toggle_simulated_high_cov std_msgs/String fail`
 - **data management failures**
     - **full memory:** prepare full USB flash drive and configure `MONITOR_DRIVE` (path to monitor) accordingly
         - find out device: `fdisk -l`, e.g. `/dev/sdd1`
