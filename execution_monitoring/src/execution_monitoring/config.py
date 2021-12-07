@@ -1,12 +1,110 @@
 #!/usr/bin/env python
 
-# SCAN FAILURES
+#############################################################################
+######################## DATA MANAGEMENT MONITORING #########################
+#############################################################################
+DATA_MANAGEMENT_FAILURE_ONE = "full memory"
+DATA_MANAGEMENT_FAILURE_TWO = "scan not logged correctly"
+
+# DATA MANAGEMENT SETTINGS
+MONITOR_DRIVE = "/"
+ENABLE_SPECIFIC_LASER_SCAN_CHECK = True
+#############################################################################
+#############################################################################
+#############################################################################
+
+#############################################################################
+############################# SENSOR MONITORING #############################
+#############################################################################
 SENSOR_FAILURE_ONE = "total sensor failure"
 SENSOR_FAILURE_TWO = "empty list of range values"
 SENSOR_FAILURE_THREE = "predominantly infeasible range values (inf)"
 SENSOR_FAILURE_FOUR = "repeated scan"
 
-# CONNECTION FAILURES
+# SCAN SETTINGS
+SCAN_PATH = MONITOR_DRIVE + "/home/docker/catkin_ws/src/execution_monitoring/execution_monitoring/scans/"
+SCAN_TIME_LIMIT = 60
+SCAN_FILE_EXTENSION = ".txt"
+SCAN_VALUES_LB_PERCENTAGE = 5
+#############################################################################
+#############################################################################
+#############################################################################
+
+#############################################################################
+############################ WEATHER MONITORING #############################
+#############################################################################
+# WEATHER CONDITION CODES
+# Group 2xx: Thunderstorm
+THUNDERSTORM_WITH_LIGHT_RAIN = 200
+THUNDERSTORM_WITH_RAIN = 201
+THUNDERSTORM_WITH_HEAVY_RAIN = 202
+LIGHT_THUNDERSTORM = 210
+THUNDERSTORM = 211
+HEAVY_THUNDERSTORM = 212
+RAGGED_THUNDERSTORM = 221
+THUNDERSTORM_WITH_LIGHT_DRIZZLE = 230
+THUNDERSTORM_WITH_DRIZZLE = 231
+THUNDERSTORM_WITH_HEAVY_DRIZZLE = 232
+# Group 3xx: Drizzle
+LIGHT_INTENSITY_DRIZZLE = 300
+DRIZZLE = 301
+HEAVY_INTENSITY_DRIZZLE = 302
+LIGHT_INTENSITY_DRIZZLE_RAIN = 310
+DRIZZLE_RAIN = 311
+HEAVY_INTENSITY_DRIZZLE_RAIN = 312
+SHOWER_RAIN_AND_DRIZZLE = 313
+HEAVY_SHOWER_RAIN_AND_DRIZZLE = 314
+SHOWER_DRIZZLE = 321
+# Group 5xx: Rain
+LIGHT_RAIN = 500
+MODERATE_RAIN = 501
+HEAVY_INTENSITY_RAIN = 502
+VERY_HEAVY_RAIN = 503
+EXTREME_RAIN = 504
+FREEZING_RAIN = 511
+LIGHT_INTENSITY_SHOWER_RAIN = 520
+SHOWER_RAIN = 521
+HEAVY_INTENSITY_SHOWER_RAIN = 522
+RAGGED_SHOWER_RAIN = 531
+# Group 6xx: Snow
+LIGHT_SNOW = 600
+SNOW = 601
+HEAVY_SNOW = 602
+SLEET = 611
+LIGHT_SHOWER_SLEET = 612
+SHOWER_SLEET = 613
+LIGHT_RAIN_AND_SNOW = 615
+RAIN_AND_SNOW = 616
+LIGHT_SHOWER_SNOW = 620
+SHOWER_SNOW = 621
+HEAVY_SHOWER_SNOW = 622
+# Group 7xx: Atmosphere
+MIST = 701
+SMOKE = 711
+HAZE = 721
+SAND_DUST_WHIRLS = 731
+FOG = 741
+SAND = 751
+DUST = 761
+VOLCANIC_ASH = 762
+SQUALLS = 771
+TORNADO = 781
+# Group 800: Clear
+CLEAR_SKY = 800
+# Group 80x: Clouds
+FEW_CLOUDS = 801
+SCATTERED_CLOUDS = 802
+BROKEN_CLOUDS = 803
+OVERCAST_CLOUDS = 804
+
+LOCATION = 'Osnabrueck,DE'
+#############################################################################
+#############################################################################
+#############################################################################
+
+#############################################################################
+########################### CONNECTION MONITORING ###########################
+#############################################################################
 CONNECTION_FAILURE_ONE = "bad wifi link"
 CONNECTION_FAILURE_TWO = "bad wifi signal"
 CONNECTION_FAILURE_THREE = "bad wifi bitrate"
@@ -64,19 +162,8 @@ GOOD_VARIANCE_UB = 20
 COVARIANCE_HISTORY_LENGTH = 5
 SIGNIFICANT_COVARIANCE_INCREASE = 15
 
-# DATA MANAGEMENT FAILURES
-DATA_MANAGEMENT_FAILURE_ONE = "full memory"
-DATA_MANAGEMENT_FAILURE_TWO = "scan not logged correctly"
-
-# DATA MANAGEMENT SETTINGS
-MONITOR_DRIVE = "/"
-ENABLE_SPECIFIC_LASER_SCAN_CHECK = True
-
-# SCAN SETTINGS
-SCAN_PATH = MONITOR_DRIVE + "/home/docker/catkin_ws/src/execution_monitoring/execution_monitoring/scans/"
-SCAN_TIME_LIMIT = 60
-SCAN_FILE_EXTENSION = ".txt"
-SCAN_VALUES_LB_PERCENTAGE = 5
-
 # WIFI MONITORING
 WIFI_INTERFACE = "wlx3c1e045678a2"
+#############################################################################
+#############################################################################
+#############################################################################
