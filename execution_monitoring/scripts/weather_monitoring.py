@@ -6,8 +6,6 @@ from datetime import datetime
 
 from pyowm import OWM
 
-LOCATION = 'Osnabrueck,DE'
-
 class WeatherData:
 
     def __init__(self, time, status, cloudiness, humidity, pressure, rain_vol, snow_vol, wind, temperature, condition_code, icon_name, sunrise_time, sunset_time):
@@ -71,18 +69,18 @@ class WeatherMonitoring:
         owm = OWM(secret_config.OWM_API_KEY)
 
         if owm.is_API_online():
-            observation = owm.weather_at_place(LOCATION)
+            observation = owm.weather_at_place(config.LOCATION)
             print("monitoring weather for: " + observation.get_location().get_name())
             weather_data = self.parse_weather_data(observation.get_weather())
             weather_data.log_complete_info()
 
-            fc = owm.three_hours_forecast(LOCATION)
+            fc = owm.three_hours_forecast(config.LOCATION)
             f = fc.get_forecast().get_weathers()
             rospy.loginfo("forecast for the next few hours:")
             forecasts = [self.parse_weather_data(f[i]) for i in range(2)]
         
-        for forecast in forecasts:
-            forecast.log_complete_info()
+        # for forecast in forecasts:
+        #     forecast.log_complete_info()
 
 
 def node():
