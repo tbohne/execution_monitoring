@@ -172,6 +172,7 @@ catkin_install_python(PROGRAMS
   scripts/republish_velodyne.py
   scripts/operator_communication.py
   scripts/internet_monitoring.py
+  scripts/weather_monitoring.py
   scripts/gnss_simulator.py
   scripts/os_specific/wifi_monitor.py
   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
