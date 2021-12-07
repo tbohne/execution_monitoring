@@ -64,17 +64,68 @@ class WeatherMonitoring:
             data.get_pressure(), data.get_rain(), data.get_snow(), data.get_wind(), data.get_temperature('celsius'), data.get_weather_code(),
             data.get_weather_icon_name(), data.get_sunrise_time('iso'), data.get_sunset_time('iso'))
 
+    def monitor_rain_volume(self, rain_vol):
+        # moderate rain: greater than 0.5 mm per hour, but less than 4.0 mm per hour
+        if 4.0 > rain_vol > 0.5:
+            pass
+        # heavy rain: greater than 4 mm per hour, but less than 8 mm per hour
+        elif 8.0 > rain_vol > 4.0:
+            pass
+        # very heavy rain: greater than 8 mm per hour
+        elif rain_vol > 8.0:
+            pass
+
+    def monitor_snow_volume(self, snow_vol):
+        if 4.0 > snow_vol > 0.5:
+            pass
+        elif 8.0 > snow_vol > 4.0:
+            pass
+        elif snow_vol > 8.0:
+            pass
+
+    def monitor_wind(self, gust_speed, speed):
+        if 14 > gust_speed > 11 or 14 > speed > 11:
+            # Strong Breeze -> Large branches in continuous motion. Whistling sounds heard in overhead or nearby power and telephone lines. Umbrellas used with difficulty.
+            pass
+        elif 20 > gust_speed > 14 or 20 > speed > 14:
+            # Near Gale / Gale -> Whole trees in motion. Inconvenience felt when walking against the wind.
+            #                  -> Wind breaks twigs and small branches. Wind generally impedes walking.
+            pass
+        elif 24 > gust_speed > 21 or 24 > speed > 21:
+            # Strong Gale -> Structural damage occurs, such as chimney covers, roofing tiles blown off, and television antennas damaged. Ground is littered with many small twigs and broken branches.
+            pass
+        elif 28 > gust_speed > 24 or 28 > speed > 24:
+            # Whole Gale -> Considerable structural damage occurs, especially on roofs. Small trees may be blown over and uprooted.
+            pass
+        elif 33 > gust_speed > 28 or 33 > speed > 28:
+            # Storm Force -> Widespread damage occurs. Larger trees blown over and uprooted.
+            pass
+        elif gust_speed > 33 or speed > 33:
+            # Hurricane Force -> Severe and extensive damage. Roofs can be peeled off. Windows broken. Trees uprooted. RVs and small mobile homes overturned. Moving automobiles can be pushed off the roadways.
+            pass
+
+    def monitor_temperature(self, min_temp, max_temp, temp):
+        # arbitrarily chosen, depends on sensors etc., should be configurable by the user
+        if temp > 50 or max_temp > 50:
+            pass
+        # arbitrarily chosen, depends on sensors etc., should be configurable by the user
+        if temp < -5 or min_temp < -5:
+            pass
+
+    def monitor_owm_weather_condition_code(self, code):
+        pass
+
+    def monitor_sunrise_and_sunset(self, sunrise_time, sunset_time):
+        pass
+
     def monitor_weather_data(self, weather_data):
 
-        # monitor rain volume
-        # monitor snow volume
-        # monitor wind (gust speed, speed, direction)
-        # monitor temperature (min, temp, max)
-        # monitor OWM weather condition code
-        # monitor sunrise / sunset
-        pass
-        
-
+        self.monitor_rain_volume(weather_data.rain_vol)
+        self.monitor_snow_volume(weather_data.snow_vol)
+        self.monitor_wind(weather_data.wind_gust_speed, weather_data.wind_speed)
+        self.monitor_temperature(weather_data.min_temp, weather_data.max_temp, weather_data.temp)
+        self.monitor_owm_weather_condition_code(weather_data.owm_weather_condition_code)
+        self.monitor_sunrise_and_sunset(weather_data.sunrise_time, weather_data.sunset_time)
 
     def launch_weather_monitoring(self):
 
