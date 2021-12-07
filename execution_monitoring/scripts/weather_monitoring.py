@@ -13,9 +13,9 @@ class WeatherData:
         self.status = status
         self.cloudiness_percentage = cloudiness
         self.humidity_percentage = humidity
-        self.atmospheric_pressure = pressure
-        self.rain_vol = rain_vol
-        self.snow_vol = snow_vol
+        self.atmospheric_pressure = pressure['press']
+        self.rain_vol = rain_vol['1h'] if '1h' in rain_vol else 0
+        self.snow_vol = snow_vol['1h'] if '1h' in snow_vol else 0
         self.wind_gust_speed = wind['gust']
         self.wind_speed = wind['speed']
         self.wind_direction = wind['deg']
@@ -34,11 +34,11 @@ class WeatherData:
         rospy.loginfo("status: %s", self.status)
         rospy.loginfo("cloudiness percentage: %s", self.cloudiness_percentage)
         rospy.loginfo("humidity percentage: %s", self.humidity_percentage)
-        rospy.loginfo("atmospheric pressure: %s", self.atmospheric_pressure)
+        rospy.loginfo("atmospheric pressure: %s hPa", self.atmospheric_pressure)
 
         # for monitoring
-        rospy.loginfo("rain volume for the last 3 hours: %s mm", self.rain_vol)
-        rospy.loginfo("snow volume for the last 3 hours: %s mm", self.snow_vol)
+        rospy.loginfo("rain volume for the last 1 hour: %s mm", self.rain_vol)
+        rospy.loginfo("snow volume for the last 1 hour: %s mm", self.snow_vol)
         rospy.loginfo("wind gust speed: %s m/s", self.wind_gust_speed)
         rospy.loginfo("wind speed: %s m/s", self.wind_speed)
         rospy.loginfo("wind direction: %s deg.", self.wind_direction)
@@ -64,8 +64,20 @@ class WeatherMonitoring:
             data.get_pressure(), data.get_rain(), data.get_snow(), data.get_wind(), data.get_temperature('celsius'), data.get_weather_code(),
             data.get_weather_icon_name(), data.get_sunrise_time('iso'), data.get_sunset_time('iso'))
 
-    def launch_weather_monitoring(self):
+    def monitor_weather_data(self, weather_data):
+
+        # monitor rain volume
+        # monitor snow volume
+        # monitor wind (gust speed, speed, direction)
+        # monitor temperature (min, temp, max)
+        # monitor OWM weather condition code
+        # monitor sunrise / sunset
+        pass
         
+
+
+    def launch_weather_monitoring(self):
+
         owm = OWM(secret_config.OWM_API_KEY)
 
         if owm.is_API_online():
@@ -73,6 +85,7 @@ class WeatherMonitoring:
             print("monitoring weather for: " + observation.get_location().get_name())
             weather_data = self.parse_weather_data(observation.get_weather())
             weather_data.log_complete_info()
+            self.monitor_weather_data(weather_data)
 
             fc = owm.three_hours_forecast(config.LOCATION)
             f = fc.get_forecast().get_weathers()
