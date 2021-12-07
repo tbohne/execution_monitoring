@@ -8,6 +8,52 @@ from pyowm import OWM
 
 LOCATION = 'Osnabrueck,DE'
 
+class WeatherData:
+
+    def __init__(self, time, status, cloudiness, humidity, pressure, rain_vol, snow_vol, wind, temperature, condition_code, icon_name, sunrise_time, sunset_time):
+        self.observation_time = time
+        self.status = status
+        self.cloudiness_percentage = cloudiness
+        self.humidity_percentage = humidity
+        self.atmospheric_pressure = pressure
+        self.rain_vol = rain_vol
+        self.snow_vol = snow_vol
+        self.wind_gust_speed = wind['gust']
+        self.wind_speed = wind['speed']
+        self.wind_direction = wind['deg']
+        self.max_temp = temperature['temp_max']
+        self.min_temp = temperature['temp_min']
+        self.temp = temperature['temp']
+        self.owm_weather_condition_code = condition_code
+        self.weather_related_icon_name = icon_name
+        self.sunrise_time = sunrise_time
+        self.sunset_time = sunset_time
+
+    def log_complete_info(self):
+        rospy.loginfo("###############################################################################")
+        # just for information
+        rospy.loginfo("time of observation: %s", self.observation_time)
+        rospy.loginfo("status: %s", self.status)
+        rospy.loginfo("cloudiness percentage: %s", self.cloudiness_percentage)
+        rospy.loginfo("humidity percentage: %s", self.humidity_percentage)
+        rospy.loginfo("atmospheric pressure: %s", self.atmospheric_pressure)
+
+        # for monitoring
+        rospy.loginfo("rain volume for the last 3 hours: %s mm", self.rain_vol)
+        rospy.loginfo("snow volume for the last 3 hours: %s mm", self.snow_vol)
+        rospy.loginfo("wind gust speed: %s m/s", self.wind_gust_speed)
+        rospy.loginfo("wind speed: %s m/s", self.wind_speed)
+        rospy.loginfo("wind direction: %s deg.", self.wind_direction)
+        rospy.loginfo("min. temperature: %s [deg. C]", self.min_temp)
+        rospy.loginfo("temperature: %s [deg. C]", self.temp)
+        rospy.loginfo("max. temperature: %s [deg. C]", self.max_temp)
+        rospy.loginfo("OWM weather condition code: %s", self.owm_weather_condition_code)
+        rospy.loginfo("weather-related icon name: %s", self.weather_related_icon_name)
+        rospy.loginfo("sunrise time: %s", self.sunrise_time)
+        rospy.loginfo("sunset time: %s", self.sunset_time)
+        rospy.loginfo("###############################################################################")
+
+
 class WeatherMonitoring:
 
     def __init__(self):
@@ -15,26 +61,10 @@ class WeatherMonitoring:
         self.robot_info_pub = rospy.Publisher('/robot_info', String, queue_size=1)
         self.launch_weather_monitoring()
 
-    def parse_weather_data(self, data, forecast):
-        rospy.loginfo("###############################################################################")
-        # just for information
-        rospy.loginfo("time of observation: %s", data.get_reference_time(timeformat='iso'))
-        rospy.loginfo("status: %s", data.get_detailed_status())
-        rospy.loginfo("cloudiness percentage: %s", data.get_clouds())
-        rospy.loginfo("humidity percentage: %s", data.get_humidity())
-        rospy.loginfo("atmospheric pressure: %s", data.get_pressure())
-
-        # for monitoring
-        rospy.loginfo("rain volume for the last 3 hours: %s mm", data.get_rain())
-        rospy.loginfo("snow volume for the last 3 hours: %s mm", data.get_snow())
-        rospy.loginfo("wind: %s", data.get_wind())
-        rospy.loginfo("temperature (degrees C): %s", data.get_temperature('celsius'))
-        rospy.loginfo("OWM weather condition code: %s", data.get_weather_code())
-        rospy.loginfo("weather-related icon name: %s", data.get_weather_icon_name())
-        if not forecast:
-            rospy.loginfo("sunrise time: %s", data.get_sunrise_time('iso'))
-            rospy.loginfo("sunset time: %s", data.get_sunset_time('iso'))
-        rospy.loginfo("###############################################################################")
+    def parse_weather_data(self, data):
+        return WeatherData(data.get_reference_time(timeformat='iso'), data.get_detailed_status(), data.get_clouds(), data.get_humidity(),
+            data.get_pressure(), data.get_rain(), data.get_snow(), data.get_wind(), data.get_temperature('celsius'), data.get_weather_code(),
+            data.get_weather_icon_name(), data.get_sunrise_time('iso'), data.get_sunset_time('iso'))
 
     def launch_weather_monitoring(self):
         
@@ -43,13 +73,16 @@ class WeatherMonitoring:
         if owm.is_API_online():
             observation = owm.weather_at_place(LOCATION)
             print("monitoring weather for: " + observation.get_location().get_name())
-            self.parse_weather_data(observation.get_weather(), False)
+            weather_data = self.parse_weather_data(observation.get_weather())
+            weather_data.log_complete_info()
 
             fc = owm.three_hours_forecast(LOCATION)
             f = fc.get_forecast().get_weathers()
             rospy.loginfo("forecast for the next few hours:")
-            for i in range(0, 3):
-                self.parse_weather_data(f[i], True)
+            forecasts = [self.parse_weather_data(f[i]) for i in range(2)]
+        
+        for forecast in forecasts:
+            forecast.log_complete_info()
 
 
 def node():
