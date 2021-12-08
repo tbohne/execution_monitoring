@@ -33,6 +33,26 @@ SCAN_VALUES_LB_PERCENTAGE = 5
 #############################################################################
 ############################ WEATHER MONITORING #############################
 #############################################################################
+# WEATHER FAILURES / INFOS
+WEATHER_FAILURE_ONE = "moderate rain - continuing work"
+WEATHER_FAILURE_TWO = "heavy rain - interrupting work, seeking shelter"
+WEATHER_FAILURE_THREE = "very heavy rain - interrupting work, seeking shelter"
+WEATHER_FAILURE_FOUR = "moderate snow - continuing work"
+WEATHER_FAILURE_FIVE = "heavy snow - interrupting work, seeking shelter - "
+WEATHER_FAILURE_SIX = "strong breeze -> large branches in continuous motion etc. - continuing work"
+WEATHER_FAILURE_SEVEN = "gale -> whole trees in motion; inconvenience felt when walking against the wind; wind breaks twigs and small branches - continuing work, but it begins getting critical"
+WEATHER_FAILURE_EIGHT = "strong gale -> risk for structural damage - interrupting work, seeking shelter"
+WEATHER_FAILURE_NINE = "storm force -> very high risk for structural damage; larger trees blown over and uprooted - interrupting work, seeking shelter"
+WEATHER_FAILURE_TEN = "hurricane -> very high risk for severe and extensive structural damage - interrupting work, seeking shelter"
+WEATHER_FAILURE_ELEVEN = "very high temperature (> 40 deg. C); sensor damage possible - interrupting work, seeking shelter"
+WEATHER_FAILURE_TWELVE = "very low temperature (< -5 deg. C); battery and sensor damage expected - interrupting work, seeking shelter"
+WEATHER_FAILURE_THIRTEEN = "thunderstorm - interrupting work, seeking shelter"
+WEATHER_FAILURE_FOURTEEN = "tornado - interrupting work, seeking shelter"
+WEATHER_FAILURE_FIFTEEN = "perception may be impaired by mist, smoke or fog - interrupting work, continuing later"
+WEATHER_FAILURE_SIXTEEN = "before sunrise - interrupting work until then"
+WEATHER_FAILURE_SEVENTEEN = "after sunset - interrupting work until sunrise"
+WEATHER_FAILURE_EIGHTEEN = "sunset in a few minutes - interrupting work and driving back to base"
+
 # WEATHER CONDITION CODES
 # Group 2xx: Thunderstorm
 THUNDERSTORM_WITH_LIGHT_RAIN = 200
