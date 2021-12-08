@@ -7,7 +7,7 @@ import numpy as np
 def parse_mission_name(mission_name):
     return mission_name.data.strip().replace(" ", "_").replace(",", "_").replace("__", "_").replace(":", "_")
 
-def create_dtg_goal(action):
+def create_dtg_goal(pose):
     action_goal = dtg_Goal()
     # TODO: could we use wgs84 here?
     action_goal.target_pose.header.frame_id = "utm"
@@ -18,11 +18,11 @@ def create_dtg_goal(action):
     target = osr.SpatialReference()
     target.ImportFromEPSG(32632)
     transform = osr.CoordinateTransformation(source, target)
-    x, y = transform.TransformPoint(action.pose[1], action.pose[0])[0:2]  # switch lat / lon
+    x, y = transform.TransformPoint(pose[1], pose[0])[0:2]  # switch lat / lon
     action_goal.target_pose.pose.position.x = x
     action_goal.target_pose.pose.position.y = y
 
-    q = quaternion_from_euler(0, 0, np.pi * (action.pose[2] + 90) / 180)
+    q = quaternion_from_euler(0, 0, np.pi * (pose[2] + 90) / 180)
     action_goal.target_pose.pose.orientation.x = q[0]
     action_goal.target_pose.pose.orientation.y = q[1]
     action_goal.target_pose.pose.orientation.z = q[2]

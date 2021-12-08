@@ -1,7 +1,9 @@
 #!/usr/bin/env python
 import rospy
 from std_msgs.msg import String, Bool
-from execution_monitoring import config
+import actionlib
+from arox_navigation_flex.msg import drive_to_goalAction
+from execution_monitoring import config, util
 
 
 class FallbackResolver:
@@ -57,6 +59,7 @@ class WeatherFailureResolver(GeneralFailureResolver):
         super(WeatherFailureResolver, self).__init__()
         rospy.Subscriber('/resolve_weather_failure', String, self.resolve_callback, queue_size=1)
         self.success_pub = rospy.Publisher('/resolve_weather_failure_success', Bool, queue_size=1)
+        self.drive_to_goal_client = actionlib.SimpleActionClient('drive_to_goal', drive_to_goalAction)
 
     def resolve_callback(self, msg):
         rospy.loginfo("launch weather failure resolver..")
@@ -75,10 +78,22 @@ class WeatherFailureResolver(GeneralFailureResolver):
 
     def resolve_weather_failure(self, msg):
         rospy.loginfo("resolve drastic weather change..")
-        # TODO: drive back to base
-        self.fallback_pub.publish(msg)
-        while not self.problem_resolved:
-            rospy.sleep(5)
+        rospy.loginfo("seeking shelter - driving back to base..")
+
+        action_goal = util.create_dtg_goal(config.BASE_POSE)
+        self.drive_to_goal_client.wait_for_server()
+        self.drive_to_goal_client.send_goal(action_goal)
+        rospy.loginfo("goal sent, wait for accomplishment..")
+        self.drive_to_goal_client.wait_for_result()
+
+        out = self.drive_to_goal_client.get_result()
+        if out.progress > 0:
+            self.fallback_pub.publish(msg)
+            while not self.problem_resolved:
+                rospy.sleep(5)
+
+        self.problem_resolved = True
+
 
 class DataManagementFailureResolver(GeneralFailureResolver):
 
