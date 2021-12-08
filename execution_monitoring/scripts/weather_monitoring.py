@@ -26,8 +26,8 @@ class WeatherData:
         self.weather_related_icon_name = icon_name
         self.sunrise_time = sunrise_time
         self.sunset_time = sunset_time
-        self.sunrise_time_sec = sunrise_time_sec
-        self.sunset_time_sec = sunset_time_sec
+        self.sunrise_time_sec = int(sunrise_time_sec)
+        self.sunset_time_sec = int(sunset_time_sec)
 
     def log_complete_info(self):
         rospy.loginfo("###############################################################################")
@@ -59,6 +59,7 @@ class WeatherMonitoring:
     def __init__(self):
         self.contingency_pub = rospy.Publisher('/contingency_preemption', String, queue_size=1)
         self.robot_info_pub = rospy.Publisher('/robot_info', String, queue_size=1)
+        self.moderate_weather_pub = rospy.Publisher('/moderate_weather', String, queue_size=1)
         rospy.Subscriber('/resolve_weather_failure_success', Bool, self.resolve_callback, queue_size=1)
         rospy.Subscriber('/toggle_rain_sim', String, self.rain_callback, queue_size=1)
         rospy.Subscriber('/toggle_snow_sim', String, self.snow_callback, queue_size=1)
@@ -118,128 +119,205 @@ class WeatherMonitoring:
 
         if self.sim_rain:
             rain = {'1h': 6}
-            self.sim_rain = False
         if self.sim_snow:
             snow = {'1h': 4}
-            self.sim_snow = False
         if self.sim_wind:
             wind['gust'] = wind['speed'] = 27
-            self.sim_wind = False
         if self.sim_temp:
             temp = {'temp_min': -9, 'temp_max': -2, 'temp': -5}
-            self.sim_temp = False
         if self.code_sim:
             code = 221
-            self.code_sim = False
         if self.sunset_sim:
             sunset = int((datetime.now() - datetime(1970, 1, 1)).total_seconds())
-            self.sunset_sim = False
 
         return WeatherData(time, status, clouds, humid, pressure, rain, snow, wind, temp, code, icon, sunrise, sunset, sunrise_iso, sunset_iso)
 
     def monitor_rain_volume(self, rain_vol):
+        """
+        Monitors the current rain volume.
+
+        :param rain_vol: rain volume per hour in mm
+        :return: false if contingency, else true
+        """
         # moderate rain: greater than 0.5 mm per hour, but less than 4.0 mm per hour
-        if 4.0 > rain_vol > 0.5:
+        if 4.0 > rain_vol > 0.5 and self.active_monitoring:
             self.robot_info_pub.publish(config.WEATHER_FAILURE_ONE)
         # heavy rain: greater than 4 mm per hour, but less than 8 mm per hour
         elif 8.0 > rain_vol > 4.0:
-            self.contingency_pub.publish(config.WEATHER_FAILURE_TWO)
-            self.active_monitoring = False
+            if self.active_monitoring:
+                self.contingency_pub.publish(config.WEATHER_FAILURE_TWO)
+                self.active_monitoring = False
+            return False
         # very heavy rain: greater than 8 mm per hour
         elif rain_vol > 8.0:
-            self.contingency_pub.publish(config.WEATHER_FAILURE_THREE)
-            self.active_monitoring = False
+            if self.active_monitoring:
+                self.contingency_pub.publish(config.WEATHER_FAILURE_THREE)
+                self.active_monitoring = False
+            return False
+        return True
 
     def monitor_snow_volume(self, snow_vol):
+        """
+        Monitors the current snow volume.
+
+        :param snow_vol: snow volume per hour in mm
+        :return: false if contingency, else true
+        """
         # moderate snow
-        if 2.0 > snow_vol > 0.5:
+        if 2.0 > snow_vol > 0.5 and self.active_monitoring:
             self.robot_info_pub.publish(config.WEATHER_FAILURE_FOUR)
         # heavy snow
         elif snow_vol > 2.0:
-            self.contingency_pub.publish(config.WEATHER_FAILURE_FIVE + snow_vol + " mm per hour")
-            self.active_monitoring = False
+            if self.active_monitoring:
+                self.contingency_pub.publish(config.WEATHER_FAILURE_FIVE)
+                self.active_monitoring = False
+            return False
+        return True
 
     def monitor_wind(self, gust_speed, speed):
-        if 14 > gust_speed > 11 or 14 > speed > 11:
+        """
+        Monitors the current wind speed.
+
+        :param gust_speed: gust speed in m/s
+        :param speed: general wind speed in m/s
+        :return: false if contingency, else true
+        """
+        if 14 > gust_speed > 11 or 14 > speed > 11 and self.active_monitoring:
             # strong breeze -> large branches in continuous motion
             self.robot_info_pub.publish(config.WEATHER_FAILURE_SIX)
-        elif 20 > gust_speed > 14 or 20 > speed > 14:
+        elif 20 > gust_speed > 14 or 20 > speed > 14 and self.active_monitoring:
             # gale -> whole trees in motion; inconvenience felt when walking against the wind; wind breaks twigs and small branches
             self.robot_info_pub.publish(config.WEATHER_FAILURE_SEVEN)
         elif 28 > gust_speed > 21 or 28 > speed > 21:
             # strong gale -> risk for structural damage
-            self.contingency_pub.publish(config.WEATHER_FAILURE_EIGHT)
-            self.active_monitoring = False
+            if self.active_monitoring:
+                self.contingency_pub.publish(config.WEATHER_FAILURE_EIGHT)
+                self.active_monitoring = False
+            return False
         elif 33 > gust_speed > 28 or 33 > speed > 28:
             # storm force -> very high risk for structural damage; larger trees blown over and uprooted
             self.contingency_pub.publish(config.WEATHER_FAILURE_NINE)
             self.active_monitoring = False
+            return False
         elif gust_speed > 33 or speed > 33:
             # hurricane -> very high risk for severe and extensive structural damage
-            self.contingency_pub.publish(config.WEATHER_FAILURE_TEN)
-            self.active_monitoring = False
+            if self.active_monitoring:
+                self.contingency_pub.publish(config.WEATHER_FAILURE_TEN)
+                self.active_monitoring = False
+            return False
+        return True
 
     def monitor_temperature(self, min_temp, max_temp, temp):
+        """
+        Monitors the current temperature.
+
+        :param min_temp: current minimum temperature in the area [deg. C]
+        :param max_temp: current maximum temperature in the area [deg. C]
+        :param temp: current temperature [deg. C]
+        :return: false if contingency, else true
+        """
         # arbitrarily chosen, depends on sensors etc., should be configurable by the user
         if temp > 40 or max_temp > 40:
-            self.contingency_pub.publish(config.WEATHER_FAILURE_ELEVEN)
-            self.active_monitoring = False
+            if self.active_monitoring:
+                self.contingency_pub.publish(config.WEATHER_FAILURE_ELEVEN)
+                self.active_monitoring = False
+            return False
         # arbitrarily chosen, depends on sensors etc., should be configurable by the user
         if temp < -5 or min_temp < -5:
-            self.contingency_pub.publish(config.WEATHER_FAILURE_TWELVE)
-            self.active_monitoring = False
+            if self.active_monitoring:
+                self.contingency_pub.publish(config.WEATHER_FAILURE_TWELVE)
+                self.active_monitoring = False
+            return False
+        return True
 
     def monitor_owm_weather_condition_code(self, code):
+        """
+        Monitors the current OWM weather code.
+
+        :param code: OWM weather code
+        :return: false if contingency, else true
+        """
         if code in [config.THUNDERSTORM_WITH_LIGHT_RAIN, config.THUNDERSTORM_WITH_RAIN, config.THUNDERSTORM_WITH_HEAVY_RAIN, config.LIGHT_THUNDERSTORM, config.THUNDERSTORM,
             config.HEAVY_THUNDERSTORM, config.RAGGED_THUNDERSTORM, config.THUNDERSTORM_WITH_LIGHT_DRIZZLE, config.THUNDERSTORM_WITH_DRIZZLE, config.THUNDERSTORM_WITH_HEAVY_DRIZZLE]:
-            self.contingency_pub.publish(config.WEATHER_FAILURE_THIRTEEN)
-            self.active_monitoring = False
+            if self.active_monitoring:
+                self.contingency_pub.publish(config.WEATHER_FAILURE_THIRTEEN)
+                self.active_monitoring = False
+            return False
         elif code in [config.HEAVY_INTENSITY_RAIN, config.VERY_HEAVY_RAIN, config.EXTREME_RAIN, config.FREEZING_RAIN, config.HEAVY_INTENSITY_SHOWER_RAIN, config.RAGGED_SHOWER_RAIN]:
-            self.contingency_pub.publish(config.WEATHER_FAILURE_TWO)
-            self.active_monitoring = False
+            if self.active_monitoring:
+                self.contingency_pub.publish(config.WEATHER_FAILURE_TWO)
+                self.active_monitoring = False
+            return False
         elif code in [config.SNOW, config.HEAVY_SNOW, config.RAIN_AND_SNOW, config.HEAVY_SHOWER_SNOW]:
-            self.contingency_pub.publish(config.WEATHER_FAILURE_FIVE)
-            self.active_monitoring = False
+            if self.active_monitoring:
+                self.contingency_pub.publish(config.WEATHER_FAILURE_FIVE)
+                self.active_monitoring = False
+            return False
         elif code == config.TORNADO:
-            self.contingency_pub.publish(config.WEATHER_FAILURE_FOURTEEN)
-            self.active_monitoring = False
+            if self.active_monitoring:
+                self.contingency_pub.publish(config.WEATHER_FAILURE_FOURTEEN)
+                self.active_monitoring = False
+            return False
         elif code == config.SQUALLS:
-            self.contingency_pub.publish(config.WEATHER_FAILURE_SEVEN)
-            self.active_monitoring = False
+            if self.active_monitoring:
+                self.contingency_pub.publish(config.WEATHER_FAILURE_SEVEN)
+                self.active_monitoring = False
+            return False
         elif code in [config.MIST, config.SMOKE, config.FOG]:
-            self.contingency_pub.publish(config.WEATHER_FAILURE_FIFTEEN)
-            self.active_monitoring = False
+            if self.active_monitoring:
+                self.contingency_pub.publish(config.WEATHER_FAILURE_FIFTEEN)
+                self.active_monitoring = False
+            return False
+        return True
 
     def monitor_sunrise_and_sunset(self, sunrise_time_sec, sunset_time_sec):
-        # TODO: convert everything to correct time zone
-        # rospy.loginfo("current time: %s", datetime.now())
-        # rospy.loginfo("sunrise time: %s", sunrise_time)
-        # rospy.loginfo("sunset time: %s", sunset_time)
+        """
+        Monitors the sunrise and sunset times.
+
+        :param sunrise_time_sec: sunrise time in seconds (UNIX timestamp)
+        :param sunset_time_sec: sunset time in seconds (UNIX timestamp)
+        :return: false if contingency, else true
+        """
+        # TODO: convert everything to correct time zone        
         time_in_seconds = int((datetime.now() - datetime(1970, 1, 1)).total_seconds())
+        rospy.loginfo("time: %s", time_in_seconds)
+        rospy.loginfo("sunrise time: %s", sunrise_time_sec)
+        rospy.loginfo("sunset time: %s", sunset_time_sec)
+        rospy.loginfo("time > sunset? %s", ((time_in_seconds > sunset_time_sec)))
 
         if sunrise_time_sec > time_in_seconds:
-            self.contingency_pub.publish(config.WEATHER_FAILURE_SIXTEEN)
-            self.active_monitoring = False
+            if self.active_monitoring:
+                self.contingency_pub.publish(config.WEATHER_FAILURE_SIXTEEN)
+                self.active_monitoring = False
+            return False
         elif time_in_seconds > sunset_time_sec:
-            self.contingency_pub.publish(config.WEATHER_FAILURE_SEVENTEEN)
-            self.active_monitoring = False
+            
+            if self.active_monitoring:
+                rospy.loginfo("TIME AFTER SUNSET")
+                self.contingency_pub.publish(config.WEATHER_FAILURE_SEVENTEEN)
+                self.active_monitoring = False
+            return False
         else:
             time_since_sunrise = time_in_seconds - sunrise_time_sec
             time_before_sunset = sunset_time_sec - time_in_seconds
             # rospy.loginfo("minutes since sunrise: %s", time_since_sunrise / 60)
             # rospy.loginfo("minutes before sunset: %s", time_before_sunset / 60)
             if time_before_sunset / 60 < 15:
-                self.contingency_pub.publish(config.WEATHER_FAILURE_EIGHTEEN)
-                self.active_monitoring = False
+                if self.active_monitoring:
+                    self.contingency_pub.publish(config.WEATHER_FAILURE_EIGHTEEN)
+                    self.active_monitoring = False
+                return False
+        return True
 
     def monitor_weather_data(self, weather_data):
-        if self.active_monitoring:
-            self.monitor_rain_volume(weather_data.rain_vol)
-            self.monitor_snow_volume(weather_data.snow_vol)
-            self.monitor_wind(weather_data.wind_gust_speed, weather_data.wind_speed)
-            self.monitor_temperature(weather_data.min_temp, weather_data.max_temp, weather_data.temp)
-            self.monitor_owm_weather_condition_code(weather_data.owm_weather_condition_code)
-            self.monitor_sunrise_and_sunset(weather_data.sunrise_time_sec, weather_data.sunset_time_sec)
+        rain_ok = self.monitor_rain_volume(weather_data.rain_vol)
+        snow_ok = self.monitor_snow_volume(weather_data.snow_vol)
+        wind_ok = self.monitor_wind(weather_data.wind_gust_speed, weather_data.wind_speed)
+        temp_ok = self.monitor_temperature(weather_data.min_temp, weather_data.max_temp, weather_data.temp)
+        code_ok = self.monitor_owm_weather_condition_code(weather_data.owm_weather_condition_code)
+        sun_ok = self.monitor_sunrise_and_sunset(weather_data.sunrise_time_sec, weather_data.sunset_time_sec)
+        if not self.active_monitoring and rain_ok and snow_ok and wind_ok and temp_ok and code_ok and sun_ok:
+            self.moderate_weather_pub.publish("weather is moderate again..")
 
     def launch_weather_monitoring(self):
 
@@ -250,7 +328,7 @@ class WeatherMonitoring:
                 observation = owm.weather_at_place(config.LOCATION)
                 print("monitoring weather for: " + observation.get_location().get_name())
                 weather_data = self.parse_weather_data(observation.get_weather())
-                # weather_data.log_complete_info()
+                weather_data.log_complete_info()
                 self.monitor_weather_data(weather_data)
                 
                 # TODO: implement forecast monitoring -> seek shelter in time..
@@ -268,6 +346,8 @@ def node():
     rospy.init_node('weather_monitoring')
     rospy.wait_for_message('SMACH_runnning', String)
     rospy.loginfo("launch weather monitoring..")
+    # necessary to wait for actual start of operation -> should be removed later
+    rospy.sleep(5)
     WeatherMonitoring()
     rospy.spin()
 
