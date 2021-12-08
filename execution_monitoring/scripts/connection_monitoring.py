@@ -33,7 +33,7 @@ class ConnectionMonitoring:
             if self.active_monitoring:
                 if self.last_gnss_msg_time is not None:
                     time_since_update = (now - self.last_gnss_msg_time).total_seconds()
-                    rospy.loginfo("time since last GNSS update: %s s", time_since_update)
+                    # rospy.loginfo("time since last GNSS update: %s s", time_since_update)
                     if time_since_update > config.GPS_TIMEOUT:
                         rospy.loginfo("detected GNSS timeout - no new update since %s s", time_since_update)
                         self.contingency_pub.publish(config.CONNECTION_FAILURE_EIGHT)
@@ -41,7 +41,7 @@ class ConnectionMonitoring:
 
                 if self.last_wifi_msg_time is not None:
                     time_since_update = (now - self.last_wifi_msg_time).total_seconds()
-                    rospy.loginfo("time since last wifi update: %s s", time_since_update)
+                    # rospy.loginfo("time since last wifi update: %s s", time_since_update)
                     if time_since_update > config.WIFI_TIMEOUT:
                         rospy.loginfo("detected wifi timeout - no new update since %s s", time_since_update)
                         self.contingency_pub.publish(config.CONNECTION_FAILURE_NINE)
@@ -49,7 +49,7 @@ class ConnectionMonitoring:
 
                 if self.last_internet_msg_time is not None:
                     time_since_update = (now - self.last_internet_msg_time).total_seconds()
-                    rospy.loginfo("time since last internet update: %s s", time_since_update)
+                    # rospy.loginfo("time since last internet update: %s s", time_since_update)
                     if time_since_update > config.INTERNET_TIMEOUT:
                         rospy.loginfo("detected internet timeout - no new update since %s s", time_since_update)
                         self.contingency_pub.publish(config.CONNECTION_FAILURE_TEN)
@@ -250,8 +250,8 @@ class ConnectionMonitoring:
     def wifi_callback(self, wifi_info):
         self.last_wifi_msg_time = datetime.now()
         if self.active_monitoring:
-            rospy.loginfo("receiving new wifi info..")
-            rospy.loginfo("link quality: %s%%, signal level: %s dBm, bit rate: %s Mb/s",  "{:4.2f}".format(wifi_info.link_quality),  "{:4.2f}".format(wifi_info.signal_level),  "{:4.2f}".format(wifi_info.bit_rate))
+            # rospy.loginfo("receiving new wifi info..")
+            # rospy.loginfo("link quality: %s%%, signal level: %s dBm, bit rate: %s Mb/s",  "{:4.2f}".format(wifi_info.link_quality),  "{:4.2f}".format(wifi_info.signal_level),  "{:4.2f}".format(wifi_info.bit_rate))
             if not self.check_wifi_disconnect(wifi_info):
                 self.check_link_quality(wifi_info.link_quality)
                 self.check_signal_level(wifi_info.signal_level)
@@ -278,8 +278,8 @@ class ConnectionMonitoring:
     def internet_callback(self, internet_info):
         self.last_internet_msg_time = datetime.now()
         if self.active_monitoring:
-            rospy.loginfo("receiving new internet connection info..")
-            rospy.loginfo("download: %s Mb/s, upload: %s Mb/s", internet_info.download, internet_info.upload)
+            # rospy.loginfo("receiving new internet connection info..")
+            # rospy.loginfo("download: %s Mb/s, upload: %s Mb/s", internet_info.download, internet_info.upload)
             if not self.check_internet_disconnect(internet_info):
                 self.check_download_speed(internet_info.download)
                 self.check_upload_speed(internet_info.upload)

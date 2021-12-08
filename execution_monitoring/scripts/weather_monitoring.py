@@ -59,12 +59,80 @@ class WeatherMonitoring:
     def __init__(self):
         self.contingency_pub = rospy.Publisher('/contingency_preemption', String, queue_size=1)
         self.robot_info_pub = rospy.Publisher('/robot_info', String, queue_size=1)
+        self.sim_rain = False
+        self.sim_snow = False
+        self.sim_wind = False
+        self.sim_temp = False
+        self.code_sim = False
+        self.sunset_sim = False
+
+        rospy.Subscriber('/toggle_rain_sim', String, self.rain_callback, queue_size=1)
+        rospy.Subscriber('/toggle_snow_sim', String, self.snow_callback, queue_size=1)
+        rospy.Subscriber('/toggle_wind_sim', String, self.wind_callback, queue_size=1)
+        rospy.Subscriber('/toggle_low_temp_sim', String, self.low_temp_callback, queue_size=1)
+        rospy.Subscriber('/toggle_thuderstorm_sim', String, self.thunderstorm_callback, queue_size=1)
+        rospy.Subscriber('/toggle_sunset_sim', String, self.sunset_callback, queue_size=1)
+
         self.launch_weather_monitoring()
+    
+    def rain_callback(self, msg):
+        self.sim_rain = not self.sim_rain
+    
+    def snow_callback(self, msg):
+        self.sim_snow = not self.sim_snow
+
+    def wind_callback(self, msg):
+        self.sim_wind = not self.sim_wind
+
+    def low_temp_callback(self, msg):
+        self.sim_temp = not self.sim_temp
+
+    def thunderstorm_callback(self, msg):
+        self.code_sim = not self.code_sim
+
+    def sunset_callback(self, msg):
+        self.sunset_sim = not self.sunset_sim
 
     def parse_weather_data(self, data):
-        return WeatherData(data.get_reference_time(timeformat='iso'), data.get_detailed_status(), data.get_clouds(), data.get_humidity(),
-            data.get_pressure(), data.get_rain(), data.get_snow(), data.get_wind(), data.get_temperature('celsius'), data.get_weather_code(),
-            data.get_weather_icon_name(), data.get_sunrise_time(), data.get_sunset_time(), data.get_sunrise_time('iso'), data.get_sunset_time('iso'))
+        time = data.get_reference_time(timeformat='iso')
+        status = data.get_detailed_status()
+        clouds = data.get_clouds()
+        humid = data.get_humidity()
+        pressure = data.get_pressure()
+        icon = data.get_weather_icon_name()
+        sunrise_iso = data.get_sunrise_time('iso')
+        sunset_iso = data.get_sunset_time('iso')
+
+        # TODO: could perhaps separate monitoring and simulation later (node that publishes WeatherData.msg)
+        # data that is monitored and therefore also simulated
+        rain = data.get_rain()
+        snow = data.get_snow()
+        wind = data.get_wind()
+        temp = data.get_temperature('celsius')
+        code = data.get_weather_code()
+        sunrise = data.get_sunrise_time()
+        sunset = data.get_sunset_time()
+
+        if self.sim_rain:
+            rain = {'1h': 6}
+            self.sim_rain = False
+        if self.sim_snow:
+            snow = {'1h': 4}
+            self.sim_snow = False
+        if self.sim_wind:
+            wind['gust'] = wind['speed'] = 27
+            self.sim_wind = False
+        if self.sim_temp:
+            temp = {'temp_min': -9, 'temp_max': -2, 'temp': -5}
+            self.sim_temp = False
+        if self.code_sim:
+            code = 221
+            self.code_sim = False
+        if self.sunset_sim:
+            sunset = int((datetime.now() - datetime(1970, 1, 1)).total_seconds())
+            self.sunset_sim = False
+
+        return WeatherData(time, status, clouds, humid, pressure, rain, snow, wind, temp, code, icon, sunrise, sunset, sunrise_iso, sunset_iso)
 
     def monitor_rain_volume(self, rain_vol):
         # moderate rain: greater than 0.5 mm per hour, but less than 4.0 mm per hour
@@ -125,7 +193,7 @@ class WeatherMonitoring:
         elif code in [config.MIST, config.SMOKE, config.FOG]:
             self.contingency_pub.publish(config.WEATHER_FAILURE_FIFTEEN)
 
-    def monitor_sunrise_and_sunset(self, sunrise_time, sunset_time, sunrise_time_sec, sunset_time_sec):
+    def monitor_sunrise_and_sunset(self, sunrise_time_sec, sunset_time_sec):
         # TODO: convert everything to correct time zone
         # rospy.loginfo("current time: %s", datetime.now())
         # rospy.loginfo("sunrise time: %s", sunrise_time)
@@ -150,31 +218,34 @@ class WeatherMonitoring:
         self.monitor_wind(weather_data.wind_gust_speed, weather_data.wind_speed)
         self.monitor_temperature(weather_data.min_temp, weather_data.max_temp, weather_data.temp)
         self.monitor_owm_weather_condition_code(weather_data.owm_weather_condition_code)
-        self.monitor_sunrise_and_sunset(weather_data.sunrise_time, weather_data.sunset_time, weather_data.sunrise_time_sec, weather_data.sunset_time_sec)
+        self.monitor_sunrise_and_sunset(weather_data.sunrise_time_sec, weather_data.sunset_time_sec)
 
     def launch_weather_monitoring(self):
 
         owm = OWM(secret_config.OWM_API_KEY)
 
-        if owm.is_API_online():
-            observation = owm.weather_at_place(config.LOCATION)
-            print("monitoring weather for: " + observation.get_location().get_name())
-            weather_data = self.parse_weather_data(observation.get_weather())
-            weather_data.log_complete_info()
-            self.monitor_weather_data(weather_data)
-            
-            # TODO: implement forecast monitoring -> seek shelter in time..
-            # fc = owm.three_hours_forecast(config.LOCATION)
-            # f = fc.get_forecast().get_weathers()
-            # rospy.loginfo("forecast for the next few hours:")
-            # forecasts = [self.parse_weather_data(f[i]) for i in range(2)]
-            # for forecast in forecasts:
-            #     forecast.log_complete_info()
+        while not rospy.is_shutdown():
+            if owm.is_API_online():
+                observation = owm.weather_at_place(config.LOCATION)
+                print("monitoring weather for: " + observation.get_location().get_name())
+                weather_data = self.parse_weather_data(observation.get_weather())
+                weather_data.log_complete_info()
+                self.monitor_weather_data(weather_data)
+                
+                # TODO: implement forecast monitoring -> seek shelter in time..
+                # fc = owm.three_hours_forecast(config.LOCATION)
+                # f = fc.get_forecast().get_weathers()
+                # rospy.loginfo("forecast for the next few hours:")
+                # forecasts = [self.parse_weather_data(f[i]) for i in range(2)]
+                # for forecast in forecasts:
+                #     forecast.log_complete_info()
+
+            rospy.sleep(config.WEATHER_MONITORING_FREQUENCY)
 
 
 def node():
     rospy.init_node('weather_monitoring')
-    #rospy.wait_for_message('SMACH_runnning', String)
+    rospy.wait_for_message('SMACH_runnning', String)
     rospy.loginfo("launch weather monitoring..")
     WeatherMonitoring()
     rospy.spin()
