@@ -51,6 +51,34 @@ class GeneralFailureResolver(object):
         else:
             rospy.loginfo("fallback solution was not successful..")
 
+class WeatherFailureResolver(GeneralFailureResolver):
+
+    def __init__(self):
+        super(WeatherFailureResolver, self).__init__()
+        rospy.Subscriber('/resolve_weather_failure', String, self.resolve_callback, queue_size=1)
+        self.success_pub = rospy.Publisher('/resolve_weather_failure_success', Bool, queue_size=1)
+
+    def resolve_callback(self, msg):
+        rospy.loginfo("launch weather failure resolver..")
+        rospy.loginfo("type of weather failure: %s", msg.data)
+        self.problem_resolved = False
+
+        # all these failures are resolved by seeking shelter and waiting
+        if msg.data in [config.WEATHER_FAILURE_TWO, config.WEATHER_FAILURE_THREE, config.WEATHER_FAILURE_FIVE, config.WEATHER_FAILURE_EIGHT, config.WEATHER_FAILURE_NINE,
+            config.WEATHER_FAILURE_TEN, config.WEATHER_FAILURE_ELEVEN, config.WEATHER_FAILURE_TWELVE, config.WEATHER_FAILURE_THIRTEEN, config.WEATHER_FAILURE_FOURTEEN,
+            config.WEATHER_FAILURE_FIFTEEN, config.WEATHER_FAILURE_SIXTEEN, config.WEATHER_FAILURE_SEVENTEEN, config.WEATHER_FAILURE_EIGHTEEN]:
+
+            self.resolve_weather_failure(msg.data)
+
+        if self.problem_resolved:
+            self.success_pub.publish(True)
+
+    def resolve_weather_failure(self, msg):
+        rospy.loginfo("resolve drastic weather change..")
+        # TODO: drive back to base
+        self.fallback_pub.publish(msg)
+        while not self.problem_resolved:
+            rospy.sleep(5)
 
 class DataManagementFailureResolver(GeneralFailureResolver):
 
@@ -323,6 +351,7 @@ def node():
     rospy.wait_for_message('SMACH_runnning', String)
     SensorFailureResolver()
     ConnectionResolver()
+    WeatherFailureResolver()
     DataManagementFailureResolver()
     FallbackResolver()
     rospy.spin()
