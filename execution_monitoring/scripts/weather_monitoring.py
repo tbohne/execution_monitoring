@@ -8,7 +8,7 @@ from pyowm import OWM
 
 class WeatherData:
 
-    def __init__(self, time, status, cloudiness, humidity, pressure, rain_vol, snow_vol, wind, temperature, condition_code, icon_name, sunrise_time, sunset_time):
+    def __init__(self, time, status, cloudiness, humidity, pressure, rain_vol, snow_vol, wind, temperature, condition_code, icon_name, sunrise_time_sec, sunset_time_sec, sunrise_time, sunset_time):
         self.observation_time = time
         self.status = status
         self.cloudiness_percentage = cloudiness
@@ -26,6 +26,8 @@ class WeatherData:
         self.weather_related_icon_name = icon_name
         self.sunrise_time = sunrise_time
         self.sunset_time = sunset_time
+        self.sunrise_time_sec = sunrise_time_sec
+        self.sunset_time_sec = sunset_time_sec
 
     def log_complete_info(self):
         rospy.loginfo("###############################################################################")
@@ -62,7 +64,7 @@ class WeatherMonitoring:
     def parse_weather_data(self, data):
         return WeatherData(data.get_reference_time(timeformat='iso'), data.get_detailed_status(), data.get_clouds(), data.get_humidity(),
             data.get_pressure(), data.get_rain(), data.get_snow(), data.get_wind(), data.get_temperature('celsius'), data.get_weather_code(),
-            data.get_weather_icon_name(), data.get_sunrise_time('iso'), data.get_sunset_time('iso'))
+            data.get_weather_icon_name(), data.get_sunrise_time(), data.get_sunset_time(), data.get_sunrise_time('iso'), data.get_sunset_time('iso'))
 
     def monitor_rain_volume(self, rain_vol):
         # moderate rain: greater than 0.5 mm per hour, but less than 4.0 mm per hour
@@ -127,13 +129,25 @@ class WeatherMonitoring:
             # contingency -> drive back to shelter
             pass
 
-    def monitor_sunrise_and_sunset(self, sunrise_time, sunset_time):
-        rospy.loginfo("time: %s", datetime.now())
-        rospy.loginfo("sunrise: %s", sunrise_time)
-        rospy.loginfo("sunset: %s", sunset_time)
-        # TODO: implement monitoring
-        # rospy.loginfo("time greater sunrise: %s", (datetime.now() > sunrise_time))
-        # rospy.loginfo("time smaller sunset: %s", (datetime.now() > sunset_time))
+    def monitor_sunrise_and_sunset(self, sunrise_time, sunset_time, sunrise_time_sec, sunset_time_sec):
+        # TODO: convert everything to correct time zone
+        # rospy.loginfo("current time: %s", datetime.now())
+        # rospy.loginfo("sunrise time: %s", sunrise_time)
+        # rospy.loginfo("sunset time: %s", sunset_time)
+        time_in_seconds = int((datetime.now() - datetime(1970,1,1)).total_seconds())
+
+        if sunrise_time_sec > time_in_seconds:
+            # problem -> before sunrise
+            pass
+        elif time_in_seconds > sunset_time_sec:
+            # problem -> after sunset
+            pass
+        else:
+            time_since_sunrise = time_in_seconds - sunrise_time_sec
+            time_before_sunset = sunset_time_sec - time_in_seconds
+            # rospy.loginfo("minutes since sunrise: %s", time_since_sunrise / 60)
+            # rospy.loginfo("minutes before sunset: %s", time_before_sunset / 60)
+
 
     def monitor_weather_data(self, weather_data):
         self.monitor_rain_volume(weather_data.rain_vol)
@@ -141,7 +155,7 @@ class WeatherMonitoring:
         self.monitor_wind(weather_data.wind_gust_speed, weather_data.wind_speed)
         self.monitor_temperature(weather_data.min_temp, weather_data.max_temp, weather_data.temp)
         self.monitor_owm_weather_condition_code(weather_data.owm_weather_condition_code)
-        self.monitor_sunrise_and_sunset(weather_data.sunrise_time, weather_data.sunset_time)
+        self.monitor_sunrise_and_sunset(weather_data.sunrise_time, weather_data.sunset_time, weather_data.sunrise_time_sec, weather_data.sunset_time_sec)
 
     def launch_weather_monitoring(self):
 
