@@ -113,13 +113,29 @@ class WeatherMonitoring:
             pass
 
     def monitor_owm_weather_condition_code(self, code):
-        pass
+        if code in [config.THUNDERSTORM_WITH_LIGHT_RAIN, config.THUNDERSTORM_WITH_RAIN, config.THUNDERSTORM_WITH_HEAVY_RAIN, config.LIGHT_THUNDERSTORM, config.THUNDERSTORM,
+            config.HEAVY_THUNDERSTORM, config.RAGGED_THUNDERSTORM, config.THUNDERSTORM_WITH_LIGHT_DRIZZLE, config.THUNDERSTORM_WITH_DRIZZLE, config.THUNDERSTORM_WITH_HEAVY_DRIZZLE]:
+            # contingency -> drive back to shelter
+            pass
+        elif code in [config.HEAVY_INTENSITY_RAIN, config.VERY_HEAVY_RAIN, config.EXTREME_RAIN, config.FREEZING_RAIN, config.HEAVY_INTENSITY_SHOWER_RAIN, config.RAGGED_SHOWER_RAIN]:
+            # contingency -> drive back to shelter
+            pass
+        elif code in [config.SNOW, config.HEAVY_SNOW, config.RAIN_AND_SNOW, config.HEAVY_SHOWER_SNOW]:
+            # contingency -> drive back to shelter
+            pass
+        elif code in [config.MIST, config.SMOKE, config.FOG, config.SQUALLS, config.TORNADO]:
+            # contingency -> drive back to shelter
+            pass
 
     def monitor_sunrise_and_sunset(self, sunrise_time, sunset_time):
-        pass
+        rospy.loginfo("time: %s", datetime.now())
+        rospy.loginfo("sunrise: %s", sunrise_time)
+        rospy.loginfo("sunset: %s", sunset_time)
+        # TODO: implement monitoring
+        # rospy.loginfo("time greater sunrise: %s", (datetime.now() > sunrise_time))
+        # rospy.loginfo("time smaller sunset: %s", (datetime.now() > sunset_time))
 
     def monitor_weather_data(self, weather_data):
-
         self.monitor_rain_volume(weather_data.rain_vol)
         self.monitor_snow_volume(weather_data.snow_vol)
         self.monitor_wind(weather_data.wind_gust_speed, weather_data.wind_speed)
