@@ -18,11 +18,13 @@ class Contingency(smach.State):
         rospy.Subscriber('/resolve_sensor_failure_success', Bool, self.resolve_failure_success_callback, queue_size=1)
         rospy.Subscriber('/resolve_connection_failure_success', Bool, self.resolve_failure_success_callback, queue_size=1)
         rospy.Subscriber('/resolve_data_management_failure_success', Bool, self.resolve_failure_success_callback, queue_size=1)
+        rospy.Subscriber('/resolve_weather_failure_success', Bool, self.resolve_failure_success_callback, queue_size=1)
         self.sensor_failure_resolver_pub = rospy.Publisher('/resolve_sensor_failure', String, queue_size=1)
         self.wifi_failure_resolver_pub = rospy.Publisher('/resolve_wifi_failure', String, queue_size=1)
         self.internet_failure_resolver_pub = rospy.Publisher('/resolve_internet_failure', String, queue_size=1)
         self.gnss_failure_resolver_pub = rospy.Publisher('/resolve_gnss_failure', String, queue_size=1)
         self.data_management_failure_resolver_pub = rospy.Publisher('/resolve_data_management_failure', String, queue_size=1)
+        self.weather_failure_resolver_pub = rospy.Publisher('/resolve_weather_failure', String, queue_size=1)
 
     def interrupt_reason_callback(self, reason):
         self.interrupt_reason = reason.data
@@ -87,6 +89,34 @@ class Contingency(smach.State):
             self.gnss_failure_resolver_pub.publish(config.CONNECTION_FAILURE_NINETEEN)
         elif self.interrupt_reason == config.CONNECTION_FAILURE_TWENTY:
             self.gnss_failure_resolver_pub.publish(config.CONNECTION_FAILURE_TWENTY)
+        elif self.interrupt_reason == config.WEATHER_FAILURE_TWO:
+            self.weather_failure_resolver_pub.publish(config.WEATHER_FAILURE_TWO)
+        elif self.interrupt_reason == config.WEATHER_FAILURE_THREE:
+            self.weather_failure_resolver_pub.publish(config.WEATHER_FAILURE_THREE)
+        elif self.interrupt_reason == config.WEATHER_FAILURE_FIVE:
+            self.weather_failure_resolver_pub.publish(config.WEATHER_FAILURE_FIVE)
+        elif self.interrupt_reason == config.WEATHER_FAILURE_EIGHT:
+            self.weather_failure_resolver_pub.publish(config.WEATHER_FAILURE_EIGHT)
+        elif self.interrupt_reason == config.WEATHER_FAILURE_NINE:
+            self.weather_failure_resolver_pub.publish(config.WEATHER_FAILURE_NINE)
+        elif self.interrupt_reason == config.WEATHER_FAILURE_TEN:
+            self.weather_failure_resolver_pub.publish(config.WEATHER_FAILURE_TEN)
+        elif self.interrupt_reason == config.WEATHER_FAILURE_ELEVEN:
+            self.weather_failure_resolver_pub.publish(config.WEATHER_FAILURE_ELEVEN)
+        elif self.interrupt_reason == config.WEATHER_FAILURE_TWELVE:
+            self.weather_failure_resolver_pub.publish(config.WEATHER_FAILURE_TWELVE)
+        elif self.interrupt_reason == config.WEATHER_FAILURE_THIRTEEN:
+            self.weather_failure_resolver_pub.publish(config.WEATHER_FAILURE_THIRTEEN)
+        elif self.interrupt_reason == config.WEATHER_FAILURE_FOURTEEN:
+            self.weather_failure_resolver_pub.publish(config.WEATHER_FAILURE_FOURTEEN)
+        elif self.interrupt_reason == config.WEATHER_FAILURE_FIFTEEN:
+            self.weather_failure_resolver_pub.publish(config.WEATHER_FAILURE_FIFTEEN)
+        elif self.interrupt_reason == config.WEATHER_FAILURE_SIXTEEN:
+            self.weather_failure_resolver_pub.publish(config.WEATHER_FAILURE_SIXTEEN)
+        elif self.interrupt_reason == config.WEATHER_FAILURE_SEVENTEEN:
+            self.weather_failure_resolver_pub.publish(config.WEATHER_FAILURE_SEVENTEEN)
+        elif self.interrupt_reason == config.WEATHER_FAILURE_EIGHTEEN:
+            self.weather_failure_resolver_pub.publish(config.WEATHER_FAILURE_EIGHTEEN)
         else:
             rospy.loginfo("unkonwn interrupt reason: %s", self.interrupt_reason)
 
