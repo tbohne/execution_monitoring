@@ -58,13 +58,16 @@ class WeatherFailureResolver(GeneralFailureResolver):
     def __init__(self):
         super(WeatherFailureResolver, self).__init__()
         rospy.Subscriber('/resolve_weather_failure', String, self.resolve_callback, queue_size=1)
+        rospy.Subscriber('/moderate_weather', String, self.moderate_weather_callback, queue_size=1)
         self.success_pub = rospy.Publisher('/resolve_weather_failure_success', Bool, queue_size=1)
         self.drive_to_goal_client = actionlib.SimpleActionClient('drive_to_goal', drive_to_goalAction)
+        self.moderate_weather = True
 
     def resolve_callback(self, msg):
         rospy.loginfo("launch weather failure resolver..")
         rospy.loginfo("type of weather failure: %s", msg.data)
         self.problem_resolved = False
+        self.moderate_weather = False
 
         # all these failures are resolved by seeking shelter and waiting
         if msg.data in [config.WEATHER_FAILURE_TWO, config.WEATHER_FAILURE_THREE, config.WEATHER_FAILURE_FIVE, config.WEATHER_FAILURE_EIGHT, config.WEATHER_FAILURE_NINE,
@@ -75,6 +78,9 @@ class WeatherFailureResolver(GeneralFailureResolver):
 
         if self.problem_resolved:
             self.success_pub.publish(True)
+
+    def moderate_weather_callback(self, msg):
+        self.moderate_weather = True
 
     def resolve_weather_failure(self, msg):
         rospy.loginfo("resolve drastic weather change..")
@@ -91,6 +97,10 @@ class WeatherFailureResolver(GeneralFailureResolver):
             self.fallback_pub.publish(msg)
             while not self.problem_resolved:
                 rospy.sleep(5)
+
+        rospy.loginfo("waiting until weather is moderate again..")
+        while not self.moderate_weather:
+            rospy.sleep(5)
 
         self.problem_resolved = True
 
