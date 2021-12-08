@@ -69,85 +69,80 @@ class WeatherMonitoring:
     def monitor_rain_volume(self, rain_vol):
         # moderate rain: greater than 0.5 mm per hour, but less than 4.0 mm per hour
         if 4.0 > rain_vol > 0.5:
-            pass
+            self.robot_info_pub.publish(config.WEATHER_FAILURE_ONE)
         # heavy rain: greater than 4 mm per hour, but less than 8 mm per hour
         elif 8.0 > rain_vol > 4.0:
-            pass
+            self.contingency_pub.publish(config.WEATHER_FAILURE_TWO)
         # very heavy rain: greater than 8 mm per hour
         elif rain_vol > 8.0:
-            pass
+            self.contingency_pub.publish(config.WEATHER_FAILURE_THREE)
 
     def monitor_snow_volume(self, snow_vol):
-        if 4.0 > snow_vol > 0.5:
-            pass
-        elif 8.0 > snow_vol > 4.0:
-            pass
-        elif snow_vol > 8.0:
-            pass
+        # moderate snow
+        if 2.0 > snow_vol > 0.5:
+            self.robot_info_pub.publish(config.WEATHER_FAILURE_FOUR)
+        # heavy snow
+        elif snow_vol > 2.0:
+            self.contingency_pub.publish(config.WEATHER_FAILURE_FIVE + snow_vol + " mm per hour")
 
     def monitor_wind(self, gust_speed, speed):
         if 14 > gust_speed > 11 or 14 > speed > 11:
-            # Strong Breeze -> Large branches in continuous motion. Whistling sounds heard in overhead or nearby power and telephone lines. Umbrellas used with difficulty.
-            pass
+            # strong breeze -> large branches in continuous motion
+            self.robot_info_pub.publish(config.WEATHER_FAILURE_SIX)
         elif 20 > gust_speed > 14 or 20 > speed > 14:
-            # Near Gale / Gale -> Whole trees in motion. Inconvenience felt when walking against the wind.
-            #                  -> Wind breaks twigs and small branches. Wind generally impedes walking.
-            pass
-        elif 24 > gust_speed > 21 or 24 > speed > 21:
-            # Strong Gale -> Structural damage occurs, such as chimney covers, roofing tiles blown off, and television antennas damaged. Ground is littered with many small twigs and broken branches.
-            pass
-        elif 28 > gust_speed > 24 or 28 > speed > 24:
-            # Whole Gale -> Considerable structural damage occurs, especially on roofs. Small trees may be blown over and uprooted.
-            pass
+            # gale -> whole trees in motion; inconvenience felt when walking against the wind; wind breaks twigs and small branches
+            self.robot_info_pub.publish(config.WEATHER_FAILURE_SEVEN)
+        elif 28 > gust_speed > 21 or 28 > speed > 21:
+            # strong gale -> risk for structural damage
+            self.contingency_pub.publish(config.WEATHER_FAILURE_EIGHT)
         elif 33 > gust_speed > 28 or 33 > speed > 28:
-            # Storm Force -> Widespread damage occurs. Larger trees blown over and uprooted.
-            pass
+            # storm force -> very high risk for structural damage; larger trees blown over and uprooted
+            self.contingency_pub.publish(config.WEATHER_FAILURE_NINE)
         elif gust_speed > 33 or speed > 33:
-            # Hurricane Force -> Severe and extensive damage. Roofs can be peeled off. Windows broken. Trees uprooted. RVs and small mobile homes overturned. Moving automobiles can be pushed off the roadways.
-            pass
+            # hurricane -> very high risk for severe and extensive structural damage
+            self.contingency_pub.publish(config.WEATHER_FAILURE_TEN)
 
     def monitor_temperature(self, min_temp, max_temp, temp):
         # arbitrarily chosen, depends on sensors etc., should be configurable by the user
-        if temp > 50 or max_temp > 50:
-            pass
+        if temp > 40 or max_temp > 40:
+            self.contingency_pub.publish(config.WEATHER_FAILURE_ELEVEN)
         # arbitrarily chosen, depends on sensors etc., should be configurable by the user
         if temp < -5 or min_temp < -5:
-            pass
+            self.contingency_pub.publish(config.WEATHER_FAILURE_TWELVE)
 
     def monitor_owm_weather_condition_code(self, code):
         if code in [config.THUNDERSTORM_WITH_LIGHT_RAIN, config.THUNDERSTORM_WITH_RAIN, config.THUNDERSTORM_WITH_HEAVY_RAIN, config.LIGHT_THUNDERSTORM, config.THUNDERSTORM,
             config.HEAVY_THUNDERSTORM, config.RAGGED_THUNDERSTORM, config.THUNDERSTORM_WITH_LIGHT_DRIZZLE, config.THUNDERSTORM_WITH_DRIZZLE, config.THUNDERSTORM_WITH_HEAVY_DRIZZLE]:
-            # contingency -> drive back to shelter
-            pass
+            self.contingency_pub.publish(config.WEATHER_FAILURE_THIRTEEN)
         elif code in [config.HEAVY_INTENSITY_RAIN, config.VERY_HEAVY_RAIN, config.EXTREME_RAIN, config.FREEZING_RAIN, config.HEAVY_INTENSITY_SHOWER_RAIN, config.RAGGED_SHOWER_RAIN]:
-            # contingency -> drive back to shelter
-            pass
+            self.contingency_pub.publish(config.WEATHER_FAILURE_TWO)
         elif code in [config.SNOW, config.HEAVY_SNOW, config.RAIN_AND_SNOW, config.HEAVY_SHOWER_SNOW]:
-            # contingency -> drive back to shelter
-            pass
-        elif code in [config.MIST, config.SMOKE, config.FOG, config.SQUALLS, config.TORNADO]:
-            # contingency -> drive back to shelter
-            pass
+            self.contingency_pub.publish(config.WEATHER_FAILURE_FIVE)
+        elif code == config.TORNADO:
+            self.contingency_pub.publish(config.WEATHER_FAILURE_FOURTEEN)
+        elif code == config.SQUALLS:
+            self.contingency_pub.publish(config.WEATHER_FAILURE_SEVEN)
+        elif code in [config.MIST, config.SMOKE, config.FOG]:
+            self.contingency_pub.publish(config.WEATHER_FAILURE_FIFTEEN)
 
     def monitor_sunrise_and_sunset(self, sunrise_time, sunset_time, sunrise_time_sec, sunset_time_sec):
         # TODO: convert everything to correct time zone
         # rospy.loginfo("current time: %s", datetime.now())
         # rospy.loginfo("sunrise time: %s", sunrise_time)
         # rospy.loginfo("sunset time: %s", sunset_time)
-        time_in_seconds = int((datetime.now() - datetime(1970,1,1)).total_seconds())
+        time_in_seconds = int((datetime.now() - datetime(1970, 1, 1)).total_seconds())
 
         if sunrise_time_sec > time_in_seconds:
-            # problem -> before sunrise
-            pass
+            self.contingency_pub.publish(config.WEATHER_FAILURE_SIXTEEN)
         elif time_in_seconds > sunset_time_sec:
-            # problem -> after sunset
-            pass
+            self.contingency_pub.publish(config.WEATHER_FAILURE_SEVENTEEN)
         else:
             time_since_sunrise = time_in_seconds - sunrise_time_sec
             time_before_sunset = sunset_time_sec - time_in_seconds
             # rospy.loginfo("minutes since sunrise: %s", time_since_sunrise / 60)
             # rospy.loginfo("minutes before sunset: %s", time_before_sunset / 60)
-
+            if time_before_sunset / 60 < 15:
+                self.contingency_pub.publish(config.WEATHER_FAILURE_EIGHTEEN)
 
     def monitor_weather_data(self, weather_data):
         self.monitor_rain_volume(weather_data.rain_vol)
@@ -167,14 +162,14 @@ class WeatherMonitoring:
             weather_data = self.parse_weather_data(observation.get_weather())
             weather_data.log_complete_info()
             self.monitor_weather_data(weather_data)
-
-            fc = owm.three_hours_forecast(config.LOCATION)
-            f = fc.get_forecast().get_weathers()
-            rospy.loginfo("forecast for the next few hours:")
-            forecasts = [self.parse_weather_data(f[i]) for i in range(2)]
-        
-        # for forecast in forecasts:
-        #     forecast.log_complete_info()
+            
+            # TODO: implement forecast monitoring -> seek shelter in time..
+            # fc = owm.three_hours_forecast(config.LOCATION)
+            # f = fc.get_forecast().get_weathers()
+            # rospy.loginfo("forecast for the next few hours:")
+            # forecasts = [self.parse_weather_data(f[i]) for i in range(2)]
+            # for forecast in forecasts:
+            #     forecast.log_complete_info()
 
 
 def node():
