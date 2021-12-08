@@ -3,19 +3,14 @@ import smach
 import actionlib
 import rospy
 import numpy as np
-from osgeo import osr
-from tf.transformations import quaternion_from_euler
 from plan_generation.srv import get_plan
 from arox_navigation_flex.msg import drive_to_goalAction
-from arox_navigation_flex.msg import drive_to_goalGoal as dtg_Goal
 from execution_monitoring.msg import ScanAction, ScanGoal
 from arox_performance_parameters.msg import arox_operational_param
 from arox_performance_parameters.msg import arox_battery_params
 from std_msgs.msg import String
 from datetime import datetime
-
-# TODO: put into parameter in launch file
-BASE_POSE = [52.3203191407, 8.153625154949, 270]
+from execution_monitoring import config, util
 
 
 class Idle(smach.State):
@@ -102,7 +97,6 @@ class ExecutePlan(smach.State):
             rospy.loginfo("battery completely discharged..")
 
     def perform_action(self, action):
-        global BASE_POSE
         rospy.loginfo("performing action %s..", action.name)
 
         # moving actions
@@ -111,33 +105,19 @@ class ExecutePlan(smach.State):
             self.publish_state_of_ongoing_operation("moving")
 
             if action.name == "return_to_base":
-                action.pose = BASE_POSE
+                action.pose = config.BASE_POSE
 
-            action_goal = dtg_Goal()
-            # TODO: could we use wgs84 here?
-            action_goal.target_pose.header.frame_id = "utm"
-
-            # the coordinates in the plan are wgs84 - transform
-            source = osr.SpatialReference()
-            source.ImportFromEPSG(4326)
-            target = osr.SpatialReference()
-            target.ImportFromEPSG(32632)
-            transform = osr.CoordinateTransformation(source, target)
-            x, y = transform.TransformPoint(action.pose[1], action.pose[0])[0:2]  # switch lat / lon
-            action_goal.target_pose.pose.position.x = x
-            action_goal.target_pose.pose.position.y = y
-
-            q = quaternion_from_euler(0, 0, np.pi * (action.pose[2] + 90) / 180)
-            action_goal.target_pose.pose.orientation.x = q[0]
-            action_goal.target_pose.pose.orientation.y = q[1]
-            action_goal.target_pose.pose.orientation.z = q[2]
-            action_goal.target_pose.pose.orientation.w = q[3]
+            action_goal = util.create_dtg_goal(action)
             self.drive_to_goal_client.wait_for_server()
             self.drive_to_goal_client.send_goal(action_goal)
             rospy.loginfo("goal sent, wait for accomplishment..")
             success = self.drive_to_goal_client.wait_for_result()
-            rospy.loginfo("successfully performed action: %s", success)
 
+            out = self.drive_to_goal_client.get_result()
+            if out.progress < 100:
+                return False
+
+            rospy.loginfo("successfully performed action: %s", success)
             return success
 
         elif action.name == "scan":
