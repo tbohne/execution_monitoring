@@ -72,7 +72,7 @@ class WiFiMonitor:
             p = subprocess.Popen(["iwconfig", config.WIFI_INTERFACE], stdout=subprocess.PIPE)
             out, err = p.communicate()
             link_quality, signal_level, bit_rate = self.parse_relevant_parameters(out)
-            rospy.loginfo("%s --- link quality: %s%%, signal level: %s dBm, bit rate: %s Mb/s", self.now(), "{:4.2f}".format(link_quality), "{:4.2f}".format(signal_level), "{:4.2f}".format(bit_rate))
+            # rospy.loginfo("%s --- link quality: %s%%, signal level: %s dBm, bit rate: %s Mb/s", self.now(), "{:4.2f}".format(link_quality), "{:4.2f}".format(signal_level), "{:4.2f}".format(bit_rate))
 
             wifi_msg = WiFi()
             wifi_msg.link_quality = link_quality

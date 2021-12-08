@@ -62,7 +62,7 @@ class InternetConnectionMonitor:
             time_now = datetime.datetime.now().strftime("%H:%M:%S")
             download = round((round(self.test.download()) / 2 ** 20), 2)
             upload = round((round(self.test.upload()) / 2 ** 20), 2)
-            rospy.loginfo("time: %s, download: %s Mb/s, upload: %s Mb/s", time_now, download, upload)
+            # rospy.loginfo("time: %s, download: %s Mb/s, upload: %s Mb/s", time_now, download, upload)
             self.internet_info_pub.publish(self.generate_msg(download, upload))
             rospy.sleep(10)
 
