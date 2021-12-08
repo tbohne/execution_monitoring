@@ -98,7 +98,20 @@ class WeatherFailureResolver(GeneralFailureResolver):
             while not self.problem_resolved:
                 rospy.sleep(5)
 
-        rospy.loginfo("waiting until weather is moderate again..")
+        rospy.loginfo("start docking procedure..")
+        rospy.loginfo("waiting until weather is moderate again - charging battery in the meantime..")
+        rospy.set_param("charging_mode", True)
+        charge_mode = rospy.get_param("charging_mode")
+
+        while charge_mode:
+            charge_mode = rospy.get_param("charging_mode")
+            rospy.loginfo("charging battery..")
+            rospy.sleep(2)
+
+        if not charge_mode:
+            rospy.loginfo("battery charged..")
+
+        rospy.loginfo("waiting until weather is moderate again")
         while not self.moderate_weather:
             rospy.sleep(5)
 

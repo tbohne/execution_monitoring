@@ -280,10 +280,6 @@ class WeatherMonitoring:
         """
         # TODO: convert everything to correct time zone        
         time_in_seconds = int((datetime.now() - datetime(1970, 1, 1)).total_seconds())
-        rospy.loginfo("time: %s", time_in_seconds)
-        rospy.loginfo("sunrise time: %s", sunrise_time_sec)
-        rospy.loginfo("sunset time: %s", sunset_time_sec)
-        rospy.loginfo("time > sunset? %s", ((time_in_seconds > sunset_time_sec)))
 
         if sunrise_time_sec > time_in_seconds:
             if self.active_monitoring:
@@ -291,9 +287,7 @@ class WeatherMonitoring:
                 self.active_monitoring = False
             return False
         elif time_in_seconds > sunset_time_sec:
-            
             if self.active_monitoring:
-                rospy.loginfo("TIME AFTER SUNSET")
                 self.contingency_pub.publish(config.WEATHER_FAILURE_SEVENTEEN)
                 self.active_monitoring = False
             return False
