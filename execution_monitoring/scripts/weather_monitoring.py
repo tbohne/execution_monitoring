@@ -3,6 +3,7 @@ import rospy
 from std_msgs.msg import String, Bool
 from execution_monitoring import util, config, secret_config
 from datetime import datetime
+from sensor_msgs.msg import NavSatFix
 
 from pyowm import OWM
 
@@ -60,6 +61,7 @@ class WeatherMonitoring:
         self.contingency_pub = rospy.Publisher('/contingency_preemption', String, queue_size=1)
         self.robot_info_pub = rospy.Publisher('/robot_info', String, queue_size=1)
         self.moderate_weather_pub = rospy.Publisher('/moderate_weather', String, queue_size=1)
+        rospy.Subscriber('/fix', NavSatFix, self.gnss_callback, queue_size=1)
         rospy.Subscriber('/resolve_weather_failure_success', Bool, self.resolve_callback, queue_size=1)
         rospy.Subscriber('/toggle_rain_sim', String, self.rain_callback, queue_size=1)
         rospy.Subscriber('/toggle_snow_sim', String, self.snow_callback, queue_size=1)
@@ -75,6 +77,9 @@ class WeatherMonitoring:
         self.sunset_sim = False
         self.active_monitoring = True
         self.launch_weather_monitoring()
+
+    def gnss_callback(self, nav_sat_fix):
+        self.position = (nav_sat_fix.latitude, nav_sat_fix.longitude)
 
     def resolve_callback(self, msg):
         self.active_monitoring = True
@@ -319,14 +324,14 @@ class WeatherMonitoring:
 
         while not rospy.is_shutdown():
             if owm.is_API_online():
-                observation = owm.weather_at_place(config.LOCATION)
+                observation = owm.weather_at_coords(*self.position)
                 print("monitoring weather for: " + observation.get_location().get_name())
                 weather_data = self.parse_weather_data(observation.get_weather())
                 weather_data.log_complete_info()
                 self.monitor_weather_data(weather_data)
                 
                 # TODO: implement forecast monitoring -> seek shelter in time..
-                # fc = owm.three_hours_forecast(config.LOCATION)
+                # fc = owm.three_hours_forecast(*self.position)
                 # f = fc.get_forecast().get_weathers()
                 # rospy.loginfo("forecast for the next few hours:")
                 # forecasts = [self.parse_weather_data(f[i]) for i in range(2)]
