@@ -53,13 +53,13 @@
         - **infeasible lat / lng:** `rostopic pub -1 /toggle_simulated_infeasible_lat_lng std_msgs/String fail`
         - **covariance history failure:** `rostopic pub -1 /toggle_simulated_cov_history_failure std_msgs/String fail`
         - **high covariance:** `rostopic pub -1 /toggle_simulated_high_cov std_msgs/String fail`
-    - **drastic weather changes**
-        - **heavy rain:** `rostopic pub -1 /toggle_rain_sim std_msgs/String fail`
-        - **heavy snow:** `rostopic pub -1 /toggle_snow_sim std_msgs/String fail`
-        - **gale:** `rostopic pub -1 /toggle_wind_sim std_msgs/String fail`
-        - **low temp.:** `rostopic pub -1 /toggle_low_temp_sim std_msgs/String fail`
-        - **thunderstorm:** `rostopic pub -1 /toggle_thuderstorm_sim std_msgs/String fail`
-        - **sunset:** `rostopic pub -1 /toggle_sunset_sim std_msgs/String fail`
+- **drastic weather changes**
+    - **heavy rain:** `rostopic pub -1 /toggle_rain_sim std_msgs/String fail`
+    - **heavy snow:** `rostopic pub -1 /toggle_snow_sim std_msgs/String fail`
+    - **gale:** `rostopic pub -1 /toggle_wind_sim std_msgs/String fail`
+    - **low temp.:** `rostopic pub -1 /toggle_low_temp_sim std_msgs/String fail`
+    - **thunderstorm:** `rostopic pub -1 /toggle_thuderstorm_sim std_msgs/String fail`
+    - **sunset:** `rostopic pub -1 /toggle_sunset_sim std_msgs/String fail`
 - **data management failures**
     - **full memory:** prepare full USB flash drive and configure `MONITOR_DRIVE` (path to monitor) accordingly
         - find out device: `fdisk -l`, e.g. `/dev/sdd1`
