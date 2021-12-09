@@ -123,7 +123,7 @@ class WeatherMonitoring:
         sunset = data.get_sunset_time()
 
         if self.sim_rain:
-            rain = {'1h': 6}
+            rain = {'1h': 8}
         if self.sim_snow:
             snow = {'1h': 4}
         if self.sim_wind:
@@ -144,22 +144,15 @@ class WeatherMonitoring:
         :param rain_vol: rain volume per hour in mm
         :return: false if contingency, else true
         """
-        # moderate rain: greater than 0.5 mm per hour, but less than 4.0 mm per hour
-        if 4.0 > rain_vol > 0.5 and self.active_monitoring:
+        # moderate rain: greater than 2.6 mm per hour, but less than 7.6 mm per hour
+        if 7.6 > rain_vol > 2.6 and self.active_monitoring:
             self.robot_info_pub.publish(config.WEATHER_FAILURE_ONE)
-        # heavy rain: greater than 4 mm per hour, but less than 8 mm per hour
-        elif 8.0 > rain_vol > 4.0:
+        # heavy rain
+        elif rain_vol > 7.6:
             if self.active_monitoring:
                 self.contingency_pub.publish(config.WEATHER_FAILURE_TWO)
                 self.active_monitoring = False
             return False
-        # very heavy rain: greater than 8 mm per hour
-        elif rain_vol > 8.0:
-            if self.active_monitoring:
-                self.contingency_pub.publish(config.WEATHER_FAILURE_THREE)
-                self.active_monitoring = False
-            return False
-        return True
 
     def monitor_snow_volume(self, snow_vol):
         """

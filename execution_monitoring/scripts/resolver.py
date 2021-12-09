@@ -70,8 +70,8 @@ class WeatherFailureResolver(GeneralFailureResolver):
         self.moderate_weather = False
 
         # all these failures are resolved by seeking shelter and waiting
-        if msg.data in [config.WEATHER_FAILURE_TWO, config.WEATHER_FAILURE_THREE, config.WEATHER_FAILURE_FIVE, config.WEATHER_FAILURE_EIGHT, config.WEATHER_FAILURE_NINE,
-            config.WEATHER_FAILURE_TEN, config.WEATHER_FAILURE_ELEVEN, config.WEATHER_FAILURE_TWELVE, config.WEATHER_FAILURE_THIRTEEN, config.WEATHER_FAILURE_FOURTEEN,
+        if msg.data in [config.WEATHER_FAILURE_TWO, config.WEATHER_FAILURE_FIVE, config.WEATHER_FAILURE_EIGHT, config.WEATHER_FAILURE_NINE, config.WEATHER_FAILURE_TEN,
+            config.WEATHER_FAILURE_ELEVEN, config.WEATHER_FAILURE_TWELVE, config.WEATHER_FAILURE_THIRTEEN, config.WEATHER_FAILURE_FOURTEEN,
             config.WEATHER_FAILURE_FIFTEEN, config.WEATHER_FAILURE_SIXTEEN, config.WEATHER_FAILURE_SEVENTEEN, config.WEATHER_FAILURE_EIGHTEEN]:
 
             self.resolve_weather_failure(msg.data)

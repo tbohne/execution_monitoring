@@ -46,7 +46,6 @@ SCAN_VALUES_LB_PERCENTAGE = 5
 # WEATHER FAILURES / INFOS
 WEATHER_FAILURE_ONE = "moderate rain - continuing work"
 WEATHER_FAILURE_TWO = "heavy rain - interrupting work, seeking shelter"
-WEATHER_FAILURE_THREE = "very heavy rain - interrupting work, seeking shelter"
 WEATHER_FAILURE_FOUR = "moderate snow - continuing work"
 WEATHER_FAILURE_FIVE = "heavy snow - interrupting work, seeking shelter"
 WEATHER_FAILURE_SIX = "strong breeze -> large branches in continuous motion etc. - continuing work"

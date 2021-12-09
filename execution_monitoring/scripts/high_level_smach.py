@@ -91,8 +91,6 @@ class Contingency(smach.State):
             self.gnss_failure_resolver_pub.publish(config.CONNECTION_FAILURE_TWENTY)
         elif self.interrupt_reason == config.WEATHER_FAILURE_TWO:
             self.weather_failure_resolver_pub.publish(config.WEATHER_FAILURE_TWO)
-        elif self.interrupt_reason == config.WEATHER_FAILURE_THREE:
-            self.weather_failure_resolver_pub.publish(config.WEATHER_FAILURE_THREE)
         elif self.interrupt_reason == config.WEATHER_FAILURE_FIVE:
             self.weather_failure_resolver_pub.publish(config.WEATHER_FAILURE_FIVE)
         elif self.interrupt_reason == config.WEATHER_FAILURE_EIGHT:
