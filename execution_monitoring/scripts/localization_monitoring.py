@@ -34,7 +34,8 @@ class LocalizationMonitoring:
     def localization_monitoring(self):
         while not rospy.is_shutdown():
             self.monitor_imu()
-            self.monitor_odom()
+            self.monitor_odom(True)
+            self.monitor_odom(False)
             self.monitor_gps()
             self.relative_monitoring()
             rospy.sleep(2)
@@ -101,25 +102,26 @@ class LocalizationMonitoring:
                     # contingency
 
 
-    def monitor_odom(self):
-        rospy.loginfo("monitor odom")
+    def monitor_odom(self, filtered):
+        name = "odometry" if not filtered else "filtered odometry"
+        rospy.loginfo("monitor %s", name)
+        odom_data = self.odom_data if not filtered else self.odom_filtered_data
         # MONITOR LINEAR + ANGULAR TWIST
         # if the robot is not moving, the corresponding IMU values should be ~0.0
         if self.mbf_status != GoalStatus.ACTIVE:
-            if abs(self.odom_data.twist.twist.linear.x) > config.NOT_MOVING_LINEAR_TWIST_UB \
-                or abs(self.odom_data.twist.twist.linear.y) > config.NOT_MOVING_LINEAR_TWIST_UB \
-                or abs(self.odom_data.twist.twist.linear.z) > config.NOT_MOVING_LINEAR_TWIST_UB:
+            if abs(odom_data.twist.twist.linear.x) > config.NOT_MOVING_LINEAR_TWIST_UB \
+                or abs(odom_data.twist.twist.linear.y) > config.NOT_MOVING_LINEAR_TWIST_UB \
+                or abs(odom_data.twist.twist.linear.z) > config.NOT_MOVING_LINEAR_TWIST_UB:
                     # TODO: contingency
-                    rospy.loginfo("CONTINGENCY DETECTED ###################################")
-                    rospy.loginfo("mbf status: %s", self.mbf_status)
-                    rospy.loginfo("not moving - linear twist: %s", self.odom_data.twist.twist.linear)
+                    rospy.loginfo("%s CONTINGENCY DETECTED ###################################", name)
+                    rospy.loginfo("not moving, but linear twist: %s", odom_data.twist.twist.linear)
                     rospy.loginfo("##########################################################")
-            if abs(self.odom_data.twist.twist.angular.x) > config.NOT_MOVING_ANGULAR_TWIST_UB \
-                or abs(self.odom_data.twist.twist.angular.y) > config.NOT_MOVING_ANGULAR_TWIST_UB \
-                or abs(self.odom_data.twist.twist.angular.z) > config.NOT_MOVING_ANGULAR_TWIST_UB:
+            if abs(odom_data.twist.twist.angular.x) > config.NOT_MOVING_ANGULAR_TWIST_UB \
+                or abs(odom_data.twist.twist.angular.y) > config.NOT_MOVING_ANGULAR_TWIST_UB \
+                or abs(odom_data.twist.twist.angular.z) > config.NOT_MOVING_ANGULAR_TWIST_UB:
                     # TODO: contingency
-                    rospy.loginfo("CONTINGENCY DETECTED ###################################")
-                    rospy.loginfo("not moving - angular twist: %s", self.odom_data.twist.twist.angular)
+                    rospy.loginfo("%s CONTINGENCY DETECTED ###################################", name)
+                    rospy.loginfo("not moving, but angular twist: %s", odom_data.twist.twist.angular)
                     rospy.loginfo("##########################################################")
         # moving
         else:
@@ -136,15 +138,15 @@ class LocalizationMonitoring:
             #         rospy.loginfo("##########################################################")
 
         # POSE + TWIST COVARIANCE (6x6 matrices (x, y, z, rot_x, rot_y, rot_z))
-        for val in self.odom_data.pose.covariance:
+        for val in odom_data.pose.covariance:
                 if val > config.ODOM_POSE_COV_UP:
                     # TODO: contingency
-                    rospy.loginfo("contingency: ODOM -> pose cov")
+                    rospy.loginfo("contingency: %s -> pose cov", name)
                     break
-        for val in self.odom_data.twist.covariance:
+        for val in odom_data.twist.covariance:
             if val > config.ODOM_TWIST_COV_UP:
                 # TODO: contingency
-                rospy.loginfo("contingency: ODOM -> twist cov")
+                rospy.loginfo("contingency: %s -> twist cov", name)
                 break
 
     def monitor_gps(self):
@@ -156,12 +158,7 @@ class LocalizationMonitoring:
         pose_cov = gps_as_odom.pose.covariance
 
     def filtered_odom_callback(self, filtered_odom):
-        position = filtered_odom.pose.pose.position
-        orientatoin = filtered_odom.pose.pose.orientation
-        pose_cov = filtered_odom.pose.covariance
-        linear_twist = filtered_odom.twist.twist.linear
-        angular_twist = filtered_odom.twist.twist.angular
-        twist_cov = filtered_odom.twist.covariance
+        self.odom_filtered_data = filtered_odom
 
     def odom_callback(self, odom):
         self.odom_data = odom
