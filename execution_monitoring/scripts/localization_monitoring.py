@@ -54,7 +54,7 @@ class LocalizationMonitoring:
                 or abs(self.imu_data.angular_velocity.y) > config.NOT_MOVING_ANG_VELO_UB \
                 or abs(self.imu_data.angular_velocity.z) > config.NOT_MOVING_ANG_VELO_UB:
                     # TODO: contingency
-                    pass
+                    rospy.loginfo("contingency..... IMU angular velo")
                     # rospy.loginfo("CONTINGENCY DETECTED ###################################")
                     # rospy.loginfo("ang velo: %s", self.imu_data.angular_velocity)
                     # rospy.loginfo("##########################################################")
@@ -63,7 +63,7 @@ class LocalizationMonitoring:
             if abs(self.imu_data.linear_acceleration.x) > config.NOT_MOVING_LIN_ACC_UB \
                 or abs(self.imu_data.linear_acceleration.y) > config.NOT_MOVING_LIN_ACC_UB:
                     # TODO: contingency
-                    pass
+                    rospy.loginfo("contingency..... IMU lin acc")
                     # rospy.loginfo("CONTINGENCY DETECTED ###################################")
                     # rospy.loginfo("lin acc: %s", self.imu_data.linear_acceleration)
                     # rospy.loginfo("##########################################################")
@@ -82,18 +82,21 @@ class LocalizationMonitoring:
         if sum(self.imu_data.orientation_covariance) != 0.0 and self.imu_data.orientation_covariance[0] != -1.0:
             for val in self.imu_data.orientation_covariance:
                 if val > config.IMU_ORIENTATION_COV_UB:
+                    rospy.loginfo("contingency -> IMU covariance (ori)")
                     break
                     # contingency
         # covariance known and data provided by IMU -> monitor
         if sum(self.imu_data.angular_velocity_covariance) != 0.0 and self.imu_data.angular_velocity_covariance[0] != -1.0:
             for val in self.imu_data.angular_velocity_covariance:
                 if val > config.IMU_ANGULAR_VELO_COV_UB:
+                    rospy.loginfo("contingency -> IMU covariance (angu velo)")
                     break
                     # contingency
         # covariance known and data provided by IMU -> monitor
         if sum(self.imu_data.linear_acceleration_covariance) != 0.0 and self.imu_data.linear_acceleration_covariance[0] != -1.0:
             for val in self.imu_data.linear_acceleration_covariance:
                 if val > config.IMU_LINEAR_ACC_COV_UB:
+                    rospy.loginfo("contingency -> IMU covariance (lin acc)")
                     break
                     # contingency
 
@@ -132,9 +135,17 @@ class LocalizationMonitoring:
             #         rospy.loginfo("moving - linear twist: %s", self.odom_data.twist.twist.linear)
             #         rospy.loginfo("##########################################################")
 
-        # POSE + TWIST COVARIANCE
-        # rospy.loginfo(self.odom_data.pose.covariance)
-        # rospy.loginfo(self.odom_data.twist.covariance)
+        # POSE + TWIST COVARIANCE (6x6 matrices (x, y, z, rot_x, rot_y, rot_z))
+        for val in self.odom_data.pose.covariance:
+                if val > config.ODOM_POSE_COV_UP:
+                    # TODO: contingency
+                    rospy.loginfo("contingency: ODOM -> pose cov")
+                    break
+        for val in self.odom_data.twist.covariance:
+            if val > config.ODOM_TWIST_COV_UP:
+                # TODO: contingency
+                rospy.loginfo("contingency: ODOM -> twist cov")
+                break
 
     def monitor_gps(self):
         pass
