@@ -1,10 +1,12 @@
 #!/usr/bin/env python
 import rospy
+import math
 from std_msgs.msg import String, Bool
 from execution_monitoring import util, config
 from datetime import datetime
 from sensor_msgs.msg import Imu
 from nav_msgs.msg import Odometry
+import tf
 from actionlib_msgs.msg import GoalStatusArray, GoalStatus
 
 class LocalizationMonitoring:
@@ -23,7 +25,9 @@ class LocalizationMonitoring:
         self.imu_data = Imu()
         self.odom_data = Odometry()
         self.odom_filtered_data = Odometry()
-        self.gps_as_odom_data = Odometry()
+        self.gps_as_odom_data_latest = Odometry()
+        self.gps_as_odom_data_second_latest = Odometry()
+
         self.mbf_status = None
         self.localization_monitoring()
 
@@ -37,14 +41,26 @@ class LocalizationMonitoring:
             self.monitor_imu()
             self.monitor_odom(True)
             self.monitor_odom(False)
-            self.monitor_gps()
             self.relative_monitoring()
             rospy.sleep(2)
 
     def relative_monitoring(self):
         # IMU orientation
         # odom position + orientation
-        pass
+        # GNSS position
+
+        # -> can compare position of odom and GNSS
+        # ->             orientation of IMU and odom
+        rospy.loginfo("imu orientation: %s", self.imu_data.orientation)
+        rospy.loginfo("odom orientation: %s", self.odom_data.pose.pose.orientation)
+        rospy.loginfo("odom filtered orientation: %s", self.odom_filtered_data.pose.pose.orientation)
+
+        # interpolate orientation based on two GPS points
+        vector_x = self.gps_as_odom_data_latest.pose.pose.position.x - self.gps_as_odom_data_second_latest.pose.pose.position.x
+        vector_y = self.gps_as_odom_data_latest.pose.pose.position.y - self.gps_as_odom_data_second_latest.pose.pose.position.y
+        angle = math.atan2(vector_y, vector_x)
+        quaternion = tf.transformations.quaternion_from_euler(0, 0, angle)
+        rospy.loginfo("gnss orientation interpolation z component: %s", quaternion[2])
     
     def monitor_imu(self):
 
@@ -152,13 +168,9 @@ class LocalizationMonitoring:
                     rospy.loginfo("contingency: %s -> twist cov", name)
                     break
 
-    def monitor_gps(self):
-        pass
-
     def gps_as_odom_callback(self, gps_as_odom):
-        position = gps_as_odom.pose.pose.position
-        orientatoin = gps_as_odom.pose.pose.orientation
-        pose_cov = gps_as_odom.pose.covariance
+        self.gps_as_odom_data_second_latest = self.gps_as_odom_data_latest
+        self.gps_as_odom_data_latest = gps_as_odom
 
     def filtered_odom_callback(self, filtered_odom):
         self.odom_filtered_data = filtered_odom
