@@ -19,53 +19,61 @@ class LocalizationMonitoring:
         rospy.Subscriber('/odom', Odometry, self.odom_callback, queue_size=1)
         rospy.Subscriber('/odometry/filtered_odom', Odometry, self.filtered_odom_callback, queue_size=1)
         rospy.Subscriber('/odometry/gps', Odometry, self.gps_as_odom_callback, queue_size=1)
+        rospy.Subscriber('/move_base_flex/exe_path/status', GoalStatusArray, self.mbf_status_callback, queue_size=1)
         self.imu_data = Imu()
         self.odom_data = Odometry()
         self.odom_filtered_data = Odometry()
         self.gps_as_odom_data = Odometry()
+        self.mbf_status = None
         self.localization_monitoring()
 
+    def mbf_status_callback(self, mbf_status):
+        # the last element in the list is the latest (most recent)
+        self.mbf_status = mbf_status.status_list[-1].status
+
+    def localization_monitoring(self):
+        while not rospy.is_shutdown():
+            self.monitor_imu()
+            self.monitor_odom()
+            self.monitor_gps()
+            self.relative_monitoring()
+            rospy.sleep(2)
+
+    def relative_monitoring(self):
+        # IMU orientation
+        # odom position + orientation
+        pass
     
     def monitor_imu(self):
-        mbf_status = None
-        try:
-            # create a new subscription to the topic, receive one message, then unsubscribe
-            mbf_status = rospy.wait_for_message("/move_base_flex/exe_path/status", GoalStatusArray, 5)
-        except rospy.ROSException as e:
-            rospy.loginfo("mbf failure: %s", e)
 
         # MONITOR ANGULAR VELOCITY + LINEAR ACCELERATION
-        if mbf_status is not None:
-            status = mbf_status.status_list[0].status
-            # if the robot is not moving, the corresponding IMU values should be ~0.0
-            if status != GoalStatus.ACTIVE:
-                # angular velocity in rad/sec
-                if abs(self.imu_data.angular_velocity.x) > config.NOT_MOVING_ANG_VELO_UB \
-                    or abs(self.imu_data.angular_velocity.y) > config.NOT_MOVING_ANG_VELO_UB \
-                    or abs(self.imu_data.angular_velocity.z) > config.NOT_MOVING_ANG_VELO_UB:
-                        # TODO: contingency
-                        pass
-                        # rospy.loginfo("CONTINGENCY DETECTED ###################################")
-                        # rospy.loginfo("ang velo: %s", self.imu_data.angular_velocity)
-                        # rospy.loginfo("##########################################################")
+        # if the robot is not moving, the corresponding IMU values should be ~0.0
+        if self.mbf_status != GoalStatus.ACTIVE:
+            # angular velocity in rad/sec
+            if abs(self.imu_data.angular_velocity.x) > config.NOT_MOVING_ANG_VELO_UB \
+                or abs(self.imu_data.angular_velocity.y) > config.NOT_MOVING_ANG_VELO_UB \
+                or abs(self.imu_data.angular_velocity.z) > config.NOT_MOVING_ANG_VELO_UB:
+                    # TODO: contingency
+                    pass
+                    # rospy.loginfo("CONTINGENCY DETECTED ###################################")
+                    # rospy.loginfo("ang velo: %s", self.imu_data.angular_velocity)
+                    # rospy.loginfo("##########################################################")
 
-                # linear acceleration in m/s^2 (z-component is g (~9.81))
-                if abs(self.imu_data.linear_acceleration.x) > config.NOT_MOVING_LIN_ACC_UB \
-                    or abs(self.imu_data.linear_acceleration.y) > config.NOT_MOVING_LIN_ACC_UB:
-                        # TODO: contingency
-                        pass
-                        # rospy.loginfo("CONTINGENCY DETECTED ###################################")
-                        # rospy.loginfo("lin acc: %s", self.imu_data.linear_acceleration)
-                        # rospy.loginfo("##########################################################")
-            # robot is moving -> should be visible in IMU
-            else:
-                pass
-                # rospy.loginfo("now there should be high values - we are moving::")
-                # rospy.loginfo("ang velo: %s", self.imu_data.angular_velocity)
-                # rospy.loginfo("lin acc: %s", self.imu_data.linear_acceleration)
-                # however, should it be visible at all times when ACTIVE?
-
-        # MONITOR ORIENTATION??
+            # linear acceleration in m/s^2 (z-component is g (~9.81))
+            if abs(self.imu_data.linear_acceleration.x) > config.NOT_MOVING_LIN_ACC_UB \
+                or abs(self.imu_data.linear_acceleration.y) > config.NOT_MOVING_LIN_ACC_UB:
+                    # TODO: contingency
+                    pass
+                    # rospy.loginfo("CONTINGENCY DETECTED ###################################")
+                    # rospy.loginfo("lin acc: %s", self.imu_data.linear_acceleration)
+                    # rospy.loginfo("##########################################################")
+        # robot is moving -> should be visible in IMU
+        else:
+            pass
+            # rospy.loginfo("now there should be high values - we are moving::")
+            # rospy.loginfo("ang velo: %s", self.imu_data.angular_velocity)
+            # rospy.loginfo("lin acc: %s", self.imu_data.linear_acceleration)
+            # however, should it be visible at all times when ACTIVE?
 
         # MONITOR COVARIANCE -> diagonals contain variances (x, y, z)
         # --> all zeros -> covariance unknown
@@ -91,17 +99,45 @@ class LocalizationMonitoring:
 
 
     def monitor_odom(self):
-        pass
+        rospy.loginfo("monitor odom")
+        # MONITOR LINEAR + ANGULAR TWIST
+        # if the robot is not moving, the corresponding IMU values should be ~0.0
+        if self.mbf_status != GoalStatus.ACTIVE:
+            if abs(self.odom_data.twist.twist.linear.x) > config.NOT_MOVING_LINEAR_TWIST_UB \
+                or abs(self.odom_data.twist.twist.linear.y) > config.NOT_MOVING_LINEAR_TWIST_UB \
+                or abs(self.odom_data.twist.twist.linear.z) > config.NOT_MOVING_LINEAR_TWIST_UB:
+                    # TODO: contingency
+                    rospy.loginfo("CONTINGENCY DETECTED ###################################")
+                    rospy.loginfo("mbf status: %s", self.mbf_status)
+                    rospy.loginfo("not moving - linear twist: %s", self.odom_data.twist.twist.linear)
+                    rospy.loginfo("##########################################################")
+            if abs(self.odom_data.twist.twist.angular.x) > config.NOT_MOVING_ANGULAR_TWIST_UB \
+                or abs(self.odom_data.twist.twist.angular.y) > config.NOT_MOVING_ANGULAR_TWIST_UB \
+                or abs(self.odom_data.twist.twist.angular.z) > config.NOT_MOVING_ANGULAR_TWIST_UB:
+                    # TODO: contingency
+                    rospy.loginfo("CONTINGENCY DETECTED ###################################")
+                    rospy.loginfo("not moving - angular twist: %s", self.odom_data.twist.twist.angular)
+                    rospy.loginfo("##########################################################")
+        # moving
+        else:
+            # moving is hard to monitor -> there can be pauses with (0, 0, 0)
+            pass
+            # # at least one linear component should be significantly higher than 0
+            # if abs(self.odom_data.twist.twist.linear.x) < config.MOVING_LINEAR_TWIST_LB \
+            #     and abs(self.odom_data.twist.twist.linear.y) < config.MOVING_LINEAR_TWIST_LB \
+            #     and abs(self.odom_data.twist.twist.linear.z) < config.MOVING_LINEAR_TWIST_LB:
+            #         # TODO: contingency
+            #         pass
+            #         rospy.loginfo("CONTINGENCY DETECTED ###################################")
+            #         rospy.loginfo("moving - linear twist: %s", self.odom_data.twist.twist.linear)
+            #         rospy.loginfo("##########################################################")
+
+        # POSE + TWIST COVARIANCE
+        # rospy.loginfo(self.odom_data.pose.covariance)
+        # rospy.loginfo(self.odom_data.twist.covariance)
 
     def monitor_gps(self):
         pass
-
-    def localization_monitoring(self):
-        while not rospy.is_shutdown():
-            self.monitor_imu()
-            self.monitor_odom()
-            self.monitor_gps()
-            rospy.sleep(2)
 
     def gps_as_odom_callback(self, gps_as_odom):
         position = gps_as_odom.pose.pose.position
@@ -117,12 +153,7 @@ class LocalizationMonitoring:
         twist_cov = filtered_odom.twist.covariance
 
     def odom_callback(self, odom):
-        position = odom.pose.pose.position
-        orientatoin = odom.pose.pose.orientation
-        pose_cov = odom.pose.covariance
-        linear_twist = odom.twist.twist.linear
-        angular_twist = odom.twist.twist.angular
-        twist_cov = odom.twist.covariance
+        self.odom_data = odom
 
     def imu_callback(self, imu):
         self.imu_data = imu
