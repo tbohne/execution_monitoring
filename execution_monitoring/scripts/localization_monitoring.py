@@ -28,8 +28,9 @@ class LocalizationMonitoring:
         self.localization_monitoring()
 
     def mbf_status_callback(self, mbf_status):
-        # the last element in the list is the latest (most recent)
-        self.mbf_status = mbf_status.status_list[-1].status
+        if len(mbf_status.status_list) > 0:
+            # the last element in the list is the latest (most recent)
+            self.mbf_status = mbf_status.status_list[-1].status
 
     def localization_monitoring(self):
         while not rospy.is_shutdown():
