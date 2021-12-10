@@ -139,16 +139,18 @@ class LocalizationMonitoring:
             #         rospy.loginfo("##########################################################")
 
         # POSE + TWIST COVARIANCE (6x6 matrices (x, y, z, rot_x, rot_y, rot_z))
-        for val in odom_data.pose.covariance:
-                if val > config.ODOM_POSE_COV_UP:
+        # TODO: only due to the very high covariance of the filtered version -> to be checked later
+        if not filtered:
+            for val in odom_data.pose.covariance:
+                    if val > config.ODOM_POSE_COV_UP:
+                        # TODO: contingency
+                        rospy.loginfo("contingency: %s -> pose cov", name)
+                        break
+            for val in odom_data.twist.covariance:
+                if val > config.ODOM_TWIST_COV_UP:
                     # TODO: contingency
-                    rospy.loginfo("contingency: %s -> pose cov", name)
+                    rospy.loginfo("contingency: %s -> twist cov", name)
                     break
-        for val in odom_data.twist.covariance:
-            if val > config.ODOM_TWIST_COV_UP:
-                # TODO: contingency
-                rospy.loginfo("contingency: %s -> twist cov", name)
-                break
 
     def monitor_gps(self):
         pass
