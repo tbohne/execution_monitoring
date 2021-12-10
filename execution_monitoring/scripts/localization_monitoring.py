@@ -34,6 +34,7 @@ class LocalizationMonitoring:
         except rospy.ROSException as e:
             rospy.loginfo("mbf failure: %s", e)
 
+        # MONITOR ANGULAR VELOCITY + LINEAR ACCELERATION
         if mbf_status is not None:
             status = mbf_status.status_list[0].status
             # if the robot is not moving, the corresponding IMU values should be ~0.0
@@ -43,17 +44,50 @@ class LocalizationMonitoring:
                     or abs(self.imu_data.angular_velocity.y) > config.NOT_MOVING_ANG_VELO_UB \
                     or abs(self.imu_data.angular_velocity.z) > config.NOT_MOVING_ANG_VELO_UB:
                         # TODO: contingency
-                        rospy.loginfo("CONTINGENCY DETECTED")
+                        pass
+                        # rospy.loginfo("CONTINGENCY DETECTED ###################################")
+                        # rospy.loginfo("ang velo: %s", self.imu_data.angular_velocity)
+                        # rospy.loginfo("##########################################################")
 
                 # linear acceleration in m/s^2 (z-component is g (~9.81))
                 if abs(self.imu_data.linear_acceleration.x) > config.NOT_MOVING_LIN_ACC_UB \
                     or abs(self.imu_data.linear_acceleration.y) > config.NOT_MOVING_LIN_ACC_UB:
                         # TODO: contingency
-                        rospy.loginfo("CONTINGENCY DETECTED")
+                        pass
+                        # rospy.loginfo("CONTINGENCY DETECTED ###################################")
+                        # rospy.loginfo("lin acc: %s", self.imu_data.linear_acceleration)
+                        # rospy.loginfo("##########################################################")
             # robot is moving -> should be visible in IMU
             else:
                 pass
+                # rospy.loginfo("now there should be high values - we are moving::")
+                # rospy.loginfo("ang velo: %s", self.imu_data.angular_velocity)
+                # rospy.loginfo("lin acc: %s", self.imu_data.linear_acceleration)
                 # however, should it be visible at all times when ACTIVE?
+
+        # MONITOR ORIENTATION??
+
+        # MONITOR COVARIANCE -> diagonals contain variances (x, y, z)
+        # --> all zeros -> covariance unknown
+        # --> 1st element of  matrix -1 -> no estimate for the data elements (e.g. no orientation provided by IMU)
+        # covariance known and data provided by IMU -> monitor
+        if sum(self.imu_data.orientation_covariance) != 0.0 and self.imu_data.orientation_covariance[0] != -1.0:
+            for val in self.imu_data.orientation_covariance:
+                if val > config.IMU_ORIENTATION_COV_UB:
+                    break
+                    # contingency
+        # covariance known and data provided by IMU -> monitor
+        if sum(self.imu_data.angular_velocity_covariance) != 0.0 and self.imu_data.angular_velocity_covariance[0] != -1.0:
+            for val in self.imu_data.angular_velocity_covariance:
+                if val > config.IMU_ANGULAR_VELO_COV_UB:
+                    break
+                    # contingency
+        # covariance known and data provided by IMU -> monitor
+        if sum(self.imu_data.linear_acceleration_covariance) != 0.0 and self.imu_data.linear_acceleration_covariance[0] != -1.0:
+            for val in self.imu_data.linear_acceleration_covariance:
+                if val > config.IMU_LINEAR_ACC_COV_UB:
+                    break
+                    # contingency
 
 
     def monitor_odom(self):
@@ -91,14 +125,7 @@ class LocalizationMonitoring:
         twist_cov = odom.twist.covariance
 
     def imu_callback(self, imu):
-        orientation = imu.orientation
-        orientation_cov = imu.orientation_covariance
-        angular_velocity = imu.angular_velocity
-        angular_velocity_cov = imu.angular_velocity_covariance
-        linear_acceleration = imu.linear_acceleration
-        linear_acceleration_cov = imu.linear_acceleration_covariance
         self.imu_data = imu
-
 
 def node():
     rospy.init_node('localization_monitoring')

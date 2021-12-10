@@ -46,6 +46,9 @@ SCAN_VALUES_LB_PERCENTAGE = 5
 # TODO: should be checked - arbitrarily selected
 NOT_MOVING_ANG_VELO_UB = 0.05
 NOT_MOVING_LIN_ACC_UB = 0.2
+IMU_ORIENTATION_COV_UB = 10
+IMU_ANGULAR_VELO_COV_UB = 10
+IMU_LINEAR_ACC_COV_UB = 10
 #############################################################################
 #############################################################################
 #############################################################################
