@@ -29,7 +29,6 @@ class LocalizationMonitoring:
         self.gps_as_odom_data_second_latest = None
         self.initial_GPS = None
         self.initial_odom = None
-
         self.mbf_status = None
         self.localization_monitoring()
 
@@ -39,35 +38,25 @@ class LocalizationMonitoring:
             self.mbf_status = mbf_status.status_list[-1].status
 
     def localization_monitoring(self):
+        """
+        IMU      -> orientation (relative to a global reference frame)
+        Odometry -> position + orientation (relative to initial pose)
+        GNSS     -> position + interpolated orientation (absolute)
+        """
         while not rospy.is_shutdown():
             self.monitor_imu()
             self.monitor_odom(True)
             self.monitor_odom(False)
-            self.relative_monitoring()
+
+            if self.odom_data is not None and self.odom_filtered_data is not None and self.gps_as_odom_data_latest is not None:
+                self.yaw_monitoring()
+                self.odom_gnss_dist_divergence_monitoring()
+
             rospy.sleep(2)
 
-    def relative_monitoring(self):
-
-        if self.odom_data is not None and self.odom_filtered_data is not None and self.gps_as_odom_data_latest is not None:
-            # IMU orientation
-            # odom position + orientation
-            # GNSS position
-
-            # -> can compare position of odom and GNSS
-            # ->             orientation of IMU and odom
-            
-            #self.orientation_z_component_monitoring()
-            self.odom_and_gnss_dist_diverge_monitoring()
-
-    def odom_and_gnss_dist_diverge_monitoring(self):
-        rospy.loginfo("################################################################")
-        rospy.loginfo("odom position: %s", self.odom_data.pose.pose.position)
-        rospy.loginfo("odom filtered position: %s", self.odom_filtered_data.pose.pose.position)
-        rospy.loginfo("gnss position: %s", self.gps_as_odom_data_latest.pose.pose.position)
-
+    def odom_gnss_dist_divergence_monitoring(self):
         gps_x = self.gps_as_odom_data_latest.pose.pose.position.x
         gps_y = self.gps_as_odom_data_latest.pose.pose.position.y
-
         odom_x = self.odom_filtered_data.pose.pose.position.x
         odom_y = self.odom_filtered_data.pose.pose.position.y
 
@@ -79,31 +68,27 @@ class LocalizationMonitoring:
         if self.initial_GPS is not None and self.initial_odom is not None:
             odom_dist = math.sqrt((self.initial_odom.x - odom_x) ** 2 + (self.initial_odom.y - odom_y) ** 2)
             gps_dist = math.sqrt((self.initial_GPS.x - gps_x) ** 2 + (self.initial_GPS.y - gps_y) ** 2)
-            rospy.loginfo("2D dist between initial filtered odom and current: %s", odom_dist)
-            rospy.loginfo("2D dist between initial GPS and current: %s", gps_dist)
 
-            if abs(odom_dist - gps_dist) > 0.5:
-                # TODO: robot_info
-                rospy.loginfo("GNSS (initial-current) and odometry (initial-current) distances are slightly diverging -> indicator for minor localization issue")
-            if abs(odom_dist - gps_dist) > 2.0:
-                # TODO: contingency
-                rospy.loginfo("GNSS (initial-current) and odometry (initial-current) distances are diverging quite a bit -> indicator for localization issue")
             if abs(odom_dist - gps_dist) > 4.0:
                 # TODO: contingency
                 rospy.loginfo("GNSS (initial-current) and odometry (initial-current) distances are diverging quite heavily -> indicator for localization issue")
+            elif abs(odom_dist - gps_dist) > 2.0:
+                # TODO: contingency
+                rospy.loginfo("GNSS (initial-current) and odometry (initial-current) distances are diverging quite a bit -> indicator for localization issue")
+            elif abs(odom_dist - gps_dist) > 0.5:
+                # TODO: robot_info
+                rospy.loginfo("GNSS (initial-current) and odometry (initial-current) distances are slightly diverging -> indicator for minor localization issue")
+            
+            if abs(odom_dist - gps_dist) > 0.5:
+                rospy.loginfo("2D dist between initial filtered odom and current: %s", odom_dist)
+                rospy.loginfo("2D dist between initial GPS and current: %s", gps_dist)
 
-        rospy.loginfo("################################################################")
-
-    def orientation_z_component_monitoring(self):
+    def yaw_monitoring(self):
         """
         Arguably the most important component of the orientation.
-        GNSS interpolation of orientation (z component).
+        GNSS interpolation of orientation (z (yaw) component).
         Just comparing with IMU and filtered odometry. Odometry itself is always too bad.
         """
-        rospy.loginfo("################################################################")
-        rospy.loginfo("imu orientation z: %s", self.imu_data.orientation.z)
-        rospy.loginfo("odom orientation z: %s", self.odom_data.pose.pose.orientation.z)
-        rospy.loginfo("odom filtered orientation z: %s", self.odom_filtered_data.pose.pose.orientation.z)
 
         # interpolate orientation based on two GPS points
         x1 = self.gps_as_odom_data_latest.pose.pose.position.x
@@ -116,18 +101,24 @@ class LocalizationMonitoring:
         
         dist = math.sqrt((x1 - x2) ** 2 + (y1 - y2) ** 2)
         if dist > config.DIST_THRESH_FOR_INTERPOLATION_BETWEEN_GNSS_POS:
-            rospy.loginfo("gnss interpolation distance between points: %s", dist)
             angle = math.atan2(vector_y, vector_x)
             quaternion = tf.transformations.quaternion_from_euler(0, 0, angle)
             gnss_orientation_z = quaternion[2]
-            rospy.loginfo("gnss orientation interpolation z component: %s", gnss_orientation_z)
+            contingency = False
 
             if abs(gnss_orientation_z) - abs(self.imu_data.orientation.z) > config.Z_COMP_DIFF_UB:
                 rospy.loginfo("CONTINGENCY -- z component diff between GNSS interpolation and IMU too high")
+                contingency = True
 
             if abs(gnss_orientation_z) - abs(self.odom_filtered_data.pose.pose.orientation.z) > config.Z_COMP_DIFF_UB:
                 rospy.loginfo("CONTINGENCY -- z component diff between GNSS interpolation and filtered odometry too high")
-        rospy.loginfo("################################################################")
+                contingency = True
+
+            if contingency:
+                rospy.loginfo("imu orientation z: %s", self.imu_data.orientation.z)
+                rospy.loginfo("odom orientation z: %s", self.odom_data.pose.pose.orientation.z)
+                rospy.loginfo("odom filtered orientation z: %s", self.odom_filtered_data.pose.pose.orientation.z)
+                rospy.loginfo("gnss orientation interpolation z component: %s", gnss_orientation_z)
 
     
     def monitor_imu(self):
