@@ -51,16 +51,25 @@ class LocalizationMonitoring:
 
         # -> can compare position of odom and GNSS
         # ->             orientation of IMU and odom
-        rospy.loginfo("imu orientation: %s", self.imu_data.orientation)
-        rospy.loginfo("odom orientation: %s", self.odom_data.pose.pose.orientation)
-        rospy.loginfo("odom filtered orientation: %s", self.odom_filtered_data.pose.pose.orientation)
+        rospy.loginfo("imu orientation z: %s", self.imu_data.orientation.z)
+        rospy.loginfo("odom orientation z: %s", self.odom_data.pose.pose.orientation.z)
+        rospy.loginfo("odom filtered orientation z: %s", self.odom_filtered_data.pose.pose.orientation.z)
 
         # interpolate orientation based on two GPS points
-        vector_x = self.gps_as_odom_data_latest.pose.pose.position.x - self.gps_as_odom_data_second_latest.pose.pose.position.x
-        vector_y = self.gps_as_odom_data_latest.pose.pose.position.y - self.gps_as_odom_data_second_latest.pose.pose.position.y
-        angle = math.atan2(vector_y, vector_x)
-        quaternion = tf.transformations.quaternion_from_euler(0, 0, angle)
-        rospy.loginfo("gnss orientation interpolation z component: %s", quaternion[2])
+        x1 = self.gps_as_odom_data_latest.pose.pose.position.x
+        x2 = self.gps_as_odom_data_second_latest.pose.pose.position.x
+        y1 = self.gps_as_odom_data_latest.pose.pose.position.y
+        y2 = self.gps_as_odom_data_second_latest.pose.pose.position.y
+
+        vector_x = x1 - x2
+        vector_y = y1 - y2
+        
+        dist = math.sqrt((x1 - x2) ** 2 + (y1 - y2) ** 2)
+        if dist > config.DIST_THRESH_FOR_INTERPOLATION_BETWEEN_GNSS_POS:
+            rospy.loginfo("gnss interpolation distance between points: %s", dist)
+            angle = math.atan2(vector_y, vector_x)
+            quaternion = tf.transformations.quaternion_from_euler(0, 0, angle)
+            rospy.loginfo("gnss orientation interpolation z component: %s", quaternion[2])
     
     def monitor_imu(self):
 
