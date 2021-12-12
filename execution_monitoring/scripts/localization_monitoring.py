@@ -51,6 +51,17 @@ class LocalizationMonitoring:
 
         # -> can compare position of odom and GNSS
         # ->             orientation of IMU and odom
+        self.orientation_z_component_monitoring()
+
+        
+
+    def orientation_z_component_monitoring(self):
+        """
+        Arguably the most important component of the orientation.
+        GNSS interpolation of orientation (z component).
+        Just comparing with IMU and filtered odometry. Odometry itself is always too bad.
+        """
+        rospy.loginfo("################################################################")
         rospy.loginfo("imu orientation z: %s", self.imu_data.orientation.z)
         rospy.loginfo("odom orientation z: %s", self.odom_data.pose.pose.orientation.z)
         rospy.loginfo("odom filtered orientation z: %s", self.odom_filtered_data.pose.pose.orientation.z)
@@ -69,7 +80,16 @@ class LocalizationMonitoring:
             rospy.loginfo("gnss interpolation distance between points: %s", dist)
             angle = math.atan2(vector_y, vector_x)
             quaternion = tf.transformations.quaternion_from_euler(0, 0, angle)
-            rospy.loginfo("gnss orientation interpolation z component: %s", quaternion[2])
+            gnss_orientation_z = quaternion[2]
+            rospy.loginfo("gnss orientation interpolation z component: %s", gnss_orientation_z)
+
+            if abs(gnss_orientation_z) - abs(self.imu_data.orientation.z) > config.Z_COMP_DIFF_UB:
+                rospy.loginfo("CONTINGENCY -- z component diff between GNSS interpolation and IMU too high")
+
+            if abs(gnss_orientation_z) - abs(self.odom_filtered_data.pose.pose.orientation.z) > config.Z_COMP_DIFF_UB:
+                rospy.loginfo("CONTINGENCY -- z component diff between GNSS interpolation and filtered odometry too high")
+        rospy.loginfo("################################################################")
+
     
     def monitor_imu(self):
 
