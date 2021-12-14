@@ -45,7 +45,9 @@ SCAN_VALUES_LB_PERCENTAGE = 5
 #############################################################################
 # TODO: should be checked - arbitrarily selected
 NOT_MOVING_ANG_VELO_UB = 0.05
-NOT_MOVING_LIN_ACC_UB = 0.3
+NOT_MOVING_LIN_ACC_UB = 1.0
+
+ACTIVE_PASSIVE_FACTOR_LB = 3
 
 NOT_MOVING_LINEAR_TWIST_UB = 0.01
 NOT_MOVING_ANGULAR_TWIST_UB = 0.01

@@ -36,6 +36,8 @@ class LocalizationMonitoring:
         self.initial_GPS = None
         self.initial_odom = None
         self.mbf_status = None
+        self.lin_acc_active_history = collections.deque([], config.COVARIANCE_HISTORY_LENGTH)
+        self.lin_acc_passive_history = collections.deque([], config.COVARIANCE_HISTORY_LENGTH)
         self.localization_monitoring()
 
     def mbf_status_callback(self, mbf_status):
@@ -161,22 +163,24 @@ class LocalizationMonitoring:
                 rospy.loginfo("CONTINGENCY..... IMU angular velo, %s", self.mbf_status)
                 rospy.loginfo("ang velo: %s, %s, %s", x_avg, y_avg, z_avg)
 
-            rospy.loginfo("passive: %s, active: %s", len(passive_imu_copy), len(active_imu_copy))
-
             if len(passive_imu_copy) == config.IMU_ENTRIES and len(active_imu_copy) == config.IMU_ENTRIES:
                 entries = int(config.IMU_PERCENTAGE * config.IMU_ENTRIES)
-                rospy.loginfo("PASSIVE:::: %s", len(passive_imu_copy))
-                rospy.loginfo(np.median(sorted([max(abs(data.linear_acceleration.x), abs(data.linear_acceleration.y)) for data in passive_imu_copy])[::-1][:entries]))
+                self.lin_acc_passive_history.appendleft(np.median(sorted([max(abs(data.linear_acceleration.x), abs(data.linear_acceleration.y)) for data in passive_imu_copy])[::-1][:entries]))
+                self.lin_acc_active_history.appendleft(np.median(sorted([max(abs(data.linear_acceleration.x), abs(data.linear_acceleration.y)) for data in active_imu_copy])[::-1][:entries]))
 
-                rospy.loginfo("ACTIVE:::: %s", len(active_imu_copy))
-                rospy.loginfo(np.median(sorted([max(abs(data.linear_acceleration.x), abs(data.linear_acceleration.y)) for data in active_imu_copy])[::-1][:entries]))
+                # linear acceleration in m/s^2 (z-component is g (~9.81))
+                avg_factor = 0.0
+                for i in range(config.COVARIANCE_HISTORY_LENGTH):
+                    avg_factor += self.lin_acc_active_history[i] / self.lin_acc_passive_history[i]
+                    if self.lin_acc_passive_history[i] > config.NOT_MOVING_LIN_ACC_UB:
+                        rospy.loginfo("CONTINGENCY..... LIN ACC WITHOUT MOVING TOO HIGH: %s",self.lin_acc_passive_history[i])
+                avg_factor /= config.COVARIANCE_HISTORY_LENGTH
 
-                # # linear acceleration in m/s^2 (z-component is g (~9.81))
-                # x_avg = np.average([abs(data.linear_acceleration.x) for data in self.passive_imu_data])
-                # y_avg = np.average([abs(data.linear_acceleration.y) for data in self.passive_imu_data])
-                # if x_avg > config.NOT_MOVING_LIN_ACC_UB or y_avg > config.NOT_MOVING_LIN_ACC_UB:
-                #     rospy.loginfo("CONTINGENCY..... IMU lin acc, %s", self.mbf_status)
-                #     rospy.loginfo("lin acc: %s, %s", x_avg, y_avg)
+                if avg_factor < config.ACTIVE_PASSIVE_FACTOR_LB:
+                    rospy.loginfo("CONTINGENCY: LIN ACC during movement not considerably higher compared to standing still")
+                    rospy.loginfo("avtive values: %s", self.lin_acc_active_history)
+                    rospy.loginfo("passive values: %s", self.lin_acc_passive_history)
+                    
 
             # MONITOR COVARIANCE
             self.imu_cov_monitoring(active_imu_copy[0].orientation_covariance, config.IMU_ORIENTATION_COV_UB)
