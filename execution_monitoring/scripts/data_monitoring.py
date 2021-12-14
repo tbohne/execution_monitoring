@@ -21,12 +21,13 @@ class DataMonitoring:
             rospy.loginfo("reading file before scan logging..")
             scan_cnt_before = self.count_scan_entries()
 
-        rospy.sleep(config.SCAN_TIME_LIMIT)
+        # TODO: should be scan time limit, but not too long either -> otherwise problems with next one
+        rospy.sleep(10)
         rospy.loginfo("reading file after scan logging..")
         scan_cnt_after = self.count_scan_entries()
 
         if scan_cnt_after != scan_cnt_before + 1:
-            rospy.loginfo("data management error..")
+            rospy.loginfo("data management error.. before: %s, after: %s", scan_cnt_before, scan_cnt_after)
             self.contingency_pub.publish(config.DATA_MANAGEMENT_FAILURE_TWO)
         else:
             rospy.loginfo("data management OK - scan successfully logged..")
