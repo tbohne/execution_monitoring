@@ -32,7 +32,7 @@ SENSOR_FAILURE_THREE = "predominantly infeasible range values (inf)"
 SENSOR_FAILURE_FOUR = "repeated scan"
 
 # SCAN SETTINGS
-SCAN_PATH = MONITOR_DRIVE + "/home/docker/catkin_ws/src/execution_monitoring/execution_monitoring/scans/"
+SCAN_PATH = MONITOR_DRIVE + "home/docker/catkin_ws/src/execution_monitoring/execution_monitoring/scans/"
 SCAN_TIME_LIMIT = 60
 SCAN_FILE_EXTENSION = ".txt"
 SCAN_VALUES_LB_PERCENTAGE = 5
@@ -49,13 +49,13 @@ NOT_MOVING_LIN_ACC_UB = 1.0
 
 ACTIVE_PASSIVE_FACTOR_LB = 3
 
-NOT_MOVING_LINEAR_TWIST_UB = 0.01
-NOT_MOVING_ANGULAR_TWIST_UB = 0.01
+NOT_MOVING_LINEAR_TWIST_UB = 0.05
+NOT_MOVING_ANGULAR_TWIST_UB = 0.05
 MOVING_LINEAR_TWIST_LB = 0.3
 
 DIST_THRESH_FOR_INTERPOLATION_BETWEEN_GNSS_POS = 0.01
 
-Z_COMP_DIFF_UB = 0.03
+Z_COMP_DIFF_UB = 0.1
 
 IMU_ENTRIES = 1500
 IMU_PERCENTAGE = .05
