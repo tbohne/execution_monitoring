@@ -8,6 +8,8 @@ from sensor_msgs.msg import Imu
 from nav_msgs.msg import Odometry
 import tf
 from actionlib_msgs.msg import GoalStatusArray, GoalStatus
+import collections
+import numpy as np
 
 class LocalizationMonitoring:
     """
@@ -22,7 +24,10 @@ class LocalizationMonitoring:
         rospy.Subscriber('/odometry/filtered_odom', Odometry, self.filtered_odom_callback, queue_size=1)
         rospy.Subscriber('/odometry/gps', Odometry, self.gps_as_odom_callback, queue_size=1)
         rospy.Subscriber('/move_base_flex/exe_path/status', GoalStatusArray, self.mbf_status_callback, queue_size=1)
-        self.imu_data = None
+        self.status_before = None
+        self.status_switch_time = None
+        self.active_imu_data = collections.deque([], config.IMU_ENTRIES)
+        self.passive_imu_data = collections.deque([], config.IMU_ENTRIES)
         self.odom_data = None
         self.odom_filtered_data = None
         self.gps_as_odom_data_latest = None
@@ -36,6 +41,9 @@ class LocalizationMonitoring:
         if len(mbf_status.status_list) > 0:
             # the last element in the list is the latest (most recent)
             self.mbf_status = mbf_status.status_list[-1].status
+            if self.mbf_status != self.status_before:
+                self.status_switch_time = datetime.now()
+                self.status_before = self.mbf_status
 
     def localization_monitoring(self):
         """
@@ -106,7 +114,8 @@ class LocalizationMonitoring:
             gnss_orientation_z = quaternion[2]
             contingency = False
 
-            if abs(gnss_orientation_z) - abs(self.imu_data.orientation.z) > config.Z_COMP_DIFF_UB:
+            if abs(gnss_orientation_z) - abs(self.active_imu_data[0].orientation.z) > config.Z_COMP_DIFF_UB \
+                and abs(gnss_orientation_z) - abs(self.passive_imu_data[0].orientation.z) > config.Z_COMP_DIFF_UB:
                 rospy.loginfo("CONTINGENCY -- z component diff between GNSS interpolation and IMU too high")
                 contingency = True
 
@@ -115,52 +124,61 @@ class LocalizationMonitoring:
                 contingency = True
 
             if contingency:
-                rospy.loginfo("imu orientation z: %s", self.imu_data.orientation.z)
+                rospy.loginfo("imu orientation (active) z: %s", self.active_imu_data[0].orientation.z)
+                rospy.loginfo("imu orientation (passive) z: %s", self.passive_imu_data[0].orientation.z)
                 rospy.loginfo("odom orientation z: %s", self.odom_data.pose.pose.orientation.z)
                 rospy.loginfo("odom filtered orientation z: %s", self.odom_filtered_data.pose.pose.orientation.z)
                 rospy.loginfo("gnss orientation interpolation z component: %s", gnss_orientation_z)
 
+    def imu_cov_monitoring(self, cov_matrix, upper_bound):
+        # MONITOR COVARIANCE -> diagonals contain variances (x, y, z)
+        # --> all zeros -> covariance unknown
+        # --> 1st element of  matrix -1 -> no estimate for the data elements (e.g. no orientation provided by IMU)
+        # covariance known and data provided by IMU -> monitor
+        if sum(cov_matrix) != 0.0 and cov_matrix[0] != -1.0:
+            for val in cov_matrix:
+                if val > upper_bound:
+                    rospy.loginfo("CONTINGENCY -> IMU covariance")
+                    return
+
     def monitor_imu(self):
 
-        if self.imu_data is not None:
+        if len(self.active_imu_data) > 0 and len(self.passive_imu_data) > 0:
             # MONITOR ANGULAR VELOCITY + LINEAR ACCELERATION
             # if the robot is not moving, the corresponding IMU values should be ~0.0
-            if self.mbf_status != GoalStatus.ACTIVE:
-                # angular velocity in rad/sec
-                if abs(self.imu_data.angular_velocity.x) > config.NOT_MOVING_ANG_VELO_UB \
-                    or abs(self.imu_data.angular_velocity.y) > config.NOT_MOVING_ANG_VELO_UB \
-                    or abs(self.imu_data.angular_velocity.z) > config.NOT_MOVING_ANG_VELO_UB:
-                        rospy.loginfo("CONTINGENCY..... IMU angular velo, %s", self.mbf_status)
-                        rospy.loginfo("ang velo: %s", self.imu_data.angular_velocity)
+            # angular velocity in rad/sec
+            x_avg = np.average([abs(data.angular_velocity.x) for data in self.passive_imu_data])
+            y_avg = np.average([abs(data.angular_velocity.y) for data in self.passive_imu_data])
+            z_avg = np.average([abs(data.angular_velocity.z) for data in self.passive_imu_data])
 
-                # linear acceleration in m/s^2 (z-component is g (~9.81))
-                if abs(self.imu_data.linear_acceleration.x) > config.NOT_MOVING_LIN_ACC_UB \
-                    or abs(self.imu_data.linear_acceleration.y) > config.NOT_MOVING_LIN_ACC_UB:
-                        rospy.loginfo("CONTINGENCY..... IMU lin acc, %s", self.mbf_status)
-                        rospy.loginfo("lin acc: %s", self.imu_data.linear_acceleration)
+            if x_avg > config.NOT_MOVING_ANG_VELO_UB or y_avg > config.NOT_MOVING_ANG_VELO_UB or z_avg > config.NOT_MOVING_ANG_VELO_UB:
+                rospy.loginfo("CONTINGENCY..... IMU angular velo, %s", self.mbf_status)
+                rospy.loginfo("ang velo: %s, %s, %s", x_avg, y_avg, z_avg)
 
-            # MONITOR COVARIANCE -> diagonals contain variances (x, y, z)
-            # --> all zeros -> covariance unknown
-            # --> 1st element of  matrix -1 -> no estimate for the data elements (e.g. no orientation provided by IMU)
-            # covariance known and data provided by IMU -> monitor
-            if sum(self.imu_data.orientation_covariance) != 0.0 and self.imu_data.orientation_covariance[0] != -1.0:
-                for val in self.imu_data.orientation_covariance:
-                    if val > config.IMU_ORIENTATION_COV_UB:
-                        rospy.loginfo("CONTINGENCY -> IMU covariance (ori)")
-                        break
-            # covariance known and data provided by IMU -> monitor
-            if sum(self.imu_data.angular_velocity_covariance) != 0.0 and self.imu_data.angular_velocity_covariance[0] != -1.0:
-                for val in self.imu_data.angular_velocity_covariance:
-                    if val > config.IMU_ANGULAR_VELO_COV_UB:
-                        rospy.loginfo("CONTINGENCY -> IMU covariance (angu velo)")
-                        break
-            # covariance known and data provided by IMU -> monitor
-            if sum(self.imu_data.linear_acceleration_covariance) != 0.0 and self.imu_data.linear_acceleration_covariance[0] != -1.0:
-                for val in self.imu_data.linear_acceleration_covariance:
-                    if val > config.IMU_LINEAR_ACC_COV_UB:
-                        rospy.loginfo("CONTINGENCY -> IMU covariance (lin acc)")
-                        break
+            rospy.loginfo("passive: %s, active: %s", len(self.passive_imu_data), len(self.active_imu_data))
 
+            if len(self.passive_imu_data) == config.IMU_ENTRIES and len(self.active_imu_data) == config.IMU_ENTRIES:
+                entries = int(config.IMU_PERCENTAGE * config.IMU_ENTRIES)
+                rospy.loginfo("PASSIVE:::: %s", len(self.passive_imu_data))
+                rospy.loginfo(np.mean(sorted([max(abs(data.linear_acceleration.x), abs(data.linear_acceleration.y)) for data in self.passive_imu_data])[::-1][:entries]))
+
+                rospy.loginfo("ACTIVE:::: %s", len(self.active_imu_data))
+                rospy.loginfo(np.mean(sorted([max(abs(data.linear_acceleration.x), abs(data.linear_acceleration.y)) for data in self.active_imu_data])[::-1][:entries]))
+
+                # # linear acceleration in m/s^2 (z-component is g (~9.81))
+                # x_avg = np.average([abs(data.linear_acceleration.x) for data in self.passive_imu_data])
+                # y_avg = np.average([abs(data.linear_acceleration.y) for data in self.passive_imu_data])
+                # if x_avg > config.NOT_MOVING_LIN_ACC_UB or y_avg > config.NOT_MOVING_LIN_ACC_UB:
+                #     rospy.loginfo("CONTINGENCY..... IMU lin acc, %s", self.mbf_status)
+                #     rospy.loginfo("lin acc: %s, %s", x_avg, y_avg)
+
+            # MONITOR COVARIANCE
+            self.imu_cov_monitoring(self.active_imu_data[0].orientation_covariance, config.IMU_ORIENTATION_COV_UB)
+            self.imu_cov_monitoring(self.active_imu_data[0].angular_velocity_covariance, config.IMU_ANGULAR_VELO_COV_UB)
+            self.imu_cov_monitoring(self.active_imu_data[0].linear_acceleration_covariance, config.IMU_LINEAR_ACC_COV_UB)
+            self.imu_cov_monitoring(self.passive_imu_data[0].orientation_covariance, config.IMU_ORIENTATION_COV_UB)
+            self.imu_cov_monitoring(self.passive_imu_data[0].angular_velocity_covariance, config.IMU_ANGULAR_VELO_COV_UB)
+            self.imu_cov_monitoring(self.passive_imu_data[0].linear_acceleration_covariance, config.IMU_LINEAR_ACC_COV_UB)
 
     def monitor_odom(self, filtered):
         name = "odometry" if not filtered else "filtered odometry"
@@ -205,7 +223,12 @@ class LocalizationMonitoring:
         self.odom_data = odom
 
     def imu_callback(self, imu):
-        self.imu_data = imu
+        # after status switch - block 2s
+        if self.status_switch_time is not None and (datetime.now() - self.status_switch_time).total_seconds() > 2:
+            if self.mbf_status != GoalStatus.ACTIVE:
+                self.passive_imu_data.appendleft(imu)
+            else:
+                self.active_imu_data.appendleft(imu)
 
 def node():
     rospy.init_node('localization_monitoring')
