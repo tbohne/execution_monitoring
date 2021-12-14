@@ -55,7 +55,7 @@ class Idle(smach.State):
         if plan is not None:
             rospy.loginfo("received plan..")
             userdata.output_plan = plan
-            self.mission_name_pub.publish(datetime.fromtimestamp(rospy.get_time()).strftime("%A, %B %d, %Y %I:%M:%S"))
+            self.mission_name_pub.publish(datetime.fromtimestamp(rospy.get_time()).strftime("%m_%d_%Y"))
             return "plan_received"
         else:
             rospy.loginfo("waiting for plan..")
