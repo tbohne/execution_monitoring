@@ -57,7 +57,7 @@ class LocalizationMonitoring:
         """
         while not rospy.is_shutdown():
 
-            if self.status_switch_time is not None and (datetime.now() - self.status_switch_time).total_seconds() > 2:
+            if self.status_switch_time is not None and (datetime.now() - self.status_switch_time).total_seconds() > 5:
                 self.monitor_imu()
                 self.monitor_odom(True)
                 self.monitor_odom(False)
@@ -160,7 +160,7 @@ class LocalizationMonitoring:
             z_avg = np.average([abs(data.angular_velocity.z) for data in passive_imu_copy])
 
             if x_avg > config.NOT_MOVING_ANG_VELO_UB or y_avg > config.NOT_MOVING_ANG_VELO_UB or z_avg > config.NOT_MOVING_ANG_VELO_UB:
-                rospy.loginfo("CONTINGENCY..... IMU angular velo, %s", self.mbf_status)
+                rospy.loginfo("CONTINGENCY..... IMU angular velo for passive state")
                 rospy.loginfo("ang velo: %s, %s, %s", x_avg, y_avg, z_avg)
 
             if len(passive_imu_copy) == config.IMU_ENTRIES and len(active_imu_copy) == config.IMU_ENTRIES:
@@ -171,12 +171,16 @@ class LocalizationMonitoring:
                 # linear acceleration in m/s^2 (z-component is g (~9.81))
                 avg_factor = 0.0
                 for i in range(config.COVARIANCE_HISTORY_LENGTH):
-                    avg_factor += self.lin_acc_active_history[i] / self.lin_acc_passive_history[i]
-                    if self.lin_acc_passive_history[i] > config.NOT_MOVING_LIN_ACC_UB:
-                        rospy.loginfo("CONTINGENCY..... LIN ACC WITHOUT MOVING TOO HIGH: %s",self.lin_acc_passive_history[i])
+                    if i < len(self.lin_acc_active_history) and i < len(self.lin_acc_passive_history):
+                        avg_factor += self.lin_acc_active_history[i] / self.lin_acc_passive_history[i]
+                        if self.lin_acc_passive_history[i] > config.NOT_MOVING_LIN_ACC_UB:
+                            rospy.loginfo("CONTINGENCY..... LIN ACC WITHOUT MOVING TOO HIGH: %s",self.lin_acc_passive_history[i])
                 avg_factor /= config.COVARIANCE_HISTORY_LENGTH
 
-                if avg_factor < config.ACTIVE_PASSIVE_FACTOR_LB:
+                if len(self.lin_acc_active_history) == config.COVARIANCE_HISTORY_LENGTH \
+                    and len(self.lin_acc_passive_history) == config.COVARIANCE_HISTORY_LENGTH \
+                    and avg_factor < config.ACTIVE_PASSIVE_FACTOR_LB:
+
                     rospy.loginfo("CONTINGENCY: LIN ACC during movement not considerably higher compared to standing still")
                     rospy.loginfo("avtive values: %s", self.lin_acc_active_history)
                     rospy.loginfo("passive values: %s", self.lin_acc_passive_history)
@@ -205,6 +209,7 @@ class LocalizationMonitoring:
                     or abs(odom_data.twist.twist.angular.z) > config.NOT_MOVING_ANGULAR_TWIST_UB:
                         rospy.loginfo("%s CONTINGENCY DETECTED ###################################", name)
                         rospy.loginfo("not moving, but angular twist: %s", odom_data.twist.twist.angular)
+                        rospy.loginfo("mbf status: %s", self.mbf_status)
 
             # POSE + TWIST COVARIANCE (6x6 matrices (x, y, z, rot_x, rot_y, rot_z))
             # TODO: only due to the very high covariance of the filtered version -> to be checked later
