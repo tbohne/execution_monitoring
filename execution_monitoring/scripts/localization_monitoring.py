@@ -174,6 +174,7 @@ class LocalizationMonitoring:
                     if i < len(self.lin_acc_active_history) and i < len(self.lin_acc_passive_history):
                         avg_factor += self.lin_acc_active_history[i] / self.lin_acc_passive_history[i]
                         if self.lin_acc_passive_history[i] > config.NOT_MOVING_LIN_ACC_UB:
+                            rospy.loginfo("mbf status: %s", )
                             rospy.loginfo("CONTINGENCY..... LIN ACC WITHOUT MOVING TOO HIGH: %s",self.lin_acc_passive_history[i])
                 avg_factor /= config.COVARIANCE_HISTORY_LENGTH
 
@@ -238,9 +239,9 @@ class LocalizationMonitoring:
         # after status switch - block 2s
         if self.status_switch_time is not None and (datetime.now() - self.status_switch_time).total_seconds() > 10:
             # aborted state should not be collected at all
-            if self.mbf_status != GoalStatus.ACTIVE and self.mbf_status != GoalStatus.ABORTED:
+            if self.mbf_status == GoalStatus.SUCCEEDED: #self.mbf_status != GoalStatus.ACTIVE and self.mbf_status != GoalStatus.ABORTED:
                 self.passive_imu_data.appendleft(imu)
-            elif self.mbf_status != GoalStatus.ABORTED:
+            elif self.mbf_status == GoalStatus.ACTIVE: #self.mbf_status != GoalStatus.ABORTED:
                 self.active_imu_data.appendleft(imu)
 
 def node():

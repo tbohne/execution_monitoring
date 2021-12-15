@@ -308,7 +308,8 @@ class WeatherMonitoring:
         wind_ok = self.monitor_wind(weather_data.wind_gust_speed, weather_data.wind_speed)
         temp_ok = self.monitor_temperature(weather_data.min_temp, weather_data.max_temp, weather_data.temp)
         code_ok = self.monitor_owm_weather_condition_code(weather_data.owm_weather_condition_code)
-        sun_ok = self.monitor_sunrise_and_sunset(weather_data.sunrise_time_sec, weather_data.sunset_time_sec)
+        # TODO: activate again for real tests..
+        sun_ok = True #self.monitor_sunrise_and_sunset(weather_data.sunrise_time_sec, weather_data.sunset_time_sec)
         if not self.active_monitoring and rain_ok and snow_ok and wind_ok and temp_ok and code_ok and sun_ok:
             self.moderate_weather_pub.publish("weather is moderate again..")
 
