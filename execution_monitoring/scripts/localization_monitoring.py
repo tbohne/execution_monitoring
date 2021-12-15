@@ -198,7 +198,7 @@ class LocalizationMonitoring:
         if self.odom_data is not None:
             # MONITOR LINEAR + ANGULAR TWIST
             # if the robot is not moving, the corresponding odom values should be ~0.0
-            if self.mbf_status != GoalStatus.ACTIVE:
+            if self.mbf_status != GoalStatus.ACTIVE and self.mbf_status != GoalStatus.ABORTED:
                 if abs(odom_data.twist.twist.linear.x) > config.NOT_MOVING_LINEAR_TWIST_UB \
                     or abs(odom_data.twist.twist.linear.y) > config.NOT_MOVING_LINEAR_TWIST_UB \
                     or abs(odom_data.twist.twist.linear.z) > config.NOT_MOVING_LINEAR_TWIST_UB:
@@ -237,9 +237,10 @@ class LocalizationMonitoring:
         self.imu_latest = imu
         # after status switch - block 2s
         if self.status_switch_time is not None and (datetime.now() - self.status_switch_time).total_seconds() > 10:
-            if self.mbf_status != GoalStatus.ACTIVE:
+            # aborted state should not be collected at all
+            if self.mbf_status != GoalStatus.ACTIVE and self.mbf_status != GoalStatus.ABORTED:
                 self.passive_imu_data.appendleft(imu)
-            else:
+            elif self.mbf_status != GoalStatus.ABORTED:
                 self.active_imu_data.appendleft(imu)
 
 def node():
