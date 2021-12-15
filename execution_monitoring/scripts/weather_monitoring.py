@@ -76,6 +76,7 @@ class WeatherMonitoring:
         self.code_sim = False
         self.sunset_sim = False
         self.active_monitoring = True
+        self.position = None
         self.launch_weather_monitoring()
 
     def gnss_callback(self, nav_sat_fix):
@@ -316,7 +317,7 @@ class WeatherMonitoring:
         owm = OWM(secret_config.OWM_API_KEY)
 
         while not rospy.is_shutdown():
-            if owm.is_API_online():
+            if owm.is_API_online() and self.position is not None:
                 observation = owm.weather_at_coords(*self.position)
                 print("monitoring weather for: " + observation.get_location().get_name())
                 weather_data = self.parse_weather_data(observation.get_weather())
