@@ -180,9 +180,9 @@ CONNECTION_FAILURE_FOURTEEN = "unknown GNSS service"
 CONNECTION_FAILURE_FIFTEEN = "GNSS - latitude not present or infeasible"
 CONNECTION_FAILURE_SIXTEEN = "GNSS - longitude not present or infeasible"
 CONNECTION_FAILURE_SEVENTEEN = "GNSS - unknown covariance type"
-CONNECTION_FAILURE_EIGHTEEN = "GNSS - critically high covariance"
-CONNECTION_FAILURE_NINETEEN = "GNSS - critically high approximated covariance"
-CONNECTION_FAILURE_TWENTY = "GNSS - covariance progression issue (increasingly higher)"
+CONNECTION_FAILURE_EIGHTEEN = "GNSS - critically high standard deviations"
+CONNECTION_FAILURE_NINETEEN = "GNSS - critically high approximated standard deviations"
+CONNECTION_FAILURE_TWENTY = "GNSS - standard deviation progression issue (increasingly higher)"
 BAD_WIFI_LINK_QUALITY = 2
 BAD_WIFI_SIGNAL_LEVEL = -90
 BAD_WIFI_BIT_RATE = 0.1
@@ -216,9 +216,9 @@ LNG_LB = -180
 LNG_UB = 180
 # GNSS covariance config
 HIGH_AREA_COVARIANCE = 50
-GOOD_VARIANCE_UB = 20
+STD_DEVIATION_UB = 20
 COVARIANCE_HISTORY_LENGTH = 5
-SIGNIFICANT_COVARIANCE_INCREASE = 15
+SIGNIFICANT_DEVIATION_INCREASE = 15
 
 # WIFI MONITORING
 WIFI_INTERFACE = "wlx3c1e045678a2"

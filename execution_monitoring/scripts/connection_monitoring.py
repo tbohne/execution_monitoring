@@ -60,7 +60,7 @@ class ConnectionMonitoring:
 
     def good_variances(self, nav_sat_fix):
         for i in range(0, len(nav_sat_fix.position_covariance), 4):
-            if nav_sat_fix.position_covariance[i] != float('nan') and nav_sat_fix.position_covariance[i] > config.GOOD_VARIANCE_UB:
+            if nav_sat_fix.position_covariance[i] != float('nan') and nav_sat_fix.position_covariance[i] > config.STD_DEVIATION_UB:
                 return False
         return True
     
@@ -129,19 +129,19 @@ class ConnectionMonitoring:
             if nav_sat_fix.position_covariance_type == config.GNSS_COVARIANCE_TYPE_KNOWN:
                 # covariances can be completely used for quality assessment
                 for cov in nav_sat_fix.position_covariance:
-                    if cov != float('nan') and cov > config.HIGH_AREA_COVARIANCE:
+                    if cov != float('nan') and cov > config.STD_DEVIATION_UB:
                         self.contingency_pub.publish(config.CONNECTION_FAILURE_EIGHTEEN)
                         break
             elif nav_sat_fix.position_covariance_type == config.GNSS_COVARIANCE_TYPE_DIAGONAL_KNOWN:
                 # GNSS receiver provided the variance of each measurement -> diagonal can be used for quality assessment
                 for i in range(0, len(nav_sat_fix.position_covariance), 4):
-                    if nav_sat_fix.position_covariance[i] != float('nan') and nav_sat_fix.position_covariance[i] > config.HIGH_AREA_COVARIANCE:
+                    if nav_sat_fix.position_covariance[i] != float('nan') and nav_sat_fix.position_covariance[i] > config.STD_DEVIATION_UB:
                         self.contingency_pub.publish(config.CONNECTION_FAILURE_EIGHTEEN)
                         break
             elif nav_sat_fix.position_covariance_type == config.GNSS_COVARIANCE_TYPE_APPROXIMATED:
                 # can be considered, but with caution, without putting too much weight on it -> only an approximate value
                 for cov in nav_sat_fix.position_covariance:
-                    if cov != float('nan') and cov > config.HIGH_AREA_COVARIANCE:
+                    if cov != float('nan') and cov > config.STD_DEVIATION_UB:
                         # at least information, but not so critial, is only approximated
                         self.robot_info_pub.publish(config.CONNECTION_FAILURE_NINETEEN)
                         break
@@ -183,13 +183,13 @@ class ConnectionMonitoring:
             #  - only increases
             #  - total increase between oldest and latest larger than 15 (configurable)
 
-            if self.increasing_values_only(east_components) and self.get_latest(east_components) - self.get_oldest(east_components) > config.SIGNIFICANT_COVARIANCE_INCREASE:
+            if self.increasing_values_only(east_components) and self.get_latest(east_components) - self.get_oldest(east_components) > config.SIGNIFICANT_DEVIATION_INCREASE:
                 self.contingency_pub.publish(config.CONNECTION_FAILURE_TWENTY)
                 return False
-            if self.increasing_values_only(north_components) and self.get_latest(north_components) - self.get_oldest(north_components) > config.SIGNIFICANT_COVARIANCE_INCREASE:
+            if self.increasing_values_only(north_components) and self.get_latest(north_components) - self.get_oldest(north_components) > config.SIGNIFICANT_DEVIATION_INCREASE:
                 self.contingency_pub.publish(config.CONNECTION_FAILURE_TWENTY)
                 return False
-            if self.increasing_values_only(up_components) and self.get_latest(up_components) - self.get_oldest(up_components) > config.SIGNIFICANT_COVARIANCE_INCREASE:
+            if self.increasing_values_only(up_components) and self.get_latest(up_components) - self.get_oldest(up_components) > config.SIGNIFICANT_DEVIATION_INCREASE:
                 self.contingency_pub.publish(config.CONNECTION_FAILURE_TWENTY)
                 return False
 
