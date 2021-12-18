@@ -51,8 +51,8 @@
         - **no RTK:** `rostopic pub -1 /set_simulated_no_rtk std_msgs/String fail`
         - **unknown service:** `rostopic pub -1 /toggle_simulated_unknown_service std_msgs/String fail`
         - **infeasible lat / lng:** `rostopic pub -1 /toggle_simulated_infeasible_lat_lng std_msgs/String fail`
-        - **covariance history failure:** `rostopic pub -1 /toggle_simulated_cov_history_failure std_msgs/String fail`
-        - **high covariance:** `rostopic pub -1 /toggle_simulated_high_cov std_msgs/String fail`
+        - **variance history failure:** `rostopic pub -1 /toggle_simulated_variance_history_failure std_msgs/String fail`
+        - **high deviation:** `rostopic pub -1 /toggle_simulated_high_deviation std_msgs/String fail`
 - **drastic weather changes**
     - **heavy rain:** `rostopic pub -1 /toggle_rain_sim std_msgs/String fail`
     - **heavy snow:** `rostopic pub -1 /toggle_snow_sim std_msgs/String fail`
