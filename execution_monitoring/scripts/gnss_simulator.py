@@ -134,7 +134,7 @@ class GNSSSimulator:
             # fill history
             for _ in range(config.COVARIANCE_HISTORY_LENGTH):
                 nav_sat_fix.position_covariance = [east, 0.0, 0.0, 0.0, north, 0.0, 0.0, 0.0, up]
-                east += 5.0
+                east += 10.0
                 self.gps_publisher.publish(nav_sat_fix)
                 rospy.sleep(1)
             self.sim_variance_history_failure = False
