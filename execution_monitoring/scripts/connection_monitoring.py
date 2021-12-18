@@ -6,7 +6,8 @@ from datetime import date, datetime
 from std_msgs.msg import String, Bool
 from execution_monitoring.msg import WiFi, Internet
 from sensor_msgs.msg import NavSatFix
-from execution_monitoring import util, config
+from execution_monitoring import config
+import math
 
 class ConnectionMonitoring:
 
@@ -58,16 +59,16 @@ class ConnectionMonitoring:
             rospy.sleep(5)
 
 
-    def good_variances(self, nav_sat_fix):
+    def feasible_standard_deviations(self, nav_sat_fix):
         for i in range(0, len(nav_sat_fix.position_covariance), 4):
-            if nav_sat_fix.position_covariance[i] != float('nan') and nav_sat_fix.position_covariance[i] > config.STD_DEVIATION_UB:
+            if nav_sat_fix.position_covariance[i] != float('nan') and math.sqrt(nav_sat_fix.position_covariance[i]) > config.STD_DEVIATION_UB:
                 return False
         return True
     
     def estimate_gnss_quality(self, nav_sat_fix):
         # GNSS quality estimation based on provided info
-        #   - good (status GNSS_STATUS_GBAS_FIX, cov type >= config.GNSS_COVARIANCE_TYPE_DIAGONAL_KNOWN, each variance value (diagonal) <= LOW_COV_UB)
-        #   - medium (status >= GNSS_STATUS_FIX, cov type >= config.GNSS_COVARIANCE_TYPE_APPROXIMATED, each value (diagonal) <= LOW_COV_UB)
+        #   - good (status GNSS_STATUS_GBAS_FIX, cov type >= config.GNSS_COVARIANCE_TYPE_DIAGONAL_KNOWN, each standard deviaton <= STD_DEVIATION_UB)
+        #   - medium (status >= GNSS_STATUS_FIX, cov type >= config.GNSS_COVARIANCE_TYPE_APPROXIMATED, each standard deviation <= STD_DEVIATION_UB)
         #   - low (status >= GNSS_STATUS_FIX, cov type == config.GNSS_COVARIANCE_TYPE_UNKNOWN)
 
         estimation_str = "Quality estimation of currently provided GNSS data: "
@@ -75,10 +76,10 @@ class ConnectionMonitoring:
         if (datetime.now() - self.gnss_info_time).total_seconds() > 60:
             self.gnss_info_time = datetime.now()
             # GOOD QUALITY
-            if nav_sat_fix.status.status == config.GNSS_STATUS_GBAS_FIX and nav_sat_fix.position_covariance_type >= config.GNSS_COVARIANCE_TYPE_DIAGONAL_KNOWN and self.good_variances(nav_sat_fix):
+            if nav_sat_fix.status.status == config.GNSS_STATUS_GBAS_FIX and nav_sat_fix.position_covariance_type >= config.GNSS_COVARIANCE_TYPE_DIAGONAL_KNOWN and self.feasible_standard_deviations(nav_sat_fix):
                 self.robot_info_pub.publish(estimation_str + "good")
             # MEDIUM QUALITY
-            elif nav_sat_fix.status.status >= config.GNSS_STATUS_FIX and nav_sat_fix.position_covariance_type >= config.GNSS_COVARIANCE_TYPE_APPROXIMATED and self.good_variances(nav_sat_fix):
+            elif nav_sat_fix.status.status >= config.GNSS_STATUS_FIX and nav_sat_fix.position_covariance_type >= config.GNSS_COVARIANCE_TYPE_APPROXIMATED and self.feasible_standard_deviations(nav_sat_fix):
                 self.robot_info_pub.publish(estimation_str + "medium")
             # LOW QUALITY
             elif nav_sat_fix.status.status >= config.GNSS_STATUS_FIX and nav_sat_fix.position_covariance_type == config.GNSS_COVARIANCE_TYPE_UNKNOWN:
@@ -106,16 +107,17 @@ class ConnectionMonitoring:
             self.contingency_pub.publish(config.CONNECTION_FAILURE_SIXTEEN)
 
     def covariance_monitoring(self, nav_sat_fix):
+        """
+        -- in m^2 - defined relative to tangential plane through the reported position
+        -- components are "east", "north", and "up"
+
+        we can basically rate two things:
+         - absolute values (good / bad)
+         - progression over time
+        """
+
         if nav_sat_fix.position_covariance_type not in [config.GNSS_COVARIANCE_TYPE_UNKNOWN, config.GNSS_COVARIANCE_TYPE_APPROXIMATED, config.GNSS_COVARIANCE_TYPE_DIAGONAL_KNOWN, config.GNSS_COVARIANCE_TYPE_KNOWN]:
             self.robot_info_pub.publish(config.CONNECTION_FAILURE_SEVENTEEN)
-
-        # only consider the covariance values if they are somehow reasonable
-        # -- in m^2 - defined relative to tangential plane through the reported position
-        # -- components are "east", "north", and "up"
-
-        # we can basically rate two things:
-        #  - absolute values (good / bad)
-        #  - progression over time
 
         # only monitor the progression for the diagonal as these are the most important values
         # --> append to history when >= DIAGONAL_KNOWN
@@ -126,22 +128,16 @@ class ConnectionMonitoring:
         
         if self.analyze_covariance_history():
         
-            if nav_sat_fix.position_covariance_type == config.GNSS_COVARIANCE_TYPE_KNOWN:
-                # covariances can be completely used for quality assessment
-                for cov in nav_sat_fix.position_covariance:
-                    if cov != float('nan') and cov > config.STD_DEVIATION_UB:
-                        self.contingency_pub.publish(config.CONNECTION_FAILURE_EIGHTEEN)
-                        break
-            elif nav_sat_fix.position_covariance_type == config.GNSS_COVARIANCE_TYPE_DIAGONAL_KNOWN:
-                # GNSS receiver provided the variance of each measurement -> diagonal can be used for quality assessment
+            if nav_sat_fix.position_covariance_type >= config.GNSS_COVARIANCE_TYPE_DIAGONAL_KNOWN:
+                # GNSS receiver provided at least the variance of each measurement -> diagonal can be used for quality assessment
                 for i in range(0, len(nav_sat_fix.position_covariance), 4):
-                    if nav_sat_fix.position_covariance[i] != float('nan') and nav_sat_fix.position_covariance[i] > config.STD_DEVIATION_UB:
+                    if nav_sat_fix.position_covariance[i] != float('nan') and math.sqrt(nav_sat_fix.position_covariance[i]) > config.STD_DEVIATION_UB:
                         self.contingency_pub.publish(config.CONNECTION_FAILURE_EIGHTEEN)
                         break
             elif nav_sat_fix.position_covariance_type == config.GNSS_COVARIANCE_TYPE_APPROXIMATED:
                 # can be considered, but with caution, without putting too much weight on it -> only an approximate value
-                for cov in nav_sat_fix.position_covariance:
-                    if cov != float('nan') and cov > config.STD_DEVIATION_UB:
+                for i in range(0, len(nav_sat_fix.position_covariance), 4):
+                    if nav_sat_fix.position_covariance[i] != float('nan') and math.sqrt(nav_sat_fix.position_covariance[i]) > config.STD_DEVIATION_UB:
                         # at least information, but not so critial, is only approximated
                         self.robot_info_pub.publish(config.CONNECTION_FAILURE_NINETEEN)
                         break
@@ -175,21 +171,21 @@ class ConnectionMonitoring:
     def analyze_covariance_history(self):
 
         if len(self.gnss_covariance_history) == config.COVARIANCE_HISTORY_LENGTH:
-            east_components = [cov[0] for cov in self.gnss_covariance_history][::-1]
-            north_components = [cov[4] for cov in self.gnss_covariance_history][::-1]
-            up_components = [cov[8] for cov in self.gnss_covariance_history][::-1]
+            east_deviations = [math.sqrt(cov[0]) for cov in self.gnss_covariance_history][::-1]
+            north_deviations = [math.sqrt(cov[4]) for cov in self.gnss_covariance_history][::-1]
+            up_deviations = [math.sqrt(cov[8]) for cov in self.gnss_covariance_history][::-1]
             
             # what's our definition for getting worse?
             #  - only increases
-            #  - total increase between oldest and latest larger than 15 (configurable)
+            #  - total increase between oldest and latest larger than SIGNIFICANT_DEVIATION_INCREASE (configurable)
 
-            if self.increasing_values_only(east_components) and self.get_latest(east_components) - self.get_oldest(east_components) > config.SIGNIFICANT_DEVIATION_INCREASE:
+            if self.increasing_values_only(east_deviations) and self.get_latest(east_deviations) - self.get_oldest(east_deviations) > config.SIGNIFICANT_DEVIATION_INCREASE:
                 self.contingency_pub.publish(config.CONNECTION_FAILURE_TWENTY)
                 return False
-            if self.increasing_values_only(north_components) and self.get_latest(north_components) - self.get_oldest(north_components) > config.SIGNIFICANT_DEVIATION_INCREASE:
+            if self.increasing_values_only(north_deviations) and self.get_latest(north_deviations) - self.get_oldest(north_deviations) > config.SIGNIFICANT_DEVIATION_INCREASE:
                 self.contingency_pub.publish(config.CONNECTION_FAILURE_TWENTY)
                 return False
-            if self.increasing_values_only(up_components) and self.get_latest(up_components) - self.get_oldest(up_components) > config.SIGNIFICANT_DEVIATION_INCREASE:
+            if self.increasing_values_only(up_deviations) and self.get_latest(up_deviations) - self.get_oldest(up_deviations) > config.SIGNIFICANT_DEVIATION_INCREASE:
                 self.contingency_pub.publish(config.CONNECTION_FAILURE_TWENTY)
                 return False
 
