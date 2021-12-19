@@ -60,11 +60,12 @@ Z_COMP_DIFF_UB = 0.1
 IMU_ENTRIES = 1500
 IMU_PERCENTAGE = .05
 
-IMU_ORIENTATION_COV_UB = 10
-IMU_ANGULAR_VELO_COV_UB = 10
-IMU_LINEAR_ACC_COV_UB = 10
-ODOM_POSE_COV_UP = 20
-ODOM_TWIST_COV_UP = 20
+IMU_ORIENTATION_STD_DEV_UB = 10  # quaternion
+IMU_ANGULAR_VELO_STD_DEV_UB = 10  # rad/sec
+IMU_LINEAR_ACC_STD_DEV_UB = 10  # m/s^2
+
+ODOM_POSE_STD_DEV_UB = 3
+ODOM_TWIST_STD_DEV_UB = 3
 #############################################################################
 #############################################################################
 #############################################################################

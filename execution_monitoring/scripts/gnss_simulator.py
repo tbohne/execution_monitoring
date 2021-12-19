@@ -93,12 +93,12 @@ class GNSSSimulator:
         if self.sim_good_quality:
             nav_sat_fix.status.status = config.GNSS_STATUS_GBAS_FIX
             nav_sat_fix.position_covariance_type = config.GNSS_COVARIANCE_TYPE_DIAGONAL_KNOWN
-            nav_sat_fix.position_covariance = [3.5, 0.0, 0.0, 0.0, 5.7, 0.0, 0.9, 0.9, 9.9]
+            nav_sat_fix.position_covariance = [6, 0.0, 0.0, 0.0, 6, 0.0, 0.0, 0.0, 6]
             nav_sat_fix.status.service = config.GNSS_SERVICE_GPS
         elif self.sim_med_quality:
             nav_sat_fix.status.status = config.GNSS_STATUS_FIX
             nav_sat_fix.position_covariance_type = config.GNSS_COVARIANCE_TYPE_APPROXIMATED
-            nav_sat_fix.position_covariance = [3.5, 0.0, 0.0, 0.0, 5.7, 0.0, 0.9, 0.9, 9.9]
+            nav_sat_fix.position_covariance = [6, 0.0, 0.0, 0.0, 6, 0.0, 0.0, 0.0, 6]
             nav_sat_fix.status.service = config.GNSS_SERVICE_GALILEO
         elif self.sim_low_quality:
             nav_sat_fix.status.status = config.GNSS_STATUS_FIX
@@ -140,7 +140,7 @@ class GNSSSimulator:
             self.sim_variance_history_failure = False
         if self.sim_high_dev:
             nav_sat_fix.position_covariance_type = config.GNSS_COVARIANCE_TYPE_DIAGONAL_KNOWN
-            nav_sat_fix.position_covariance = [0.0, 0.0, 0.0, 0.0, 110, 0.0, 0.0, 0.0, 0.0]
+            nav_sat_fix.position_covariance[0] = 101
             self.sim_high_dev = False
 
         self.gps_publisher.publish(nav_sat_fix)

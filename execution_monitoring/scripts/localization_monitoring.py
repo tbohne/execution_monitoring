@@ -134,15 +134,16 @@ class LocalizationMonitoring:
                 rospy.loginfo("odom filtered orientation z: %s", self.odom_filtered_data.pose.pose.orientation.z)
                 rospy.loginfo("gnss orientation interpolation z component: %s", gnss_orientation_z)
 
-    def imu_cov_monitoring(self, cov_matrix, upper_bound):
+    def imu_std_dev_monitoring(self, cov_matrix, std_dev_UB):
         # MONITOR COVARIANCE -> diagonals contain variances (x, y, z)
         # --> all zeros -> covariance unknown
         # --> 1st element of  matrix -1 -> no estimate for the data elements (e.g. no orientation provided by IMU)
-        # covariance known and data provided by IMU -> monitor
+
+        # covariance known and data provided by IMU -> monitor diagonal (variances or standard deviations)
         if sum(cov_matrix) != 0.0 and cov_matrix[0] != -1.0:
-            for val in cov_matrix:
-                if val > upper_bound:
-                    rospy.loginfo("CONTINGENCY -> IMU covariance")
+            for i in range(0, len(cov_matrix), 4):
+                if math.sqrt(cov_matrix[i]) > std_dev_UB:
+                    rospy.loginfo("CONTINGENCY -> IMU standard deviations")
                     return
 
     def monitor_imu(self):
@@ -188,9 +189,9 @@ class LocalizationMonitoring:
                     
         # MONITOR COVARIANCE
         if self.imu_latest is not None:
-            self.imu_cov_monitoring(self.imu_latest.orientation_covariance, config.IMU_ORIENTATION_COV_UB)
-            self.imu_cov_monitoring(self.imu_latest.angular_velocity_covariance, config.IMU_ANGULAR_VELO_COV_UB)
-            self.imu_cov_monitoring(self.imu_latest.linear_acceleration_covariance, config.IMU_LINEAR_ACC_COV_UB)
+            self.imu_std_dev_monitoring(self.imu_latest.orientation_covariance, config.IMU_ORIENTATION_STD_DEV_UB)
+            self.imu_std_dev_monitoring(self.imu_latest.angular_velocity_covariance, config.IMU_ANGULAR_VELO_STD_DEV_UB)
+            self.imu_std_dev_monitoring(self.imu_latest.linear_acceleration_covariance, config.IMU_LINEAR_ACC_STD_DEV_UB)
 
     def monitor_odom(self, filtered):
         name = "odometry" if not filtered else "filtered odometry"
@@ -215,13 +216,15 @@ class LocalizationMonitoring:
             # POSE + TWIST COVARIANCE (6x6 matrices (x, y, z, rot_x, rot_y, rot_z))
             # TODO: only due to the very high covariance of the filtered version -> to be checked later
             if not filtered:
-                for val in odom_data.pose.covariance:
-                    if val > config.ODOM_POSE_COV_UP:
-                        rospy.loginfo("CONTINGENCY: %s -> odom pose cov", name)
+                # uncertainty in pose
+                for i in range(0, len(odom_data.pose.covariance), 7):
+                    if math.sqrt(odom_data.pose.covariance[i]) > config.ODOM_POSE_STD_DEV_UB:
+                        rospy.loginfo("CONTINGENCY: %s -> pose standard deviation", name)
                         break
-                for val in odom_data.twist.covariance:
-                    if val > config.ODOM_TWIST_COV_UP:
-                        rospy.loginfo("CONTINGENCY: %s -> odom twist cov", name)
+                # velocity in free space with uncertainty
+                for i in range(0, len(odom_data.twist.covariance), 7):
+                    if math.sqrt(odom_data.twist.covariance[i]) > config.ODOM_TWIST_STD_DEV_UB:
+                        rospy.loginfo("CONTINGENCY: %s -> twist standard deviation", name)
                         break
 
     def gps_as_odom_callback(self, gps_as_odom):
