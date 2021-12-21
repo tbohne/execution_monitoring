@@ -66,7 +66,7 @@ class LocalizationMonitoring:
                     self.yaw_monitoring()
                     self.odom_gnss_dist_divergence_monitoring()
 
-            rospy.sleep(2)
+            rospy.sleep(config.LOCALIZATION_MON_FREQ)
 
     def odom_gnss_dist_divergence_monitoring(self):
         gps_x = self.gps_as_odom_data_latest.pose.pose.position.x
@@ -113,7 +113,7 @@ class LocalizationMonitoring:
         vector_x = x1 - x2
         vector_y = y1 - y2
         
-        dist = math.sqrt((x1 - x2) ** 2 + (y1 - y2) ** 2)
+        dist = math.sqrt((vector_x) ** 2 + (vector_y) ** 2)
         if dist > config.DIST_THRESH_FOR_INTERPOLATION_BETWEEN_GNSS_POS:
             angle = math.atan2(vector_y, vector_x)
             quaternion = tf.transformations.quaternion_from_euler(0, 0, angle)
@@ -170,18 +170,18 @@ class LocalizationMonitoring:
                 self.lin_acc_active_history.appendleft(np.median(sorted([max(abs(data.linear_acceleration.x), abs(data.linear_acceleration.y)) for data in active_imu_copy])[::-1][:entries]))
 
                 # linear acceleration in m/s^2 (z-component is g (~9.81))
-                avg_factor = 0.0
+                avg_ratio = 0.0
                 for i in range(config.COVARIANCE_HISTORY_LENGTH):
                     if i < len(self.lin_acc_active_history) and i < len(self.lin_acc_passive_history):
-                        avg_factor += self.lin_acc_active_history[i] / self.lin_acc_passive_history[i]
+                        avg_ratio += self.lin_acc_active_history[i] / self.lin_acc_passive_history[i]
                         if self.lin_acc_passive_history[i] > config.NOT_MOVING_LIN_ACC_UB:
                             rospy.loginfo("mbf status: %s", )
                             rospy.loginfo("CONTINGENCY..... LIN ACC WITHOUT MOVING TOO HIGH: %s",self.lin_acc_passive_history[i])
-                avg_factor /= config.COVARIANCE_HISTORY_LENGTH
+                avg_ratio /= config.COVARIANCE_HISTORY_LENGTH
 
                 if len(self.lin_acc_active_history) == config.COVARIANCE_HISTORY_LENGTH \
                     and len(self.lin_acc_passive_history) == config.COVARIANCE_HISTORY_LENGTH \
-                    and avg_factor < config.ACTIVE_PASSIVE_FACTOR_LB:
+                    and avg_ratio < config.ACTIVE_PASSIVE_FACTOR_LB:
 
                     rospy.loginfo("CONTINGENCY: LIN ACC during movement not considerably higher compared to standing still")
                     rospy.loginfo("avtive values: %s", self.lin_acc_active_history)
