@@ -26,6 +26,7 @@ class GNSSSimulator:
         rospy.Subscriber("/toggle_simulated_infeasible_lat_lng", String, self.toggle_infeasible_lat_lng_callback, queue_size=1)
         rospy.Subscriber("/toggle_simulated_variance_history_failure", String, self.toggle_var_history_failure_callback, queue_size=1)
         rospy.Subscriber("/toggle_simulated_high_deviation", String, self.toggle_high_dev_callback, queue_size=1)
+        rospy.Subscriber("/toggle_simulated_teleport", String, self.toggle_sim_teleport_callback, queue_size=1)
         self.sim_timeout = False
         self.sim_good_quality = True
         self.sim_med_quality = False
@@ -37,8 +38,12 @@ class GNSSSimulator:
         self.sim_infeasible_lat_lng = False
         self.sim_variance_history_failure = False
         self.sim_high_dev = False
+        self.sim_teleport = False
 
         self.gps_publisher = rospy.Publisher('/fix', NavSatFix, queue_size=1)
+
+    def toggle_sim_teleport_callback(self, msg):
+        self.sim_teleport = not self.sim_teleport
 
     def toggle_high_dev_callback(self, msg):
         self.sim_high_dev = not self.sim_high_dev
@@ -142,6 +147,10 @@ class GNSSSimulator:
             nav_sat_fix.position_covariance_type = config.GNSS_COVARIANCE_TYPE_DIAGONAL_KNOWN
             nav_sat_fix.position_covariance[0] = 101
             self.sim_high_dev = False
+
+        if self.sim_teleport:
+            # simulate GNSS jump
+            nav_sat_fix.latitude -= 0.0001
 
         self.gps_publisher.publish(nav_sat_fix)
 
