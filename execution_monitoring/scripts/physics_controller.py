@@ -40,7 +40,7 @@ class PhysicsController:
         self.change_gravity(x, y, z)
 
     def init_values(self):
-
+        ##################### GAZEBO DEFAULT VALUES #####################
         self.time_step = Float64(0.001)
         self.max_update_rate = Float64(1000.0)
 
@@ -50,17 +50,16 @@ class PhysicsController:
         self.gravity.z = -9.81
 
         self.ode_config = ODEPhysics()
-        self.ode_config.auto_disable_bodies = False
         self.ode_config.sor_pgs_precon_iters = 0
         self.ode_config.sor_pgs_iters = 50
         self.ode_config.sor_pgs_w = 1.3
         self.ode_config.sor_pgs_rms_error_tol = 0.0
-        self.ode_config.contact_surface_layer = 0.001
-        self.ode_config.contact_max_correcting_vel = 0.0
+        self.ode_config.contact_max_correcting_vel = 100.0
         self.ode_config.cfm = 0.0
         self.ode_config.erp = 0.2
+        self.ode_config.contact_surface_layer = 0.001
         self.ode_config.max_contacts = 20
-
+        #################################################################
         self.update_gravity_call()
 
     def update_gravity_call(self):
