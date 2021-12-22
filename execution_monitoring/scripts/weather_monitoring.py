@@ -306,7 +306,8 @@ class WeatherMonitoring:
         rain_ok = self.monitor_rain_volume(weather_data.rain_vol)
         snow_ok = self.monitor_snow_volume(weather_data.snow_vol)
         wind_ok = self.monitor_wind(weather_data.wind_gust_speed, weather_data.wind_speed)
-        temp_ok = self.monitor_temperature(weather_data.min_temp, weather_data.max_temp, weather_data.temp)
+        # TODO: reactivate again
+        temp_ok = True# self.monitor_temperature(weather_data.min_temp, weather_data.max_temp, weather_data.temp)
         code_ok = self.monitor_owm_weather_condition_code(weather_data.owm_weather_condition_code)
         # TODO: activate again for real tests..
         sun_ok = True #self.monitor_sunrise_and_sunset(weather_data.sunrise_time_sec, weather_data.sunset_time_sec)
