@@ -4,8 +4,10 @@ import time
 from gazebo_msgs.msg import ODEPhysics
 from gazebo_msgs.srv import SetPhysicsProperties, SetPhysicsPropertiesRequest
 from std_msgs.msg import Float64, String
-from geometry_msgs.msg import Vector3
+from geometry_msgs.msg import Vector3, Twist
 from std_srvs.srv import Empty
+from actionlib_msgs.msg import GoalStatusArray, GoalStatus
+from datetime import datetime
 
 class PhysicsController:
 
@@ -13,7 +15,11 @@ class PhysicsController:
         self.unpause = rospy.ServiceProxy('/gazebo/unpause_physics', Empty)
         self.pause = rospy.ServiceProxy('/gazebo/pause_physics', Empty)
 
+        rospy.Subscriber('/move_base_flex/exe_path/status', GoalStatusArray, self.mbf_status_callback, queue_size=1)
+
         rospy.Subscriber('/change_gravity', String, self.change_gravity_callback, queue_size=1)
+
+        self.cmd_vel_pub = rospy.Publisher("/cmd_vel", Twist, queue_size=1)
 
         service_name = '/gazebo/set_physics_properties'
         rospy.wait_for_service(service_name)
@@ -22,22 +28,43 @@ class PhysicsController:
         self.set_physics = rospy.ServiceProxy(service_name, SetPhysicsProperties)
         self.init_values()
 
-    def change_gravity_callback(self, msg):
+        self.mbf_status = None
+        self.sim_low_gravity = False
 
-        gravity_value = 1.0
-        rospy.loginfo("changing gravity in z direction to: %s", gravity_value)
-        x = 0.0
-        y = 0.0
-        z = gravity_value
-        self.change_gravity(x, y, z)
+    def mbf_status_callback(self, mbf_status):
+        if len(mbf_status.status_list) > 0:
+            curr = mbf_status.status_list[-1].status
+            if curr == GoalStatus.ACTIVE and self.mbf_status != curr:
+                # starting to move -> initiate simulation of low gravity -> spinning wheels
+                if self.sim_low_gravity:
+                    self.low_gravity_sim()
+            self.mbf_status = curr
+
+    def low_gravity_sim(self):
+        rospy.loginfo("init low gravity sim")
+        x = y = 0.0
         
-        rospy.sleep(2)
+        for _ in range(2):
+            gravity_value = 0.3
+            z = gravity_value
+            self.change_gravity(x, y, z)
+            rospy.loginfo("changing gravity in z direction to: %s", gravity_value)
 
-        x = 0.0
-        y = 0.0
-        z = -9.81
-        rospy.loginfo("changing gravity in z direction to: %s", gravity_value)
-        self.change_gravity(x, y, z)
+            twist = Twist()
+            twist.linear.x = 30.0
+            for _ in range(2):
+                self.cmd_vel_pub.publish(twist)
+                rospy.sleep(1)
+
+            z = -9.81
+            self.change_gravity(x, y, z)
+            rospy.loginfo("changing gravity in z direction to: %s", z)
+            rospy.sleep(0.1)
+
+        self.sim_low_gravity = False
+
+    def change_gravity_callback(self, msg):
+        self.sim_low_gravity = True
 
     def init_values(self):
         ##################### GAZEBO DEFAULT VALUES #####################
