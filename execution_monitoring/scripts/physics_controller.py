@@ -43,23 +43,25 @@ class PhysicsController:
     def low_gravity_sim(self):
         rospy.loginfo("init low gravity sim")
         x = y = 0.0
-        
-        for _ in range(2):
-            gravity_value = 0.3
-            z = gravity_value
+
+        # necessary to start movement
+        rospy.sleep(0.05)
+
+        gravity_value = 0.3
+        z = gravity_value
+        self.change_gravity(x, y, z)
+        rospy.loginfo("changing gravity in z direction to: %s", gravity_value)
+        rospy.sleep(1)
+
+        for _ in range(4):
+            z = 0.3
             self.change_gravity(x, y, z)
-            rospy.loginfo("changing gravity in z direction to: %s", gravity_value)
-
-            twist = Twist()
-            twist.linear.x = 30.0
-            for _ in range(2):
-                self.cmd_vel_pub.publish(twist)
-                rospy.sleep(1)
-
+            rospy.loginfo("changing gravity in z direction to: %s", z)
+            rospy.sleep(1.0 / 1.5)
             z = -9.81
             self.change_gravity(x, y, z)
             rospy.loginfo("changing gravity in z direction to: %s", z)
-            rospy.sleep(0.1)
+            rospy.sleep(1 / 25.0)
 
         self.sim_low_gravity = False
 
