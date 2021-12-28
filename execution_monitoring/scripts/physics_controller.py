@@ -14,12 +14,9 @@ class PhysicsController:
     def __init__(self):
         self.unpause = rospy.ServiceProxy('/gazebo/unpause_physics', Empty)
         self.pause = rospy.ServiceProxy('/gazebo/pause_physics', Empty)
-
         rospy.Subscriber('/move_base_flex/exe_path/status', GoalStatusArray, self.mbf_status_callback, queue_size=1)
 
-        rospy.Subscriber('/change_gravity', String, self.change_gravity_callback, queue_size=1)
-
-        self.cmd_vel_pub = rospy.Publisher("/cmd_vel", Twist, queue_size=1)
+        rospy.Subscriber('/wheel_movement_without_pos_change', String, self.wheel_movement_without_pos_change_callback, queue_size=1)
 
         service_name = '/gazebo/set_physics_properties'
         rospy.wait_for_service(service_name)
@@ -29,28 +26,26 @@ class PhysicsController:
         self.init_values()
 
         self.mbf_status = None
-        self.sim_low_gravity = False
+        self.sim_wheel_movement_without_pos_change = False
 
     def mbf_status_callback(self, mbf_status):
         if len(mbf_status.status_list) > 0:
             curr = mbf_status.status_list[-1].status
             if curr == GoalStatus.ACTIVE and self.mbf_status != curr:
                 # starting to move -> initiate simulation of low gravity -> spinning wheels
-                if self.sim_low_gravity:
+                if self.sim_wheel_movement_without_pos_change:
                     self.low_gravity_sim()
             self.mbf_status = curr
 
     def low_gravity_sim(self):
         rospy.loginfo("init low gravity sim")
         x = y = 0.0
-
         # necessary to start movement
         rospy.sleep(0.05)
 
-        gravity_value = 0.1
-        z = gravity_value
+        z = 0.1
         self.change_gravity(x, y, z)
-        rospy.loginfo("changing gravity in z direction to: %s", gravity_value)
+        rospy.loginfo("changing gravity in z direction to: %s", z)
         rospy.sleep(1)
 
         for _ in range(4):
@@ -63,10 +58,10 @@ class PhysicsController:
             rospy.loginfo("changing gravity in z direction to: %s", z)
             rospy.sleep(1 / 35.0)
 
-        self.sim_low_gravity = False
+        self.sim_wheel_movement_without_pos_change = False
 
-    def change_gravity_callback(self, msg):
-        self.sim_low_gravity = True
+    def wheel_movement_without_pos_change_callback(self, msg):
+        self.sim_wheel_movement_without_pos_change = True
 
     def init_values(self):
         ##################### GAZEBO DEFAULT VALUES #####################
