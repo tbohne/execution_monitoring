@@ -47,21 +47,21 @@ class PhysicsController:
         # necessary to start movement
         rospy.sleep(0.05)
 
-        gravity_value = 0.3
+        gravity_value = 0.1
         z = gravity_value
         self.change_gravity(x, y, z)
         rospy.loginfo("changing gravity in z direction to: %s", gravity_value)
         rospy.sleep(1)
 
         for _ in range(4):
-            z = 0.3
+            z = 0.2
             self.change_gravity(x, y, z)
             rospy.loginfo("changing gravity in z direction to: %s", z)
             rospy.sleep(1.0 / 1.5)
             z = -9.81
             self.change_gravity(x, y, z)
             rospy.loginfo("changing gravity in z direction to: %s", z)
-            rospy.sleep(1 / 25.0)
+            rospy.sleep(1 / 35.0)
 
         self.sim_low_gravity = False
 
