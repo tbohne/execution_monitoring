@@ -7,7 +7,6 @@ from std_msgs.msg import Float64, String
 from geometry_msgs.msg import Vector3, Twist
 from std_srvs.srv import Empty
 from actionlib_msgs.msg import GoalStatusArray, GoalStatus
-from datetime import datetime
 
 class PhysicsController:
 
@@ -17,6 +16,7 @@ class PhysicsController:
         rospy.Subscriber('/move_base_flex/exe_path/status', GoalStatusArray, self.mbf_status_callback, queue_size=1)
 
         rospy.Subscriber('/wheel_movement_without_pos_change', String, self.wheel_movement_without_pos_change_callback, queue_size=1)
+        rospy.Subscriber('/pos_change_without_wheel_movement', String, self.pos_change_without_wheel_movement_callback, queue_size=1)
 
         service_name = '/gazebo/set_physics_properties'
         rospy.wait_for_service(service_name)
@@ -27,6 +27,7 @@ class PhysicsController:
 
         self.mbf_status = None
         self.sim_wheel_movement_without_pos_change = False
+        self.sim_pos_change_without_wheel_movement = False
 
     def mbf_status_callback(self, mbf_status):
         if len(mbf_status.status_list) > 0:
@@ -35,7 +36,27 @@ class PhysicsController:
                 # starting to move -> initiate simulation of low gravity -> spinning wheels
                 if self.sim_wheel_movement_without_pos_change:
                     self.low_gravity_sim()
+                if self.sim_pos_change_without_wheel_movement:
+                    self.force_position_change_sim()
             self.mbf_status = curr
+
+    def force_position_change_sim(self):
+        rospy.loginfo("force position change sim..")
+        z = -9.81
+        x = 0.0
+        # necessary to start movement
+        rospy.sleep(0.05)
+
+        y = 8
+        self.change_gravity(x, y, z)
+        rospy.loginfo("changing gravity in y direction to: %s", y)
+        rospy.sleep(2)
+
+        y = 0.0
+        self.change_gravity(x, y, z)
+        rospy.loginfo("changing gravity back to normal")
+
+        self.sim_wheel_movement_without_pos_change = False
 
     def low_gravity_sim(self):
         rospy.loginfo("init low gravity sim")
@@ -62,6 +83,9 @@ class PhysicsController:
 
     def wheel_movement_without_pos_change_callback(self, msg):
         self.sim_wheel_movement_without_pos_change = True
+
+    def pos_change_without_wheel_movement_callback(self, msg):
+        self.sim_pos_change_without_wheel_movement = True
 
     def init_values(self):
         ##################### GAZEBO DEFAULT VALUES #####################
