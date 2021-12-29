@@ -106,7 +106,7 @@ class ExecutePlan(smach.State):
             if action.name == "return_to_base":
                 action.pose = config.BASE_POSE
 
-            action_goal = util.create_dtg_goal(action.pose)
+            action_goal = util.create_dtg_goal(action.pose, None)
             self.drive_to_goal_client.wait_for_server()
             self.drive_to_goal_client.send_goal(action_goal)
             rospy.loginfo("goal sent, wait for accomplishment..")

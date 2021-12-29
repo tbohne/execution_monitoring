@@ -86,7 +86,7 @@ class WeatherFailureResolver(GeneralFailureResolver):
         rospy.loginfo("resolve drastic weather change..")
         rospy.loginfo("seeking shelter - driving back to base..")
 
-        action_goal = util.create_dtg_goal(config.BASE_POSE)
+        action_goal = util.create_dtg_goal(config.BASE_POSE, None)
         self.drive_to_goal_client.wait_for_server()
         self.drive_to_goal_client.send_goal(action_goal)
         rospy.loginfo("goal sent, wait for accomplishment..")
