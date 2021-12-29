@@ -17,6 +17,7 @@ class PhysicsController:
 
         rospy.Subscriber('/wheel_movement_without_pos_change', String, self.wheel_movement_without_pos_change_callback, queue_size=1)
         rospy.Subscriber('/pos_change_without_wheel_movement', String, self.pos_change_without_wheel_movement_callback, queue_size=1)
+        rospy.Subscriber('/yaw_divergence', String, self.yaw_divergence_callback, queue_size=1)
 
         service_name = '/gazebo/set_physics_properties'
         rospy.wait_for_service(service_name)
@@ -28,6 +29,7 @@ class PhysicsController:
         self.mbf_status = None
         self.sim_wheel_movement_without_pos_change = False
         self.sim_pos_change_without_wheel_movement = False
+        self.sim_yaw_divergence = False
 
     def mbf_status_callback(self, mbf_status):
         if len(mbf_status.status_list) > 0:
@@ -38,7 +40,13 @@ class PhysicsController:
                     self.low_gravity_sim()
                 if self.sim_pos_change_without_wheel_movement:
                     self.force_position_change_sim()
+                if self.sim_yaw_divergence:
+                    self.yaw_divergence_sim()
             self.mbf_status = curr
+
+    def yaw_divergence_sim(self):
+        pass
+
 
     def force_position_change_sim(self):
         rospy.loginfo("force position change sim..")
@@ -56,7 +64,7 @@ class PhysicsController:
         self.change_gravity(x, y, z)
         rospy.loginfo("changing gravity back to normal")
 
-        self.sim_wheel_movement_without_pos_change = False
+        self.sim_pos_change_without_wheel_movement = False
 
     def low_gravity_sim(self):
         rospy.loginfo("init low gravity sim")
@@ -86,6 +94,9 @@ class PhysicsController:
 
     def pos_change_without_wheel_movement_callback(self, msg):
         self.sim_pos_change_without_wheel_movement = True
+
+    def yaw_divergence_callback(self, msg):
+        self.sim_yaw_divergence = True
 
     def init_values(self):
         ##################### GAZEBO DEFAULT VALUES #####################
