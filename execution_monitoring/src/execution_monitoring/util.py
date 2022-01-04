@@ -26,6 +26,7 @@ def create_dtg_goal(pose, yaw):
     action_goal.target_pose.pose.position.y = y
 
     if yaw is None:
+        # to radians
         yaw = np.pi * (pose[2] + 90) / 180
 
     q = quaternion_from_euler(0, 0, yaw)
