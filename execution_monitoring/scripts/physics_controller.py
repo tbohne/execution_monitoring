@@ -12,6 +12,7 @@ from execution_monitoring import util
 from sensor_msgs.msg import Imu
 from tf.transformations import euler_from_quaternion, quaternion_from_euler
 import numpy as np
+import math
 import tf2_ros
 from sensor_msgs.msg import NavSatFix
 
@@ -48,8 +49,8 @@ class PhysicsController:
         self.init_values()
 
     def gnss(self, nav_sat_fix):
-        _, _, yaw = euler_from_quaternion([0, 0, self.imu_data.orientation.z, 0])
-        self.pose_list = [nav_sat_fix.latitude, nav_sat_fix.longitude, yaw]
+        _, _, yaw = euler_from_quaternion([self.imu_data.orientation.x, self.imu_data.orientation.y, self.imu_data.orientation.z, self.imu_data.orientation.w])
+        self.pose_list = [nav_sat_fix.latitude, nav_sat_fix.longitude, yaw * 180 / np.pi]
 
     def imu_callback(self, imu):
         self.imu_data = imu
@@ -64,7 +65,7 @@ class PhysicsController:
                 if self.sim_pos_change_without_wheel_movement:
                     self.force_position_change_sim()
 
-            elif curr != GoalStatus.ACTIVE:
+            elif curr == GoalStatus.ACTIVE:
                 if self.sim_yaw_divergence:
                     self.yaw_divergence_sim()
 
@@ -74,18 +75,15 @@ class PhysicsController:
         rospy.loginfo("yaw divergence sim..")
 
         if self.pose_list is not None:
-            action_goal = util.create_dtg_goal(self.pose_list, self.pose_list[2])
+            
+            yaw_deg = self.pose_list[2]
+            if yaw_deg + 180 > 180:
+                yaw_deg = -180 + ((yaw_deg + 180) % 180)
+            else:
+                yaw_deg += 180
+            
+            action_goal = util.create_dtg_goal(self.pose_list, math.radians(yaw_deg))
             self.drive_to_goal_client.wait_for_server()
-
-            orientation_list = [action_goal.target_pose.pose.orientation.x, action_goal.target_pose.pose.orientation.y, action_goal.target_pose.pose.orientation.z, action_goal.target_pose.pose.orientation.w]
-            roll, pitch, yaw = euler_from_quaternion(orientation_list)
-            rospy.loginfo("yaw: %s", yaw)
-            q = quaternion_from_euler(roll, pitch, yaw + 270)
-
-            action_goal.target_pose.pose.orientation.x = q[0]
-            action_goal.target_pose.pose.orientation.y = q[1]
-            action_goal.target_pose.pose.orientation.z = q[2]
-            action_goal.target_pose.pose.orientation.w = q[3]
 
             self.drive_to_goal_client.send_goal(action_goal)
             rospy.loginfo("goal sent, wait for accomplishment..")
