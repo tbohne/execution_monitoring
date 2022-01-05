@@ -79,8 +79,7 @@ class PhysicsController:
     def yaw_divergence_sim(self):
         rospy.loginfo("yaw divergence sim..")
 
-        # TODO: handle DIST - save before sleep..
-        rospy.sleep(1)
+        rospy.sleep(0.5)
 
         if self.pose_list is not None:
             
