@@ -27,6 +27,7 @@ class PhysicsController:
         self.sim_pos_change_without_wheel_movement = False
         self.sim_yaw_divergence = False
         self.pose_list = None
+        self.switch_when_passive = False
 
         self.unpause = rospy.ServiceProxy('/gazebo/unpause_physics', Empty)
         self.pause = rospy.ServiceProxy('/gazebo/pause_physics', Empty)
@@ -67,12 +68,19 @@ class PhysicsController:
 
             elif curr == GoalStatus.ACTIVE:
                 if self.sim_yaw_divergence:
-                    self.yaw_divergence_sim()
+                    self.switch_when_passive = True
+
+            elif curr == GoalStatus.SUCCEEDED and self.switch_when_passive:
+                self.switch_when_passive = False
+                self.yaw_divergence_sim()
 
             self.mbf_status = curr
 
     def yaw_divergence_sim(self):
         rospy.loginfo("yaw divergence sim..")
+
+        # TODO: handle DIST - save before sleep..
+        rospy.sleep(1)
 
         if self.pose_list is not None:
             
@@ -97,7 +105,7 @@ class PhysicsController:
                 return False        
 
             rospy.loginfo("successfully performed action: %s", success)
-            return success        
+            return success
 
     def force_position_change_sim(self):
         rospy.loginfo("force position change sim..")

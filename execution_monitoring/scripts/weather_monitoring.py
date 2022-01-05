@@ -323,7 +323,7 @@ class WeatherMonitoring:
                 observation = owm.weather_at_coords(*self.position)
                 print("monitoring weather for: " + observation.get_location().get_name())
                 weather_data = self.parse_weather_data(observation.get_weather())
-                weather_data.log_complete_info()
+                #weather_data.log_complete_info()
                 self.monitor_weather_data(weather_data)
                 
                 # TODO: implement forecast monitoring -> seek shelter in time..
