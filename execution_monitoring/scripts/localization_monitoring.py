@@ -141,7 +141,6 @@ class LocalizationMonitoring:
 
         # covariance known and data provided by IMU -> monitor diagonal (variances or standard deviations)
         if sum(cov_matrix) != 0.0 and cov_matrix[0] != -1.0:
-            rospy.loginfo("std dev: %s", math.sqrt(max(cov_matrix)))
             for i in range(0, len(cov_matrix), 4):
                 if math.sqrt(cov_matrix[i]) > std_dev_UB:
                     rospy.loginfo("CONTINGENCY -> IMU standard deviations")
@@ -164,6 +163,8 @@ class LocalizationMonitoring:
             if x_avg > config.NOT_MOVING_ANG_VELO_UB or y_avg > config.NOT_MOVING_ANG_VELO_UB or z_avg > config.NOT_MOVING_ANG_VELO_UB:
                 rospy.loginfo("CONTINGENCY..... IMU angular velo for passive state")
                 rospy.loginfo("ang velo: %s, %s, %s", x_avg, y_avg, z_avg)
+
+            rospy.loginfo("passive, active, total: %s, %s, %s", len(passive_imu_copy), len(active_imu_copy), config.IMU_ENTRIES)
 
             if len(passive_imu_copy) == config.IMU_ENTRIES and len(active_imu_copy) == config.IMU_ENTRIES:
                 entries = int(config.IMU_PERCENTAGE * config.IMU_ENTRIES)

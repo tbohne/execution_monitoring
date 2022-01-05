@@ -26,6 +26,7 @@ class PhysicsController:
         self.sim_wheel_movement_without_pos_change = False
         self.sim_pos_change_without_wheel_movement = False
         self.sim_imu_std_dev = False
+        self.sim_moving_although_standing = False
         self.sim_yaw_divergence = False
         self.pose_list = None
         self.switch_when_passive = False
@@ -41,6 +42,7 @@ class PhysicsController:
         rospy.Subscriber('/pos_change_without_wheel_movement', String, self.pos_change_without_wheel_movement_callback, queue_size=1)
         rospy.Subscriber('/yaw_divergence', String, self.yaw_divergence_callback, queue_size=1)
         rospy.Subscriber('/imu_standard_dev', String, self.imu_std_dev_callback, queue_size=1)
+        rospy.Subscriber('/moving_although_standing_still', String, self.moving_although_standing_callback, queue_size=1)
 
         self.drive_to_goal_client = actionlib.SimpleActionClient('drive_to_goal', drive_to_goalAction)
 
@@ -81,7 +83,28 @@ class PhysicsController:
                 self.switch_when_passive = False
                 self.yaw_divergence_sim()
 
+            elif curr != GoalStatus.ACTIVE:
+                if self.sim_moving_although_standing:
+                    self.sim_movement_without_cause()
+
             self.mbf_status = curr
+
+    def sim_movement_without_cause(self):
+        rospy.loginfo("sim movement without cause (no mbf movement initiated)..")
+        self.sim_moving_although_standing = False
+
+        z = -9.81
+        x = 0.0
+        y = 3.5
+
+        self.change_gravity(x, y, z)
+        rospy.loginfo("changing gravity..")
+        rospy.sleep(5)
+
+        x = y = 0.0
+        z = -9.81
+        self.change_gravity(x, y, z)
+        rospy.loginfo("changing gravity back to normal")
 
     def sim_high_imu_std_dev(self):
         rospy.loginfo("sim high IMU std dev..")
@@ -182,6 +205,9 @@ class PhysicsController:
 
     def imu_std_dev_callback(self, msg):
         self.sim_imu_std_dev = True
+
+    def moving_although_standing_callback(self, msg):
+        self.sim_moving_although_standing = True
 
     def yaw_divergence_callback(self, msg):
         self.sim_yaw_divergence = True
