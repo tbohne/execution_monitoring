@@ -141,6 +141,7 @@ class LocalizationMonitoring:
 
         # covariance known and data provided by IMU -> monitor diagonal (variances or standard deviations)
         if sum(cov_matrix) != 0.0 and cov_matrix[0] != -1.0:
+            rospy.loginfo("std dev: %s", math.sqrt(max(cov_matrix)))
             for i in range(0, len(cov_matrix), 4):
                 if math.sqrt(cov_matrix[i]) > std_dev_UB:
                     rospy.loginfo("CONTINGENCY -> IMU standard deviations")
