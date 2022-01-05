@@ -16,6 +16,8 @@ import math
 import tf2_ros
 from sensor_msgs.msg import NavSatFix
 
+from geometry_msgs.msg import Twist
+
 TF_BUFFER = None
 
 class PhysicsController:
@@ -27,6 +29,7 @@ class PhysicsController:
         self.sim_pos_change_without_wheel_movement = False
         self.sim_imu_std_dev = False
         self.sim_moving_although_standing = False
+        self.sim_moving_although_standing_odom = False
         self.sim_yaw_divergence = False
         self.pose_list = None
         self.switch_when_passive = False
@@ -34,6 +37,8 @@ class PhysicsController:
         self.unpause = rospy.ServiceProxy('/gazebo/unpause_physics', Empty)
         self.pause = rospy.ServiceProxy('/gazebo/pause_physics', Empty)
         rospy.Subscriber('/move_base_flex/exe_path/status', GoalStatusArray, self.mbf_status_callback, queue_size=1)
+
+        self.cmd_vel_pub = rospy.Publisher("/cmd_vel", Twist, queue_size=1)
 
         rospy.Subscriber('/fix', NavSatFix, self.gnss, queue_size=1)
         rospy.Subscriber('/imu_data', Imu, self.imu_callback, queue_size=1)
@@ -43,6 +48,7 @@ class PhysicsController:
         rospy.Subscriber('/yaw_divergence', String, self.yaw_divergence_callback, queue_size=1)
         rospy.Subscriber('/imu_standard_dev', String, self.imu_std_dev_callback, queue_size=1)
         rospy.Subscriber('/moving_although_standing_still', String, self.moving_although_standing_callback, queue_size=1)
+        rospy.Subscriber('/moving_although_standing_still_odom', String, self.moving_although_standing_odom_callback, queue_size=1)
 
         self.drive_to_goal_client = actionlib.SimpleActionClient('drive_to_goal', drive_to_goalAction)
 
@@ -87,7 +93,17 @@ class PhysicsController:
                 if self.sim_moving_although_standing:
                     self.sim_movement_without_cause()
 
+                if self.sim_moving_although_standing_odom:
+                    self.sim_movement_without_cause_odom()
+
             self.mbf_status = curr
+
+    def sim_movement_without_cause_odom(self):
+        rospy.loginfo("sim movement without cause (cmd_vel)..")
+        self.sim_moving_although_standing_odom = False
+        twist = Twist()
+        twist.linear.x = 3.0
+        self.cmd_vel_pub.publish(twist)
 
     def sim_movement_without_cause(self):
         rospy.loginfo("sim movement without cause (no mbf movement initiated)..")
@@ -208,6 +224,9 @@ class PhysicsController:
 
     def moving_although_standing_callback(self, msg):
         self.sim_moving_although_standing = True
+
+    def moving_although_standing_odom_callback(self, msg):
+        self.sim_moving_although_standing_odom = True
 
     def yaw_divergence_callback(self, msg):
         self.sim_yaw_divergence = True
