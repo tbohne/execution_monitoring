@@ -384,6 +384,127 @@ class SensorFailureResolver(GeneralFailureResolver):
             rospy.sleep(5)
 
 
+class LocalizationFailureResolver(GeneralFailureResolver):
+
+    def __init__(self):
+        super(LocalizationFailureResolver, self).__init__()
+        rospy.Subscriber('/resolve_localization_failure', String, self.resolve_callback, queue_size=1)
+        self.success_pub = rospy.Publisher('/resolve_localization_failure_success', Bool, queue_size=1)
+
+    def resolve_callback(self, msg):
+        rospy.loginfo("launch localization failure resolver..")
+        rospy.loginfo("type of localization failure: %s", msg.data)
+        self.problem_resolved = False
+
+        # different types of resolution are required based on the type of issue
+        if msg.data == config.LOCALIZATION_FAILURE_ONE:
+            self.resolve_type_one_failure(config.LOCALIZATION_FAILURE_ONE)
+        elif msg.data == config.LOCALIZATION_FAILURE_TWO:
+            self.resolve_type_two_failure(config.LOCALIZATION_FAILURE_TWO)
+        elif msg.data == config.LOCALIZATION_FAILURE_THREE:
+            self.resolve_type_three_failure(config.LOCALIZATION_FAILURE_THREE)
+        elif msg.data == config.LOCALIZATION_FAILURE_FOUR:
+            self.resolve_type_four_failure(config.LOCALIZATION_FAILURE_FOUR)
+        elif msg.data == config.LOCALIZATION_FAILURE_FIVE:
+            self.resolve_type_five_failure(config.LOCALIZATION_FAILURE_FIVE)
+        elif msg.data == config.LOCALIZATION_FAILURE_SIX:
+            self.resolve_type_six_failure(config.LOCALIZATION_FAILURE_SIX)
+        elif msg.data == config.LOCALIZATION_FAILURE_SEVEN:
+            self.resolve_type_seven_failure(config.LOCALIZATION_FAILURE_SEVEN)
+        elif msg.data == config.LOCALIZATION_FAILURE_EIGHT:
+            self.resolve_type_eight_failure(config.LOCALIZATION_FAILURE_EIGHT)
+        if msg.data == config.LOCALIZATION_FAILURE_NINE:
+            self.resolve_type_nine_failure(config.LOCALIZATION_FAILURE_NINE)
+        elif msg.data == config.LOCALIZATION_FAILURE_TEN:
+            self.resolve_type_ten_failure(config.LOCALIZATION_FAILURE_TEN)
+        elif msg.data == config.LOCALIZATION_FAILURE_ELEVEN:
+            self.resolve_type_eleven_failure(config.LOCALIZATION_FAILURE_ELEVEN)
+        elif msg.data == config.LOCALIZATION_FAILURE_TWELVE:
+            self.resolve_type_twelve_failure(config.LOCALIZATION_FAILURE_TWELVE)
+        elif msg.data == config.LOCALIZATION_FAILURE_THIRTEEN:
+            self.resolve_type_thirteen_failure(config.LOCALIZATION_FAILURE_THIRTEEN)
+
+        if self.problem_resolved:
+            self.success_pub.publish(True)
+
+    def resolve_type_one_failure(self, msg):
+        rospy.loginfo("resolve type one failure..")
+        self.fallback_pub.publish(msg)
+        while not self.problem_resolved:
+            rospy.sleep(5)
+
+    def resolve_type_two_failure(self, msg):
+        rospy.loginfo("resolve type two failure..")
+        self.fallback_pub.publish(msg)
+        while not self.problem_resolved:
+            rospy.sleep(5)
+
+    def resolve_type_three_failure(self, msg):
+        rospy.loginfo("resolve type three failure..")
+        self.fallback_pub.publish(msg)
+        while not self.problem_resolved:
+            rospy.sleep(5)
+
+    def resolve_type_four_failure(self, msg):
+        rospy.loginfo("resolve type four failure..")
+        self.fallback_pub.publish(msg)
+        while not self.problem_resolved:
+            rospy.sleep(5)
+
+    def resolve_type_five_failure(self, msg):
+        rospy.loginfo("resolve type five failure..")
+        self.fallback_pub.publish(msg)
+        while not self.problem_resolved:
+            rospy.sleep(5)
+
+    def resolve_type_six_failure(self, msg):
+        rospy.loginfo("resolve type six failure..")
+        self.fallback_pub.publish(msg)
+        while not self.problem_resolved:
+            rospy.sleep(5)
+
+    def resolve_type_seven_failure(self, msg):
+        rospy.loginfo("resolve type seven failure..")
+        self.fallback_pub.publish(msg)
+        while not self.problem_resolved:
+            rospy.sleep(5)
+
+    def resolve_type_eight_failure(self, msg):
+        rospy.loginfo("resolve type eight failure..")
+        self.fallback_pub.publish(msg)
+        while not self.problem_resolved:
+            rospy.sleep(5)
+
+    def resolve_type_nine_failure(self, msg):
+        rospy.loginfo("resolve type nine failure..")
+        self.fallback_pub.publish(msg)
+        while not self.problem_resolved:
+            rospy.sleep(5)
+
+    def resolve_type_ten_failure(self, msg):
+        rospy.loginfo("resolve type ten failure..")
+        self.fallback_pub.publish(msg)
+        while not self.problem_resolved:
+            rospy.sleep(5)
+
+    def resolve_type_eleven_failure(self, msg):
+        rospy.loginfo("resolve type eleven failure..")
+        self.fallback_pub.publish(msg)
+        while not self.problem_resolved:
+            rospy.sleep(5)
+
+    def resolve_type_twelve_failure(self, msg):
+        rospy.loginfo("resolve type twelve failure..")
+        self.fallback_pub.publish(msg)
+        while not self.problem_resolved:
+            rospy.sleep(5)
+
+    def resolve_type_thirteen_failure(self, msg):
+        rospy.loginfo("resolve type thirteen failure..")
+        self.fallback_pub.publish(msg)
+        while not self.problem_resolved:
+            rospy.sleep(5)
+
 def node():
     rospy.init_node('failure_resolver')
     rospy.wait_for_message('SMACH_runnning', String)
@@ -392,6 +513,7 @@ def node():
     WeatherFailureResolver()
     DataManagementFailureResolver()
     FallbackResolver()
+    LocalizationFailureResolver()
     rospy.spin()
 
 if __name__ == '__main__':
