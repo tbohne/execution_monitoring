@@ -4,6 +4,7 @@ from std_msgs.msg import String, Bool
 import actionlib
 from arox_navigation_flex.msg import drive_to_goalAction
 from execution_monitoring import config, util
+from geometry_msgs.msg import Twist
 
 
 class FallbackResolver:
@@ -390,6 +391,7 @@ class LocalizationFailureResolver(GeneralFailureResolver):
         super(LocalizationFailureResolver, self).__init__()
         rospy.Subscriber('/resolve_localization_failure', String, self.resolve_callback, queue_size=1)
         self.success_pub = rospy.Publisher('/resolve_localization_failure_success', Bool, queue_size=1)
+        self.cmd_vel_pub = rospy.Publisher("/cmd_vel", Twist, queue_size=1)
 
     def resolve_callback(self, msg):
         rospy.loginfo("launch localization failure resolver..")
@@ -397,113 +399,32 @@ class LocalizationFailureResolver(GeneralFailureResolver):
         self.problem_resolved = False
 
         # different types of resolution are required based on the type of issue
-        if msg.data == config.LOCALIZATION_FAILURE_ONE:
-            self.resolve_type_one_failure(config.LOCALIZATION_FAILURE_ONE)
-        elif msg.data == config.LOCALIZATION_FAILURE_TWO:
-            self.resolve_type_two_failure(config.LOCALIZATION_FAILURE_TWO)
-        elif msg.data == config.LOCALIZATION_FAILURE_THREE:
-            self.resolve_type_three_failure(config.LOCALIZATION_FAILURE_THREE)
-        elif msg.data == config.LOCALIZATION_FAILURE_FOUR:
-            self.resolve_type_four_failure(config.LOCALIZATION_FAILURE_FOUR)
-        elif msg.data == config.LOCALIZATION_FAILURE_FIVE:
-            self.resolve_type_five_failure(config.LOCALIZATION_FAILURE_FIVE)
-        elif msg.data == config.LOCALIZATION_FAILURE_SIX:
-            self.resolve_type_six_failure(config.LOCALIZATION_FAILURE_SIX)
-        elif msg.data == config.LOCALIZATION_FAILURE_SEVEN:
-            self.resolve_type_seven_failure(config.LOCALIZATION_FAILURE_SEVEN)
-        elif msg.data == config.LOCALIZATION_FAILURE_EIGHT:
-            self.resolve_type_eight_failure(config.LOCALIZATION_FAILURE_EIGHT)
-        if msg.data == config.LOCALIZATION_FAILURE_NINE:
-            self.resolve_type_nine_failure(config.LOCALIZATION_FAILURE_NINE)
-        elif msg.data == config.LOCALIZATION_FAILURE_TEN:
-            self.resolve_type_ten_failure(config.LOCALIZATION_FAILURE_TEN)
-        elif msg.data == config.LOCALIZATION_FAILURE_ELEVEN:
-            self.resolve_type_eleven_failure(config.LOCALIZATION_FAILURE_ELEVEN)
-        elif msg.data == config.LOCALIZATION_FAILURE_TWELVE:
-            self.resolve_type_twelve_failure(config.LOCALIZATION_FAILURE_TWELVE)
-        elif msg.data == config.LOCALIZATION_FAILURE_THIRTEEN:
-            self.resolve_type_thirteen_failure(config.LOCALIZATION_FAILURE_THIRTEEN)
+
+        if msg.data in [config.LOCALIZATION_FAILURE_ONE, config.LOCALIZATION_FAILURE_TWO, config.LOCALIZATION_FAILURE_THREE, config.LOCALIZATION_FAILURE_FOUR,
+            config.LOCALIZATION_FAILURE_FIVE, config.LOCALIZATION_FAILURE_SIX, config.LOCALIZATION_FAILURE_SEVEN, config.LOCALIZATION_FAILURE_EIGHT, config.LOCALIZATION_FAILURE_NINE,
+            config.LOCALIZATION_FAILURE_TEN, config.LOCALIZATION_FAILURE_ELEVEN, config.LOCALIZATION_FAILURE_TWELVE, config.LOCALIZATION_FAILURE_THIRTEEN]:
+
+            self.resolve_localization_failure()
 
         if self.problem_resolved:
             self.success_pub.publish(True)
 
-    def resolve_type_one_failure(self, msg):
-        rospy.loginfo("resolve type one failure..")
-        self.fallback_pub.publish(msg)
-        while not self.problem_resolved:
-            rospy.sleep(5)
+    def resolve_localization_failure(self):
+        rospy.loginfo("resolve localization failure..")
+        # sleeping a moment to wait for the robot to stand still
+        rospy.sleep(5)
+        # TODO: should pay attention to obstacles etc.
+        rospy.loginfo("driving the robot a few meters back and forth to recalibrate the localization using different GNSS positions..")
+        twist = Twist()
+        twist.linear.x = -3.0
+        rate = rospy.Rate(4)
+        for _ in range(2):
+            for _ in range(3):
+                self.cmd_vel_pub.publish(twist)
+                rate.sleep()
+            twist.linear.x = 3.0
 
-    def resolve_type_two_failure(self, msg):
-        rospy.loginfo("resolve type two failure..")
-        self.fallback_pub.publish(msg)
-        while not self.problem_resolved:
-            rospy.sleep(5)
-
-    def resolve_type_three_failure(self, msg):
-        rospy.loginfo("resolve type three failure..")
-        self.fallback_pub.publish(msg)
-        while not self.problem_resolved:
-            rospy.sleep(5)
-
-    def resolve_type_four_failure(self, msg):
-        rospy.loginfo("resolve type four failure..")
-        self.fallback_pub.publish(msg)
-        while not self.problem_resolved:
-            rospy.sleep(5)
-
-    def resolve_type_five_failure(self, msg):
-        rospy.loginfo("resolve type five failure..")
-        self.fallback_pub.publish(msg)
-        while not self.problem_resolved:
-            rospy.sleep(5)
-
-    def resolve_type_six_failure(self, msg):
-        rospy.loginfo("resolve type six failure..")
-        self.fallback_pub.publish(msg)
-        while not self.problem_resolved:
-            rospy.sleep(5)
-
-    def resolve_type_seven_failure(self, msg):
-        rospy.loginfo("resolve type seven failure..")
-        self.fallback_pub.publish(msg)
-        while not self.problem_resolved:
-            rospy.sleep(5)
-
-    def resolve_type_eight_failure(self, msg):
-        rospy.loginfo("resolve type eight failure..")
-        self.fallback_pub.publish(msg)
-        while not self.problem_resolved:
-            rospy.sleep(5)
-
-    def resolve_type_nine_failure(self, msg):
-        rospy.loginfo("resolve type nine failure..")
-        self.fallback_pub.publish(msg)
-        while not self.problem_resolved:
-            rospy.sleep(5)
-
-    def resolve_type_ten_failure(self, msg):
-        rospy.loginfo("resolve type ten failure..")
-        self.fallback_pub.publish(msg)
-        while not self.problem_resolved:
-            rospy.sleep(5)
-
-    def resolve_type_eleven_failure(self, msg):
-        rospy.loginfo("resolve type eleven failure..")
-        self.fallback_pub.publish(msg)
-        while not self.problem_resolved:
-            rospy.sleep(5)
-
-    def resolve_type_twelve_failure(self, msg):
-        rospy.loginfo("resolve type twelve failure..")
-        self.fallback_pub.publish(msg)
-        while not self.problem_resolved:
-            rospy.sleep(5)
-
-    def resolve_type_thirteen_failure(self, msg):
-        rospy.loginfo("resolve type thirteen failure..")
-        self.fallback_pub.publish(msg)
-        while not self.problem_resolved:
-            rospy.sleep(5)
+        self.problem_resolved = True
 
 def node():
     rospy.init_node('failure_resolver')

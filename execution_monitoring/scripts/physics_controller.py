@@ -178,7 +178,7 @@ class PhysicsController:
         z = 0.0
         self.change_gravity(x, y, z)
         rospy.loginfo("changing gravity in z direction to: %s", z)
-        rospy.sleep(2)
+        rospy.sleep(1.5)
 
         # back to normal
         z = -9.81

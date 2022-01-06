@@ -22,7 +22,7 @@ class DataMonitoring:
             scan_cnt_before = self.count_scan_entries()
 
         # TODO: should be scan time limit, but not too long either -> otherwise problems with next one
-        rospy.sleep(10)
+        rospy.sleep(14)
         rospy.loginfo("reading file after scan logging..")
         scan_cnt_after = self.count_scan_entries()
 

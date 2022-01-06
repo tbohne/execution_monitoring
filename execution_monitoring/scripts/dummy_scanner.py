@@ -37,7 +37,7 @@ class DummyScanner():
             scan = rospy.wait_for_message("/RIEGL", LaserScan, timeout=config.SCAN_TIME_LIMIT)
         except rospy.ROSException as e:
             rospy.loginfo("problem retrieving laser scan: %s", e)
-        rospy.sleep(3)
+        rospy.sleep(8)
         
         if scan:
             rospy.loginfo("recorded scan..")
