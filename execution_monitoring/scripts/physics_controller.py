@@ -27,7 +27,6 @@ class PhysicsController:
         self.mbf_status = None
         self.sim_wheel_movement_without_pos_change = False
         self.sim_pos_change_without_wheel_movement = False
-        self.sim_imu_std_dev = False
         self.sim_moving_although_standing = False
         self.sim_moving_although_standing_odom = False
         self.sim_yaw_divergence = False
@@ -46,7 +45,6 @@ class PhysicsController:
         rospy.Subscriber('/wheel_movement_without_pos_change', String, self.wheel_movement_without_pos_change_callback, queue_size=1)
         rospy.Subscriber('/pos_change_without_wheel_movement', String, self.pos_change_without_wheel_movement_callback, queue_size=1)
         rospy.Subscriber('/yaw_divergence', String, self.yaw_divergence_callback, queue_size=1)
-        rospy.Subscriber('/imu_standard_dev', String, self.imu_std_dev_callback, queue_size=1)
         rospy.Subscriber('/moving_although_standing_still', String, self.moving_although_standing_callback, queue_size=1)
         rospy.Subscriber('/moving_although_standing_still_odom', String, self.moving_although_standing_odom_callback, queue_size=1)
 
@@ -78,9 +76,6 @@ class PhysicsController:
                     self.force_position_change_sim()
 
             elif curr == GoalStatus.ACTIVE:
-                
-                if self.sim_imu_std_dev:
-                    self.sim_high_imu_std_dev()
 
                 if self.sim_yaw_divergence:
                     self.switch_when_passive = True
@@ -116,27 +111,6 @@ class PhysicsController:
         self.change_gravity(x, y, z)
         rospy.loginfo("changing gravity..")
         rospy.sleep(5)
-
-        x = y = 0.0
-        z = -9.81
-        self.change_gravity(x, y, z)
-        rospy.loginfo("changing gravity back to normal")
-
-    def sim_high_imu_std_dev(self):
-        rospy.loginfo("sim high IMU std dev..")
-        self.sim_imu_std_dev = False
-        # necessary to start movement
-        rospy.sleep(0.05)
-
-        for i in range(1, 10):
-            val = i / 15
-            if i % 2 == 0:
-                val *= -1
-
-            x = y = z = val
-            self.change_gravity(x, y, z)
-            rospy.loginfo("changing gravity..")
-            rospy.sleep(1)
 
         x = y = 0.0
         z = -9.81
@@ -218,9 +192,6 @@ class PhysicsController:
 
     def pos_change_without_wheel_movement_callback(self, msg):
         self.sim_pos_change_without_wheel_movement = True
-
-    def imu_std_dev_callback(self, msg):
-        self.sim_imu_std_dev = True
 
     def moving_although_standing_callback(self, msg):
         self.sim_moving_although_standing = True
