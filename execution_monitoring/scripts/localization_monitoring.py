@@ -3,7 +3,7 @@ import rospy
 import math
 from execution_monitoring import config
 from datetime import datetime
-from std_msgs.msg import String
+from std_msgs.msg import String, Bool
 from sensor_msgs.msg import Imu
 from nav_msgs.msg import Odometry
 import tf
@@ -25,10 +25,12 @@ class LocalizationMonitoring:
         rospy.Subscriber('/odometry/filtered_odom', Odometry, self.filtered_odom_callback, queue_size=1)
         rospy.Subscriber('/odometry/gps', Odometry, self.gps_as_odom_callback, queue_size=1)
         rospy.Subscriber('/move_base_flex/exe_path/status', GoalStatusArray, self.mbf_status_callback, queue_size=1)
+        rospy.Subscriber('/resolve_localization_failure_success', Bool, self.success_callback, queue_size=1)
 
         self.contingency_pub = rospy.Publisher('/contingency_preemption', String, queue_size=1)
         self.catastrophe_pub = rospy.Publisher('/catastrophe_preemption', String, queue_size=1)
         self.robot_info_pub = rospy.Publisher('/robot_info', String, queue_size=1)
+        self.active_monitoring = True
 
         self.status_before = None
         self.status_switch_time = None
@@ -46,6 +48,9 @@ class LocalizationMonitoring:
         self.lin_acc_passive_history = collections.deque([], config.COVARIANCE_HISTORY_LENGTH)
         self.localization_monitoring()
 
+    def success_callback(self, msg):
+        self.active_monitoring = True
+
     def mbf_status_callback(self, mbf_status):
         if len(mbf_status.status_list) > 0:
             # the last element in the list is the latest (most recent)
@@ -62,7 +67,7 @@ class LocalizationMonitoring:
         """
         while not rospy.is_shutdown():
 
-            if self.status_switch_time is not None and (datetime.now() - self.status_switch_time).total_seconds() > 5:
+            if self.active_monitoring and self.status_switch_time is not None and (datetime.now() - self.status_switch_time).total_seconds() > 5:
                 self.monitor_imu()
                 self.monitor_odom(True)
                 self.monitor_odom(False)
@@ -91,9 +96,11 @@ class LocalizationMonitoring:
             if abs(odom_dist - gps_dist) > 2.0:
                 rospy.loginfo("CONTINGENCY: GNSS (initial-current) and odometry (initial-current) distances are diverging quite heavily -> indicator for localization issue")
                 self.contingency_pub.publish(config.LOCALIZATION_FAILURE_ONE)
+                self.active_monitoring = False
             elif abs(odom_dist - gps_dist) > 1.0:
                 rospy.loginfo("CONTINGENCY: GNSS (initial-current) and odometry (initial-current) distances are diverging quite a bit -> indicator for localization issue")
                 self.contingency_pub.publish(config.LOCALIZATION_FAILURE_TWO)
+                self.active_monitoring = False
             elif abs(odom_dist - gps_dist) > 0.5:
                 rospy.loginfo("INFO: GNSS (initial-current) and odometry (initial-current) distances are slightly diverging -> indicator for minor localization issue")
                 self.robot_info_pub.publish(config.LOCALIZATION_FAILURE_THREE)
@@ -127,10 +134,12 @@ class LocalizationMonitoring:
             if abs(gnss_orientation_z) - abs(self.imu_latest.orientation.z) > config.Z_COMP_DIFF_UB:
                 rospy.loginfo("CONTINGENCY -- yaw diff between GNSS interpolation and IMU too high")
                 self.contingency_pub.publish(config.LOCALIZATION_FAILURE_FOUR)
+                self.active_monitoring = False
                 contingency = True
             if abs(gnss_orientation_z) - abs(self.odom_filtered_data.pose.pose.orientation.z) > config.Z_COMP_DIFF_UB:
                 rospy.loginfo("CONTINGENCY -- yaw diff between GNSS interpolation and filtered odometry too high")
                 self.contingency_pub.publish(config.LOCALIZATION_FAILURE_FIVE)
+                self.active_monitoring = False
                 contingency = True
             if contingency:
                 rospy.loginfo("imu orientation z: %s", self.imu_latest.orientation.z)
@@ -149,6 +158,7 @@ class LocalizationMonitoring:
                 if math.sqrt(cov_matrix[i]) > std_dev_UB:
                     rospy.loginfo("CONTINGENCY -> IMU standard deviations too high")
                     self.contingency_pub.publish(config.LOCALIZATION_FAILURE_SIX)
+                    self.active_monitoring = False
                     return
 
     def monitor_imu(self):
@@ -169,6 +179,7 @@ class LocalizationMonitoring:
                 rospy.loginfo("CONTINGENCY..... IMU angular velocity too high for passive state")
                 rospy.loginfo("ang velo: %s, %s, %s", x_avg, y_avg, z_avg)
                 self.contingency_pub.publish(config.LOCALIZATION_FAILURE_SEVEN)
+                self.active_monitoring = False
 
             rospy.loginfo("passive, active, total: %s, %s, %s", len(passive_imu_copy), len(active_imu_copy), config.IMU_ENTRIES)
 
@@ -186,6 +197,7 @@ class LocalizationMonitoring:
                             rospy.loginfo("mbf status: %s", )
                             rospy.loginfo("CONTINGENCY..... linear acceleration too high for passive state: %s",self.lin_acc_passive_history[i])
                             self.contingency_pub.publish(config.LOCALIZATION_FAILURE_EIGHT)
+                            self.active_monitoring = False
                 avg_ratio /= config.COVARIANCE_HISTORY_LENGTH
 
                 if len(self.lin_acc_active_history) == config.COVARIANCE_HISTORY_LENGTH \
@@ -194,6 +206,7 @@ class LocalizationMonitoring:
 
                     rospy.loginfo("CONTINGENCY: linear acceleration during movement not considerably higher compared to standing still")
                     self.contingency_pub.publish(config.LOCALIZATION_FAILURE_NINE)
+                    self.active_monitoring = False
                     rospy.loginfo("active values: %s", self.lin_acc_active_history)
                     rospy.loginfo("passive values: %s", self.lin_acc_passive_history)
                     
@@ -217,12 +230,14 @@ class LocalizationMonitoring:
                         rospy.loginfo("%s CONTINGENCY DETECTED ###################################", name)
                         rospy.loginfo("not moving, but linear twist: %s", odom_data.twist.twist.linear)
                         self.contingency_pub.publish(config.LOCALIZATION_FAILURE_TEN)
+                        self.active_monitoring = False
                 if abs(odom_data.twist.twist.angular.x) > config.NOT_MOVING_ANGULAR_TWIST_UB \
                     or abs(odom_data.twist.twist.angular.y) > config.NOT_MOVING_ANGULAR_TWIST_UB \
                     or abs(odom_data.twist.twist.angular.z) > config.NOT_MOVING_ANGULAR_TWIST_UB:
                         rospy.loginfo("%s CONTINGENCY DETECTED ###################################", name)
                         rospy.loginfo("not moving, but angular twist: %s", odom_data.twist.twist.angular)
                         self.contingency_pub.publish(config.LOCALIZATION_FAILURE_ELEVEN)
+                        self.active_monitoring = False
 
             # POSE + TWIST COVARIANCE (6x6 matrices (x, y, z, rot_x, rot_y, rot_z))
             # TODO: only due to the very high covariance of the filtered version -> to be checked later
@@ -232,12 +247,14 @@ class LocalizationMonitoring:
                     if math.sqrt(odom_data.pose.covariance[i]) > config.ODOM_POSE_STD_DEV_UB:
                         rospy.loginfo("CONTINGENCY: %s -> pose standard deviation", name)
                         self.contingency_pub.publish(config.LOCALIZATION_FAILURE_TWELVE)
+                        self.active_monitoring = False
                         break
                 # velocity in free space with uncertainty
                 for i in range(0, len(odom_data.twist.covariance), 7):
                     if math.sqrt(odom_data.twist.covariance[i]) > config.ODOM_TWIST_STD_DEV_UB:
                         rospy.loginfo("CONTINGENCY: %s -> twist standard deviation", name)
                         self.contingency_pub.publish(config.LOCALIZATION_FAILURE_THIRTEEN)
+                        self.active_monitoring = False
                         break
 
     def gps_as_odom_callback(self, gps_as_odom):
