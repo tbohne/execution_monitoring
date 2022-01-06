@@ -118,31 +118,31 @@ class Contingency(smach.State):
         elif self.interrupt_reason == config.WEATHER_FAILURE_EIGHTEEN:
             self.weather_failure_resolver_pub.publish(config.WEATHER_FAILURE_EIGHTEEN)
         elif self.interrupt_reason == config.LOCALIZATION_FAILURE_ONE:
-            self.localization_failure_resolver_pub.publish(config.LOCALLIZATION_FAILURE_ONE)
+            self.localization_failure_resolver_pub.publish(config.LOCALIZATION_FAILURE_ONE)
         elif self.interrupt_reason == config.LOCALIZATION_FAILURE_TWO:
-            self.localization_failure_resolver_pub.publish(config.LOCALLIZATION_FAILURE_TWO)
+            self.localization_failure_resolver_pub.publish(config.LOCALIZATION_FAILURE_TWO)
         elif self.interrupt_reason == config.LOCALIZATION_FAILURE_THREE:
-            self.localization_failure_resolver_pub.publish(config.LOCALLIZATION_FAILURE_THREE)
+            self.localization_failure_resolver_pub.publish(config.LOCALIZATION_FAILURE_THREE)
         elif self.interrupt_reason == config.LOCALIZATION_FAILURE_FOUR:
-            self.localization_failure_resolver_pub.publish(config.LOCALLIZATION_FAILURE_FOUR)
+            self.localization_failure_resolver_pub.publish(config.LOCALIZATION_FAILURE_FOUR)
         elif self.interrupt_reason == config.LOCALIZATION_FAILURE_FIVE:
-            self.localization_failure_resolver_pub.publish(config.LOCALLIZATION_FAILURE_FIVE)
+            self.localization_failure_resolver_pub.publish(config.LOCALIZATION_FAILURE_FIVE)
         elif self.interrupt_reason == config.LOCALIZATION_FAILURE_SIX:
-            self.localization_failure_resolver_pub.publish(config.LOCALLIZATION_FAILURE_SIX)
+            self.localization_failure_resolver_pub.publish(config.LOCALIZATION_FAILURE_SIX)
         elif self.interrupt_reason == config.LOCALIZATION_FAILURE_SEVEN:
-            self.localization_failure_resolver_pub.publish(config.LOCALLIZATION_FAILURE_SEVEN)
+            self.localization_failure_resolver_pub.publish(config.LOCALIZATION_FAILURE_SEVEN)
         elif self.interrupt_reason == config.LOCALIZATION_FAILURE_EIGHT:
-            self.localization_failure_resolver_pub.publish(config.LOCALLIZATION_FAILURE_EIGHT)
+            self.localization_failure_resolver_pub.publish(config.LOCALIZATION_FAILURE_EIGHT)
         elif self.interrupt_reason == config.LOCALIZATION_FAILURE_NINE:
-            self.localization_failure_resolver_pub.publish(config.LOCALLIZATION_FAILURE_NINE)
+            self.localization_failure_resolver_pub.publish(config.LOCALIZATION_FAILURE_NINE)
         elif self.interrupt_reason == config.LOCALIZATION_FAILURE_TEN:
-            self.localization_failure_resolver_pub.publish(config.LOCALLIZATION_FAILURE_TEN)
+            self.localization_failure_resolver_pub.publish(config.LOCALIZATION_FAILURE_TEN)
         elif self.interrupt_reason == config.LOCALIZATION_FAILURE_ELEVEN:
-            self.localization_failure_resolver_pub.publish(config.LOCALLIZATION_FAILURE_ELEVEN)
+            self.localization_failure_resolver_pub.publish(config.LOCALIZATION_FAILURE_ELEVEN)
         elif self.interrupt_reason == config.LOCALIZATION_FAILURE_TWELVE:
-            self.localization_failure_resolver_pub.publish(config.LOCALLIZATION_FAILURE_TWELVE)
+            self.localization_failure_resolver_pub.publish(config.LOCALIZATION_FAILURE_TWELVE)
         elif self.interrupt_reason == config.LOCALIZATION_FAILURE_THIRTEEN:
-            self.localization_failure_resolver_pub.publish(config.LOCALLIZATION_FAILURE_THIRTEEN)
+            self.localization_failure_resolver_pub.publish(config.LOCALIZATION_FAILURE_THIRTEEN)
         else:
             rospy.loginfo("unkonwn interrupt reason: %s", self.interrupt_reason)
 
