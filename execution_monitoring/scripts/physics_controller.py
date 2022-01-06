@@ -89,6 +89,7 @@ class PhysicsController:
 
     def moving_although_standing_still_odom(self):
         rospy.loginfo("sim movement without cause (cmd_vel)..")
+        rospy.sleep(2)
         self.sim_moving_although_standing_still_odom = False
         twist = Twist()
         twist.linear.x = 3.0
