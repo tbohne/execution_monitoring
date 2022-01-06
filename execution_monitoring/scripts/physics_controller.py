@@ -161,23 +161,29 @@ class PhysicsController:
     def wheel_movement_without_pos_change(self):
         rospy.loginfo("init low gravity sim")
         x = y = 0.0
-        # necessary to start movement
-        rospy.sleep(0.05)
 
-        z = 0.1
+        # let robot hover a bit
+        z = 0.4
         self.change_gravity(x, y, z)
         rospy.loginfo("changing gravity in z direction to: %s", z)
-        rospy.sleep(1)
+        rospy.sleep(0.2)
 
-        for _ in range(4):
-            z = 0.2
-            self.change_gravity(x, y, z)
-            rospy.loginfo("changing gravity in z direction to: %s", z)
-            rospy.sleep(1.0 / 1.5)
-            z = -9.81
-            self.change_gravity(x, y, z)
-            rospy.loginfo("changing gravity in z direction to: %s", z)
-            rospy.sleep(1 / 35.0)
+        # prevent it from flying away
+        z = -0.1
+        self.change_gravity(x, y, z)
+        rospy.loginfo("changing gravity in z direction to: %s", z)
+        rospy.sleep(0.2)
+
+        # wait in zero gravity
+        z = 0.0
+        self.change_gravity(x, y, z)
+        rospy.loginfo("changing gravity in z direction to: %s", z)
+        rospy.sleep(2)
+
+        # back to normal
+        z = -9.81
+        rospy.loginfo("changing back to normal gravtiy..")
+        self.change_gravity(x, y, z)
 
         self.sim_wheel_movement_without_pos_change = False
 
