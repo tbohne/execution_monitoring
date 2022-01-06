@@ -1,8 +1,7 @@
 #!/usr/bin/env python
 import rospy
 import math
-from std_msgs.msg import String, Bool
-from execution_monitoring import util, config
+from execution_monitoring import config
 from datetime import datetime
 from sensor_msgs.msg import Imu
 from nav_msgs.msg import Odometry
@@ -16,7 +15,7 @@ class LocalizationMonitoring:
     """
     Monitoring for localization failures -> measure quality of localization.
     -> estimate plausibility of localization based on sensor data
-    Our localization: IMU + odometry + GNSS -> Kalman filter to bring these information together (robot_localization pkg)
+    -> our localization: IMU + odometry + GNSS -> Kalman filter to bring these information together (robot_localization pkg)
     """
 
     def __init__(self):

@@ -3,50 +3,44 @@ import rospy
 from gazebo_msgs.msg import ODEPhysics
 from gazebo_msgs.srv import SetPhysicsProperties, SetPhysicsPropertiesRequest
 from std_msgs.msg import Float64, String
-from geometry_msgs.msg import Vector3
+from geometry_msgs.msg import Vector3, Twist
 from std_srvs.srv import Empty
 from actionlib_msgs.msg import GoalStatusArray, GoalStatus
 import actionlib
 from arox_navigation_flex.msg import drive_to_goalAction
 from execution_monitoring import util
 from sensor_msgs.msg import Imu
-from tf.transformations import euler_from_quaternion, quaternion_from_euler
+from tf.transformations import euler_from_quaternion
 import numpy as np
 import math
-import tf2_ros
 from sensor_msgs.msg import NavSatFix
-
-from geometry_msgs.msg import Twist
-
-TF_BUFFER = None
 
 class PhysicsController:
 
     def __init__(self):
-
         self.mbf_status = None
         self.sim_wheel_movement_without_pos_change = False
         self.sim_pos_change_without_wheel_movement = False
-        self.sim_moving_although_standing = False
-        self.sim_moving_although_standing_odom = False
+        self.sim_moving_although_standing_still_imu = False
+        self.sim_moving_although_standing_still_odom = False
         self.sim_yaw_divergence = False
         self.pose_list = None
-        self.switch_when_passive = False
+        self.sim_when_passive = False
 
         self.unpause = rospy.ServiceProxy('/gazebo/unpause_physics', Empty)
         self.pause = rospy.ServiceProxy('/gazebo/pause_physics', Empty)
-        rospy.Subscriber('/move_base_flex/exe_path/status', GoalStatusArray, self.mbf_status_callback, queue_size=1)
-
         self.cmd_vel_pub = rospy.Publisher("/cmd_vel", Twist, queue_size=1)
 
-        rospy.Subscriber('/fix', NavSatFix, self.gnss, queue_size=1)
+        # INFO / DATA TOPICS
+        rospy.Subscriber('/move_base_flex/exe_path/status', GoalStatusArray, self.mbf_status_callback, queue_size=1)
+        rospy.Subscriber('/fix', NavSatFix, self.gnss_callback, queue_size=1)
         rospy.Subscriber('/imu_data', Imu, self.imu_callback, queue_size=1)
-
+        # SIM TOPICS
         rospy.Subscriber('/wheel_movement_without_pos_change', String, self.wheel_movement_without_pos_change_callback, queue_size=1)
         rospy.Subscriber('/pos_change_without_wheel_movement', String, self.pos_change_without_wheel_movement_callback, queue_size=1)
         rospy.Subscriber('/yaw_divergence', String, self.yaw_divergence_callback, queue_size=1)
-        rospy.Subscriber('/moving_although_standing_still', String, self.moving_although_standing_callback, queue_size=1)
-        rospy.Subscriber('/moving_although_standing_still_odom', String, self.moving_although_standing_odom_callback, queue_size=1)
+        rospy.Subscriber('/moving_although_standing_still_imu', String, self.moving_although_standing_still_imu_callback, queue_size=1)
+        rospy.Subscriber('/moving_although_standing_still_odom', String, self.moving_although_standing_still_odom_callback, queue_size=1)
 
         self.drive_to_goal_client = actionlib.SimpleActionClient('drive_to_goal', drive_to_goalAction)
 
@@ -57,7 +51,7 @@ class PhysicsController:
         self.set_physics = rospy.ServiceProxy(service_name, SetPhysicsProperties)
         self.init_values()
 
-    def gnss(self, nav_sat_fix):
+    def gnss_callback(self, nav_sat_fix):
         _, _, yaw = euler_from_quaternion([self.imu_data.orientation.x, self.imu_data.orientation.y, self.imu_data.orientation.z, self.imu_data.orientation.w])
         self.pose_list = [nav_sat_fix.latitude, nav_sat_fix.longitude, yaw * 180 / np.pi]
 
@@ -71,38 +65,38 @@ class PhysicsController:
             if curr == GoalStatus.ACTIVE and self.mbf_status != curr:
                 # starting to move -> initiate simulation of low gravity -> spinning wheels
                 if self.sim_wheel_movement_without_pos_change:
-                    self.low_gravity_sim()
+                    self.wheel_movement_without_pos_change()
                 if self.sim_pos_change_without_wheel_movement:
-                    self.force_position_change_sim()
+                    self.pos_change_without_wheel_movement()
 
             elif curr == GoalStatus.ACTIVE:
 
                 if self.sim_yaw_divergence:
-                    self.switch_when_passive = True
+                    self.sim_when_passive = True
 
-            elif curr == GoalStatus.SUCCEEDED and self.switch_when_passive:
-                self.switch_when_passive = False
-                self.yaw_divergence_sim()
+            elif curr == GoalStatus.SUCCEEDED and self.sim_when_passive:
+                self.sim_when_passive = False
+                self.yaw_divergence()
 
             elif curr != GoalStatus.ACTIVE:
-                if self.sim_moving_although_standing:
-                    self.sim_movement_without_cause()
+                if self.sim_moving_although_standing_still_imu:
+                    self.moving_although_standing_still_imu()
 
-                if self.sim_moving_although_standing_odom:
-                    self.sim_movement_without_cause_odom()
+                if self.sim_moving_although_standing_still_odom:
+                    self.moving_although_standing_still_odom()
 
             self.mbf_status = curr
 
-    def sim_movement_without_cause_odom(self):
+    def moving_although_standing_still_odom(self):
         rospy.loginfo("sim movement without cause (cmd_vel)..")
-        self.sim_moving_although_standing_odom = False
+        self.sim_moving_although_standing_still_odom = False
         twist = Twist()
         twist.linear.x = 3.0
         self.cmd_vel_pub.publish(twist)
 
-    def sim_movement_without_cause(self):
+    def moving_although_standing_still_imu(self):
         rospy.loginfo("sim movement without cause (no mbf movement initiated)..")
-        self.sim_moving_although_standing = False
+        self.sim_moving_although_standing_still_imu = False
 
         z = -9.81
         x = 0.0
@@ -117,7 +111,7 @@ class PhysicsController:
         self.change_gravity(x, y, z)
         rospy.loginfo("changing gravity back to normal")
 
-    def yaw_divergence_sim(self):
+    def yaw_divergence(self):
         rospy.loginfo("yaw divergence sim..")
         rospy.sleep(0.5)
 
@@ -146,7 +140,7 @@ class PhysicsController:
             rospy.loginfo("successfully performed action: %s", success)
             return success
 
-    def force_position_change_sim(self):
+    def pos_change_without_wheel_movement(self):
         rospy.loginfo("force position change sim..")
         z = -9.81
         x = 0.0
@@ -164,7 +158,7 @@ class PhysicsController:
 
         self.sim_pos_change_without_wheel_movement = False
 
-    def low_gravity_sim(self):
+    def wheel_movement_without_pos_change(self):
         rospy.loginfo("init low gravity sim")
         x = y = 0.0
         # necessary to start movement
@@ -193,11 +187,11 @@ class PhysicsController:
     def pos_change_without_wheel_movement_callback(self, msg):
         self.sim_pos_change_without_wheel_movement = True
 
-    def moving_although_standing_callback(self, msg):
-        self.sim_moving_although_standing = True
+    def moving_although_standing_still_imu_callback(self, msg):
+        self.sim_moving_although_standing_still_imu = True
 
-    def moving_although_standing_odom_callback(self, msg):
-        self.sim_moving_although_standing_odom = True
+    def moving_although_standing_still_odom_callback(self, msg):
+        self.sim_moving_although_standing_still_odom = True
 
     def yaw_divergence_callback(self, msg):
         self.sim_yaw_divergence = True
