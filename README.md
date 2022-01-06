@@ -67,6 +67,12 @@
         - mount flash drive: `mount /dev/sdd1 /mnt/usb`
         - set `MONITOR_DRIVE` to `/mnt/usb`
     - **scan logging failure:** `rostopic pub -1 /toggle_simulated_scan_logging_failure std_msgs/String fail`
+- **localization failures**
+    - **odometry-GNSS distance divergence (type 1):** `rostopic pub -1 /wheel_movement_without_pos_change std_msgs/String fail`
+    - **odometry-GNSS distance divergence (type 2):**  `rostopic pub -1 /pos_change_without_wheel_movement std_msgs/String fail`
+    - **interpolated GNSS and IMU / odometry yaw divergence:** `rostopic pub -1 /yaw_divergence std_msgs/String fail`
+    - **IMU acceleration although no active nav goal:** `rostopic pub -1 /moving_although_standing_still_imu std_msgs/String fail`
+    - **odometry twist although no active nav goal:** `rostopic pub -1 /moving_although_standing_still_odom std_msgs/String fail`
 
 ## Communication with Human Operator
 

@@ -321,7 +321,7 @@ class WeatherMonitoring:
         while not rospy.is_shutdown():
             if owm.is_API_online() and self.position is not None:
                 observation = owm.weather_at_coords(*self.position)
-                print("monitoring weather for: " + observation.get_location().get_name())
+                #print("monitoring weather for: " + observation.get_location().get_name())
                 weather_data = self.parse_weather_data(observation.get_weather())
                 #weather_data.log_complete_info()
                 self.monitor_weather_data(weather_data)
