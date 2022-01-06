@@ -66,11 +66,8 @@ class PhysicsController:
                 # starting to move -> initiate simulation of low gravity -> spinning wheels
                 if self.sim_wheel_movement_without_pos_change:
                     self.wheel_movement_without_pos_change()
-                if self.sim_pos_change_without_wheel_movement:
-                    self.pos_change_without_wheel_movement()
 
             elif curr == GoalStatus.ACTIVE:
-
                 if self.sim_yaw_divergence:
                     self.sim_when_passive = True
 
@@ -81,9 +78,10 @@ class PhysicsController:
             elif curr != GoalStatus.ACTIVE:
                 if self.sim_moving_although_standing_still_imu:
                     self.moving_although_standing_still_imu()
-
                 if self.sim_moving_although_standing_still_odom:
                     self.moving_although_standing_still_odom()
+                if self.sim_pos_change_without_wheel_movement:
+                    self.pos_change_without_wheel_movement()
 
             self.mbf_status = curr
 
