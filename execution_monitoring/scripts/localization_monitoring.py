@@ -54,7 +54,7 @@ class LocalizationMonitoring:
     def re_init(self, msg):
         rospy.loginfo("re-initialiizing the localiization monitoring..")
         rospy.sleep(10)
-        self.init()        
+        self.init()
 
     def mbf_status_callback(self, mbf_status):
         if len(mbf_status.status_list) > 0:
@@ -72,7 +72,7 @@ class LocalizationMonitoring:
         """
         while not rospy.is_shutdown():
 
-            if self.active_monitoring and self.status_switch_time is not None and (datetime.now() - self.status_switch_time).total_seconds() > 5:
+            if self.active_monitoring and self.status_switch_time is not None and (datetime.now() - self.status_switch_time).total_seconds() > 2:
                 self.monitor_imu()
                 self.monitor_odom(True)
                 self.monitor_odom(False)

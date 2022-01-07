@@ -86,7 +86,7 @@ class PhysicsController:
             self.mbf_status = curr
 
     def moving_although_standing_still_odom(self):
-        rospy.loginfo("sim movement without cause (cmd_vel)..")
+        rospy.loginfo("PHYS CON: sim movement without cause (cmd_vel)..")
         rospy.sleep(2)
         self.sim_moving_although_standing_still_odom = False
         twist = Twist()
@@ -94,7 +94,7 @@ class PhysicsController:
         self.cmd_vel_pub.publish(twist)
 
     def moving_although_standing_still_imu(self):
-        rospy.loginfo("sim movement without cause (no mbf movement initiated)..")
+        rospy.loginfo("PHYS CON: sim movement without cause (gravity)..")
         self.sim_moving_although_standing_still_imu = False
 
         z = -9.81
@@ -111,8 +111,8 @@ class PhysicsController:
         rospy.loginfo("changing gravity back to normal")
 
     def yaw_divergence(self):
-        rospy.loginfo("yaw divergence sim..")
-        rospy.sleep(0.5)
+        rospy.loginfo("PHYS CON: yaw divergence sim..")
+        # rospy.sleep(0.1)
 
         if self.pose_list is not None:
             
@@ -121,26 +121,30 @@ class PhysicsController:
                 yaw_deg = -180 + ((yaw_deg + 180) % 180)
             else:
                 yaw_deg += 180
+
+            twist = Twist()
+            twist.angular.z = np.pi / 2
+            self.cmd_vel_pub.publish(twist)
             
-            action_goal = util.create_dtg_goal(self.pose_list, math.radians(yaw_deg))
-            self.drive_to_goal_client.wait_for_server()
+            # action_goal = util.create_dtg_goal(self.pose_list, math.radians(yaw_deg))
+            # self.drive_to_goal_client.wait_for_server()
 
-            self.drive_to_goal_client.send_goal(action_goal)
-            rospy.loginfo("goal sent, wait for accomplishment..")
-            success = self.drive_to_goal_client.wait_for_result()
+            # self.drive_to_goal_client.send_goal(action_goal)
+            # rospy.loginfo("goal sent, wait for accomplishment..")
+            # success = self.drive_to_goal_client.wait_for_result()
 
-            out = self.drive_to_goal_client.get_result()
-            self.sim_yaw_divergence = False
+            # out = self.drive_to_goal_client.get_result()
+            # self.sim_yaw_divergence = False
 
-            if out.progress > 0:
-                rospy.loginfo("driving goal progress: %s", out.progress)
-                return False        
+            # if out.progress > 0:
+            #     rospy.loginfo("driving goal progress: %s", out.progress)
+            #     return False        
 
-            rospy.loginfo("successfully performed action: %s", success)
-            return success
+            # rospy.loginfo("successfully performed action: %s", success)
+            # return success
 
     def pos_change_without_wheel_movement(self):
-        rospy.loginfo("force position change sim..")
+        rospy.loginfo("PHYS CON: sim pos change without wheel rotations..")
         z = -9.81
         x = 0.0
         # necessary to start movement
@@ -158,7 +162,7 @@ class PhysicsController:
         self.sim_pos_change_without_wheel_movement = False
 
     def wheel_movement_without_pos_change(self):
-        rospy.loginfo("init low gravity sim")
+        rospy.loginfo("PHYS CON: sim wheel rotations without pos change..")
         x = y = 0.0
 
         # let robot hover a bit
