@@ -20,21 +20,19 @@ class LocalizationMonitoring:
     """
 
     def __init__(self):
-        self.init()
-
-    def init(self):
         rospy.Subscriber('/imu_data', Imu, self.imu_callback, queue_size=1)
         rospy.Subscriber('/odom', Odometry, self.odom_callback, queue_size=1)
         rospy.Subscriber('/odometry/filtered_odom', Odometry, self.filtered_odom_callback, queue_size=1)
         rospy.Subscriber('/odometry/gps', Odometry, self.gps_as_odom_callback, queue_size=1)
         rospy.Subscriber('/move_base_flex/exe_path/status', GoalStatusArray, self.mbf_status_callback, queue_size=1)
         rospy.Subscriber('/resolve_localization_failure_success', Bool, self.re_init, queue_size=1)
-
         self.contingency_pub = rospy.Publisher('/contingency_preemption', String, queue_size=1)
         self.catastrophe_pub = rospy.Publisher('/catastrophe_preemption', String, queue_size=1)
         self.robot_info_pub = rospy.Publisher('/robot_info', String, queue_size=1)
-        self.active_monitoring = True
+        self.init()
 
+    def init(self):
+        self.active_monitoring = True
         self.status_before = None
         self.status_switch_time = None
         self.active_imu_data = collections.deque([], config.IMU_ENTRIES)
@@ -57,7 +55,7 @@ class LocalizationMonitoring:
         self.init()
 
     def mbf_status_callback(self, mbf_status):
-        if len(mbf_status.status_list) > 0:
+        if self.active_monitoring and len(mbf_status.status_list) > 0:
             # the last element in the list is the latest (most recent)
             self.mbf_status = mbf_status.status_list[-1].status
             if self.mbf_status != self.status_before:
@@ -70,9 +68,9 @@ class LocalizationMonitoring:
         Odometry -> position + orientation (relative to initial pose)
         GNSS     -> position + interpolated orientation (absolute)
         """
-        while not rospy.is_shutdown():
+        while self.active_monitoring:
 
-            if self.active_monitoring and self.status_switch_time is not None and (datetime.now() - self.status_switch_time).total_seconds() > 5:
+            if self.status_switch_time is not None and (datetime.now() - self.status_switch_time).total_seconds() > config.STATUS_SWITCH_DELAY:
                 self.monitor_imu()
                 self.monitor_odom(True)
                 self.monitor_odom(False)
@@ -263,24 +261,28 @@ class LocalizationMonitoring:
                         break
 
     def gps_as_odom_callback(self, gps_as_odom):
-        self.gps_as_odom_data_second_latest = self.gps_as_odom_data_latest
-        self.gps_as_odom_data_latest = gps_as_odom
+        if self.active_monitoring:
+            self.gps_as_odom_data_second_latest = self.gps_as_odom_data_latest
+            self.gps_as_odom_data_latest = gps_as_odom
 
     def filtered_odom_callback(self, filtered_odom):
-        self.odom_filtered_data = filtered_odom
+        if self.active_monitoring:
+            self.odom_filtered_data = filtered_odom
 
     def odom_callback(self, odom):
-        self.odom_data = odom
+        if self.active_monitoring:
+            self.odom_data = odom
 
     def imu_callback(self, imu):
-        self.imu_latest = imu
-        # after status switch - block 2s
-        if self.status_switch_time is not None and (datetime.now() - self.status_switch_time).total_seconds() > 10:
-            # aborted state should not be collected at all
-            if self.mbf_status == GoalStatus.SUCCEEDED: #self.mbf_status != GoalStatus.ACTIVE and self.mbf_status != GoalStatus.ABORTED:
-                self.passive_imu_data.appendleft(imu)
-            elif self.mbf_status == GoalStatus.ACTIVE: #self.mbf_status != GoalStatus.ABORTED:
-                self.active_imu_data.appendleft(imu)
+        if self.active_monitoring:
+            self.imu_latest = imu
+            # after status switch - block 10s # TODO: does it have to be that long?
+            if self.status_switch_time is not None and (datetime.now() - self.status_switch_time).total_seconds() > config.STATUS_SWITCH_DELAY:
+                # aborted state should not be collected at all
+                if self.mbf_status == GoalStatus.SUCCEEDED: #self.mbf_status != GoalStatus.ACTIVE and self.mbf_status != GoalStatus.ABORTED:
+                    self.passive_imu_data.appendleft(imu)
+                elif self.mbf_status == GoalStatus.ACTIVE: #self.mbf_status != GoalStatus.ABORTED:
+                    self.active_imu_data.appendleft(imu)
 
 def node():
     rospy.init_node('localization_monitoring')

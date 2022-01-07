@@ -43,6 +43,9 @@ SCAN_VALUES_LB_PERCENTAGE = 5
 #############################################################################
 ########################## LOCALIZATION MONITORING ##########################
 #############################################################################
+
+STATUS_SWITCH_DELAY = 2
+
 # TODO: should be checked - arbitrarily selected
 NOT_MOVING_ANG_VELO_UB = 0.05
 NOT_MOVING_LIN_ACC_UB = 1.0
@@ -67,7 +70,7 @@ IMU_LINEAR_ACC_STD_DEV_UB = 10  # m/s^2
 ODOM_POSE_STD_DEV_UB = 3
 ODOM_TWIST_STD_DEV_UB = 3
 
-LOCALIZATION_MON_FREQ = 2
+LOCALIZATION_MON_FREQ = 0.5
 
 # LOCALIZATION FAILURES / INFOS
 LOCALIZATION_FAILURE_ONE = "GNSS (initial-current) and odometry (initial-current) distances are diverging quite heavily -> indicator for localization issue"
