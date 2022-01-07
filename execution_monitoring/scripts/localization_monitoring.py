@@ -186,7 +186,7 @@ class LocalizationMonitoring:
                 self.contingency_pub.publish(config.LOCALIZATION_FAILURE_SEVEN)
                 self.active_monitoring = False
 
-            #rospy.loginfo("passive, active, total: %s, %s, %s", len(passive_imu_copy), len(active_imu_copy), config.IMU_ENTRIES)
+            rospy.loginfo("passive, active, total: %s, %s, %s", len(passive_imu_copy), len(active_imu_copy), config.IMU_ENTRIES)
 
             if len(passive_imu_copy) == config.IMU_ENTRIES and len(active_imu_copy) == config.IMU_ENTRIES:
                 entries = int(config.IMU_PERCENTAGE * config.IMU_ENTRIES)
