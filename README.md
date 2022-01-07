@@ -72,6 +72,7 @@
     - **odometry-GNSS distance divergence (type 2):**  `rostopic pub -1 /pos_change_without_wheel_movement std_msgs/String fail`
     - **interpolated GNSS and IMU / odometry yaw divergence:** `rostopic pub -1 /yaw_divergence std_msgs/String fail`
     - **IMU acceleration although no active nav goal:** `rostopic pub -1 /moving_although_standing_still_imu std_msgs/String fail`
+        - *note: only working if both the active and passive history is complete (e.g. 1500)*
     - **odometry twist although no active nav goal:** `rostopic pub -1 /moving_although_standing_still_odom std_msgs/String fail`
 
 ## Communication with Human Operator
