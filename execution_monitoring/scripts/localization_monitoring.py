@@ -72,7 +72,7 @@ class LocalizationMonitoring:
         """
         while not rospy.is_shutdown():
 
-            if self.active_monitoring and self.status_switch_time is not None and (datetime.now() - self.status_switch_time).total_seconds() > 2:
+            if self.active_monitoring and self.status_switch_time is not None and (datetime.now() - self.status_switch_time).total_seconds() > 5:
                 self.monitor_imu()
                 self.monitor_odom(True)
                 self.monitor_odom(False)
