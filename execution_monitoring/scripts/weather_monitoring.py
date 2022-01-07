@@ -303,12 +303,13 @@ class WeatherMonitoring:
         return True
 
     def monitor_weather_data(self, weather_data):
+        # TODO: activate things again..
         rain_ok = self.monitor_rain_volume(weather_data.rain_vol)
-        snow_ok = self.monitor_snow_volume(weather_data.snow_vol)
+        snow_ok = True #self.monitor_snow_volume(weather_data.snow_vol)
         wind_ok = self.monitor_wind(weather_data.wind_gust_speed, weather_data.wind_speed)
         # TODO: reactivate again
         temp_ok = True# self.monitor_temperature(weather_data.min_temp, weather_data.max_temp, weather_data.temp)
-        code_ok = self.monitor_owm_weather_condition_code(weather_data.owm_weather_condition_code)
+        code_ok = True#self.monitor_owm_weather_condition_code(weather_data.owm_weather_condition_code)
         # TODO: activate again for real tests..
         sun_ok = True #self.monitor_sunrise_and_sunset(weather_data.sunrise_time_sec, weather_data.sunset_time_sec)
         if not self.active_monitoring and rain_ok and snow_ok and wind_ok and temp_ok and code_ok and sun_ok:

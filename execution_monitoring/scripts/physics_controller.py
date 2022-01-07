@@ -8,7 +8,7 @@ from std_srvs.srv import Empty
 from actionlib_msgs.msg import GoalStatusArray, GoalStatus
 import actionlib
 from arox_navigation_flex.msg import drive_to_goalAction
-from execution_monitoring import util
+from execution_monitoring import config
 from sensor_msgs.msg import Imu
 from tf.transformations import euler_from_quaternion
 import numpy as np
@@ -86,14 +86,15 @@ class PhysicsController:
             self.mbf_status = curr
 
     def moving_although_standing_still_odom(self):
+        rospy.sleep(config.STATUS_SWITCH_DELAY + 1)
         rospy.loginfo("PHYS CON: sim movement without cause (cmd_vel)..")
-        rospy.sleep(2)
         self.sim_moving_although_standing_still_odom = False
         twist = Twist()
         twist.linear.x = 3.0
         self.cmd_vel_pub.publish(twist)
 
     def moving_although_standing_still_imu(self):
+        rospy.sleep(config.STATUS_SWITCH_DELAY + 1)
         rospy.loginfo("PHYS CON: sim movement without cause (gravity)..")
         self.sim_moving_although_standing_still_imu = False
 
@@ -150,6 +151,7 @@ class PhysicsController:
         # necessary to start movement
         rospy.sleep(0.05)
 
+        # TODO: time or force should be reduced.. moved too far away..
         y = 8.0
         self.change_gravity(x, y, z)
         rospy.loginfo("changing gravity in y direction to: %s", y)
