@@ -128,18 +128,22 @@ class LocalizationMonitoring:
         vector_y = y1 - y2
         
         dist = math.sqrt((vector_x) ** 2 + (vector_y) ** 2)
+
         if (self.mbf_status == GoalStatus.ACTIVE and dist > config.DIST_THRESH_FOR_INTERPOLATION_BETWEEN_GNSS_POS) or self.mbf_status == GoalStatus.SUCCEEDED:
+
+            rospy.loginfo("yaw mon dist: %s", dist)
             angle = math.atan2(vector_y, vector_x)
             quaternion = tf.transformations.quaternion_from_euler(0, 0, angle)
+            rospy.loginfo("diff: %s", abs(abs(quaternion[2]) - abs(self.imu_latest.orientation.z)))
             gnss_orientation_z = quaternion[2]
             contingency = False
 
-            if abs(gnss_orientation_z) - abs(self.imu_latest.orientation.z) > config.Z_COMP_DIFF_UB:
+            if abs(abs(gnss_orientation_z) - abs(self.imu_latest.orientation.z)) > config.Z_COMP_DIFF_UB:
                 rospy.loginfo("CONTINGENCY -- yaw diff between GNSS interpolation and IMU too high")
                 self.contingency_pub.publish(config.LOCALIZATION_FAILURE_FOUR)
                 self.active_monitoring = False
                 contingency = True
-            if abs(gnss_orientation_z) - abs(self.odom_filtered_data.pose.pose.orientation.z) > config.Z_COMP_DIFF_UB:
+            if abs(abs(gnss_orientation_z) - abs(self.odom_filtered_data.pose.pose.orientation.z)) > config.Z_COMP_DIFF_UB:
                 rospy.loginfo("CONTINGENCY -- yaw diff between GNSS interpolation and filtered odometry too high")
                 self.contingency_pub.publish(config.LOCALIZATION_FAILURE_FIVE)
                 self.active_monitoring = False
