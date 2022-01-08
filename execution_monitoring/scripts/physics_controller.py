@@ -8,7 +8,7 @@ from std_srvs.srv import Empty
 from actionlib_msgs.msg import GoalStatusArray, GoalStatus
 import actionlib
 from arox_navigation_flex.msg import drive_to_goalAction
-from execution_monitoring import config
+from execution_monitoring import config, util
 from sensor_msgs.msg import Imu
 from tf.transformations import euler_from_quaternion
 import numpy as np
@@ -25,7 +25,6 @@ class PhysicsController:
         self.sim_moving_although_standing_still_odom = False
         self.sim_yaw_divergence = False
         self.pose_list = None
-        self.sim_when_passive = False
 
         self.unpause = rospy.ServiceProxy('/gazebo/unpause_physics', Empty)
         self.pause = rospy.ServiceProxy('/gazebo/pause_physics', Empty)
@@ -62,18 +61,12 @@ class PhysicsController:
         if len(mbf_status.status_list) > 0:
             curr = mbf_status.status_list[-1].status
 
-            if curr == GoalStatus.ACTIVE and self.mbf_status != curr:
-                # starting to move -> initiate simulation of low gravity -> spinning wheels
-                if self.sim_wheel_movement_without_pos_change:
-                    self.wheel_movement_without_pos_change()
-
-            elif curr == GoalStatus.ACTIVE:
+            if curr == GoalStatus.ACTIVE:
                 if self.sim_yaw_divergence:
-                    self.sim_when_passive = True
-
-            elif curr == GoalStatus.SUCCEEDED and self.sim_when_passive:
-                self.sim_when_passive = False
-                self.yaw_divergence()
+                    self.yaw_divergence()
+                # starting to move -> initiate simulation of low gravity -> spinning wheels
+                if self.mbf_status != curr and self.sim_wheel_movement_without_pos_change:
+                    self.wheel_movement_without_pos_change()
 
             elif curr != GoalStatus.ACTIVE:
                 if self.sim_moving_although_standing_still_imu:
@@ -109,23 +102,26 @@ class PhysicsController:
         x = y = 0.0
         z = -9.81
         self.change_gravity(x, y, z)
-        rospy.loginfo("changing gravity back to normal")
+        rospy.loginfo("changing gravity back to normal..")
 
     def yaw_divergence(self):
         rospy.loginfo("PHYS CON: yaw divergence sim..")
-        # rospy.sleep(0.1)
+        self.sim_yaw_divergence = False
 
-        if self.pose_list is not None:
+        # if self.pose_list is not None:
             
-            yaw_deg = self.pose_list[2]
-            if yaw_deg + 180 > 180:
-                yaw_deg = -180 + ((yaw_deg + 180) % 180)
-            else:
-                yaw_deg += 180
+        #     yaw_deg = self.pose_list[2]
+        #     if yaw_deg + 180 > 180:
+        #         yaw_deg = -180 + ((yaw_deg + 180) % 180)
+        #     else:
+        #         yaw_deg += 180
 
-            twist = Twist()
+        twist = Twist()
+
+        for _ in range(100):
             twist.angular.z = np.pi / 2
             self.cmd_vel_pub.publish(twist)
+            rospy.sleep(0.01)
             
             # action_goal = util.create_dtg_goal(self.pose_list, math.radians(yaw_deg))
             # self.drive_to_goal_client.wait_for_server()
@@ -155,7 +151,7 @@ class PhysicsController:
         y = 8.0
         self.change_gravity(x, y, z)
         rospy.loginfo("changing gravity in y direction to: %s", y)
-        rospy.sleep(2)
+        rospy.sleep(1)
 
         y = 0.0
         self.change_gravity(x, y, z)
