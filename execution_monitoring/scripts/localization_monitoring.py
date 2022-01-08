@@ -128,7 +128,7 @@ class LocalizationMonitoring:
         vector_y = y1 - y2
         
         dist = math.sqrt((vector_x) ** 2 + (vector_y) ** 2)
-        if dist > config.DIST_THRESH_FOR_INTERPOLATION_BETWEEN_GNSS_POS:
+        if (self.mbf_status == GoalStatus.ACTIVE and dist > config.DIST_THRESH_FOR_INTERPOLATION_BETWEEN_GNSS_POS) or self.mbf_status == GoalStatus.SUCCEEDED:
             angle = math.atan2(vector_y, vector_x)
             quaternion = tf.transformations.quaternion_from_euler(0, 0, angle)
             gnss_orientation_z = quaternion[2]
