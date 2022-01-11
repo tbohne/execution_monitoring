@@ -45,8 +45,8 @@ class LocalizationMonitoring:
         self.initial_GPS = None
         self.initial_odom = None
         self.mbf_status = None
-        self.lin_acc_active_history = collections.deque([], config.COVARIANCE_HISTORY_LENGTH)
-        self.lin_acc_passive_history = collections.deque([], config.COVARIANCE_HISTORY_LENGTH)
+        self.lin_acc_active_history = collections.deque([], config.LIN_ACC_HISTORY_LEN)
+        self.lin_acc_passive_history = collections.deque([], config.LIN_ACC_HISTORY_LEN)
         self.localization_monitoring()
 
     def re_init(self, msg):
@@ -129,7 +129,7 @@ class LocalizationMonitoring:
         
         dist = math.sqrt((vector_x) ** 2 + (vector_y) ** 2)
 
-        if (self.mbf_status == GoalStatus.ACTIVE and dist > config.DIST_THRESH_FOR_INTERPOLATION_BETWEEN_GNSS_POS) or self.mbf_status == GoalStatus.SUCCEEDED:
+        if (self.mbf_status == GoalStatus.ACTIVE and dist > config.DIST_THRESH_FOR_INTERPOLATION_BETWEEN_GNSS_POS):
 
             rospy.loginfo("yaw mon dist: %s", dist)
             angle = math.atan2(vector_y, vector_x)
