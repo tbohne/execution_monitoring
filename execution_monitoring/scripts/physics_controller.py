@@ -108,15 +108,25 @@ class PhysicsController:
         rospy.loginfo("PHYS CON: yaw divergence sim..")
         self.sim_yaw_divergence = False
 
+        if self.pose_list is not None:
+            yaw_deg = self.pose_list[2]
+            if yaw_deg + 50 > 180:
+                yaw_deg = -180 + ((yaw_deg + 50) % 180)
+            else:
+                yaw_deg += 50
+
         z = 0.2
         x = y = 2.5
+
         twist = Twist()
-        for i in range(120):
-            if i == 60:
+        cnt = 0
+        while abs(self.pose_list[2] - yaw_deg) > 5:
+            if cnt == 45:
                 self.change_gravity(x, y, z)
                 rospy.loginfo("changing gravity..")
-            twist.angular.z = np.radians(180)
+            twist.angular.z = np.radians(180) if yaw_deg > 0 else -np.radians(180)
             self.cmd_vel_pub.publish(twist)
+            cnt += 1
             rospy.sleep(0.01)
 
         x = y = 0.0
