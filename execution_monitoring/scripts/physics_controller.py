@@ -108,54 +108,21 @@ class PhysicsController:
         rospy.loginfo("PHYS CON: yaw divergence sim..")
         self.sim_yaw_divergence = False
 
-        # if self.pose_list is not None:
-            
-        #     yaw_deg = self.pose_list[2]
-        #     if yaw_deg + 180 > 180:
-        #         yaw_deg = -180 + ((yaw_deg + 180) % 180)
-        #     else:
-        #         yaw_deg += 180
-
-        # z = -9.81
-
-        # if abs(self.imu_data.linear_acceleration.x) > abs(self.imu_data.linear_acceleration.y):
-        #     y = 3.5
-        #     x = 0.0
-        # else:
-        #     y = 0.0
-        #     x = 3.5
-
-        # self.change_gravity(x, y, z)
-        # rospy.loginfo("changing gravity..")
-
+        z = 0.2
+        x = y = 2.5
         twist = Twist()
-
-        for _ in range(200):
+        for i in range(120):
+            if i == 60:
+                self.change_gravity(x, y, z)
+                rospy.loginfo("changing gravity..")
             twist.angular.z = np.radians(180)
             self.cmd_vel_pub.publish(twist)
             rospy.sleep(0.01)
 
-        # x = y = 0.0
-        # z = -9.81
-        # self.change_gravity(x, y, z)
-        # rospy.loginfo("changing gravity back to normal..")        
-            
-            # action_goal = util.create_dtg_goal(self.pose_list, math.radians(yaw_deg))
-            # self.drive_to_goal_client.wait_for_server()
-
-            # self.drive_to_goal_client.send_goal(action_goal)
-            # rospy.loginfo("goal sent, wait for accomplishment..")
-            # success = self.drive_to_goal_client.wait_for_result()
-
-            # out = self.drive_to_goal_client.get_result()
-            # self.sim_yaw_divergence = False
-
-            # if out.progress > 0:
-            #     rospy.loginfo("driving goal progress: %s", out.progress)
-            #     return False        
-
-            # rospy.loginfo("successfully performed action: %s", success)
-            # return success
+        x = y = 0.0
+        z = -9.81
+        self.change_gravity(x, y, z)
+        rospy.loginfo("changing gravity back to normal..")
 
     def pos_change_without_wheel_movement(self):
         rospy.loginfo("PHYS CON: sim pos change without wheel rotations..")
