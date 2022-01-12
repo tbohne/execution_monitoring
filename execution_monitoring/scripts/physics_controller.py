@@ -120,7 +120,7 @@ class PhysicsController:
 
         twist = Twist()
         cnt = 0
-        while abs(self.pose_list[2] - yaw_deg) > 5:
+        while abs(self.pose_list[2] - yaw_deg) > 10:
             if cnt == 45:
                 self.change_gravity(x, y, z)
                 rospy.loginfo("changing gravity..")
@@ -173,7 +173,12 @@ class PhysicsController:
         z = 0.0
         self.change_gravity(x, y, z)
         rospy.loginfo("changing gravity in z direction to: %s", z)
-        rospy.sleep(1.5)
+        twist = Twist()
+        # amplify wheel rotations in the air
+        twist.linear.x = 1
+        for _ in range(150):
+            self.cmd_vel_pub.publish(twist)
+            rospy.sleep(0.01)
 
         # back to normal
         z = -9.81

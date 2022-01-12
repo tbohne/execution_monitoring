@@ -131,10 +131,10 @@ class LocalizationMonitoring:
 
         if (self.mbf_status == GoalStatus.ACTIVE and dist > config.DIST_THRESH_FOR_INTERPOLATION_BETWEEN_GNSS_POS):
 
-            rospy.loginfo("yaw mon dist: %s", dist)
+            #rospy.loginfo("yaw mon dist: %s", dist)
             angle = math.atan2(vector_y, vector_x)
             quaternion = tf.transformations.quaternion_from_euler(0, 0, angle)
-            rospy.loginfo("diff: %s", abs(abs(quaternion[2]) - abs(self.imu_latest.orientation.z)))
+            #rospy.loginfo("diff: %s", abs(abs(quaternion[2]) - abs(self.imu_latest.orientation.z)))
             gnss_orientation_z = quaternion[2]
             contingency = False
 
@@ -188,7 +188,7 @@ class LocalizationMonitoring:
                 self.contingency_pub.publish(config.LOCALIZATION_FAILURE_SEVEN)
                 self.active_monitoring = False
 
-            rospy.loginfo("passive, active, total: %s, %s, %s", len(passive_imu_copy), len(active_imu_copy), config.IMU_ENTRIES)
+            #rospy.loginfo("passive, active, total: %s, %s, %s", len(passive_imu_copy), len(active_imu_copy), config.IMU_ENTRIES)
 
             if len(passive_imu_copy) == config.IMU_ENTRIES and len(active_imu_copy) == config.IMU_ENTRIES:
                 entries = int(config.IMU_PERCENTAGE * config.IMU_ENTRIES)
