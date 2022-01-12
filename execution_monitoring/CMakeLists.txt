@@ -176,6 +176,7 @@ catkin_install_python(PROGRAMS
   scripts/localization_monitoring.py
   scripts/gnss_simulator.py
   scripts/os_specific/wifi_monitor.py
+  scripts/experiments.py
   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
 
