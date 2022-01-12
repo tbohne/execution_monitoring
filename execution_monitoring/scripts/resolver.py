@@ -5,6 +5,7 @@ import actionlib
 from arox_navigation_flex.msg import drive_to_goalAction
 from execution_monitoring import config, util
 from geometry_msgs.msg import Twist
+from mbf_msgs.msg import RecoveryAction, RecoveryGoal
 
 
 class FallbackResolver:
@@ -419,10 +420,21 @@ class LocalizationFailureResolver(GeneralFailureResolver):
         twist.linear.x = -3.0
         rate = rospy.Rate(4)
         for _ in range(2):
-            for _ in range(3):
+            for _ in range(4):
                 self.cmd_vel_pub.publish(twist)
                 rate.sleep()
             twist.linear.x = 3.0
+
+        rospy.loginfo("clearing local costmap..")
+        rec_client = actionlib.SimpleActionClient("move_base_flex/recovery", RecoveryAction)
+        rec_client.wait_for_server()
+
+        # concurrency_slot 3
+        clear_local_costmap_goal = RecoveryGoal('clear_costmap', 3)
+        rec_client.send_goal(clear_local_costmap_goal)
+        res = rec_client.wait_for_result()
+        if res:
+            rospy.loginfo("cleared costmap..")
 
         self.problem_resolved = True
 
