@@ -1,8 +1,22 @@
 #!/usr/bin/env python
 import rospy
+from datetime import datetime
+import random
 from std_msgs.msg import String
 from arox_performance_parameters.msg import arox_operational_param
 from arox_performance_parameters.msg import arox_battery_params
+
+FAILURE_TOPICS = ["/toggle_simulated_total_sensor_failure", "/toggle_simulated_empty_ranges", "/toggle_simulated_impermissible_ranges", "/toggle_simulated_scan_repetition",
+    "/toggle_simulated_bad_wifi_link", "/toggle_simulated_bad_wifi_signal", "/toggle_simulated_bad_wifi_bit_rate", "/toggle_simulated_wifi_disconnect", "/toggle_simulated_bad_download",
+    "/toggle_simulated_bad_upload", "/toggle_simulated_timeout_failure", "/set_simulated_good_quality", "/set_simulated_med_quality", "/set_simulated_low_quality",
+    "/set_simulated_unknown_status", "/set_simulated_no_fix", "/set_simulated_no_rtk", "/toggle_simulated_unknown_service", "/toggle_simulated_infeasible_lat_lng",
+    "/toggle_simulated_variance_history_failure", "/toggle_simulated_high_deviation", "/toggle_rain_sim", "/toggle_snow_sim", "/toggle_wind_sim", "/toggle_low_temp_sim",
+    "/toggle_thuderstorm_sim", "/toggle_sunset_sim", "/toggle_simulated_scan_logging_failure", "/wheel_movement_without_pos_change", "/pos_change_without_wheel_movement",
+    "/yaw_divergence", "/moving_although_standing_still_imu", "/moving_although_standing_still_odom"]
+
+# random fail every 60s
+RANDOM_FAIL_FREQUENCY = 5
+SEED = 42
 
 class Experiment:
 
@@ -16,13 +30,14 @@ class Experiment:
         self.operation_time = 0
         self.battery_charge = 0
         self.battery_charging_cycle = 0
+        self.sim_fail_time = datetime.now()
 
         rospy.Subscriber("/contingency_preemption", String, self.contingency_callback)
         rospy.Subscriber("/catastrophe_preemption", String, self.catastrophe_callback)
         rospy.Subscriber("/arox/ongoing_operation", arox_operational_param, self.operation_callback)
         rospy.Subscriber("/arox/battery_param", arox_battery_params, self.battery_callback)
 
-        self.log_info()
+        self.run_experiment()
 
     def operation_callback(self, msg):
         self.operation_mode = msg.operation_mode
@@ -44,18 +59,32 @@ class Experiment:
     def catastrophe_callback(self, msg):
         self.catastrophe_cnt += 1
 
-    def log_info(self):
+    def simulate_random_failure(self):
+        global SEED, FAILURE_TOPICS
+        self.sim_fail_time = datetime.now()
+        rand = random.randint(0, len(FAILURE_TOPICS) - 1)
+        rospy.loginfo("random failure: %s", FAILURE_TOPICS[rand])
+
+    def run_experiment(self):
         while not rospy.is_shutdown():
-            rospy.loginfo("###########################################################")
-            rospy.loginfo("contingency cnt: %s", self.contingency_cnt)
-            rospy.loginfo("catastrophe cnt: %s", self.catastrophe_cnt)
-            rospy.loginfo("operation mode: %s", self.operation_mode)
-            rospy.loginfo("operation time: %s", self.operation_time)
-            rospy.loginfo("total completed goals: %s", self.total_completed_goals + self.completed_goals_current_mission)
-            rospy.loginfo("goals curr mission: %s / %s", self.completed_goals_current_mission, self.total_goals_current_mission)
-            rospy.loginfo("battery charge: %s, cycle: %s", self.battery_charge, self.battery_charging_cycle)
-            rospy.loginfo("###########################################################")
-            rospy.sleep(10)
+
+            if (datetime.now() - self.sim_fail_time).total_seconds() >= RANDOM_FAIL_FREQUENCY:
+                self.simulate_random_failure()
+
+            rospy.loginfo("time since last fail sim: %s", (datetime.now() - self.sim_fail_time).total_seconds())
+            #self.log_info()
+            rospy.sleep(1)
+
+    def log_info(self):
+        rospy.loginfo("###########################################################")
+        rospy.loginfo("contingency cnt: %s", self.contingency_cnt)
+        rospy.loginfo("catastrophe cnt: %s", self.catastrophe_cnt)
+        rospy.loginfo("operation mode: %s", self.operation_mode)
+        rospy.loginfo("operation time: %s", self.operation_time)
+        rospy.loginfo("total completed goals: %s", self.total_completed_goals + self.completed_goals_current_mission)
+        rospy.loginfo("goals curr mission: %s / %s", self.completed_goals_current_mission, self.total_goals_current_mission)
+        rospy.loginfo("battery charge: %s, cycle: %s", self.battery_charge, self.battery_charging_cycle)
+        rospy.loginfo("###########################################################")    
 
 def node():
     rospy.init_node('experiments')

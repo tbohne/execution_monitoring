@@ -21,7 +21,7 @@ class Idle(smach.State):
         self.mission_name_pub = rospy.Publisher('/mission_name', String, queue_size=1)
 
     @staticmethod
-    def get_plan():        
+    def get_plan():
         try:
             rospy.wait_for_service('arox_planner/get_plan', timeout=5)
             res = rospy.ServiceProxy('arox_planner/get_plan', get_plan)()
