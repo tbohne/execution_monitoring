@@ -15,7 +15,7 @@ FAILURE_TOPICS = ["/toggle_simulated_total_sensor_failure", "/toggle_simulated_e
     "/yaw_divergence", "/moving_although_standing_still_imu", "/moving_although_standing_still_odom"]
 
 # random fail every 60s
-RANDOM_FAIL_FREQUENCY = 5
+RANDOM_FAIL_FREQUENCY = 60
 SEED = 42
 
 class Experiment:
@@ -63,7 +63,12 @@ class Experiment:
         global SEED, FAILURE_TOPICS
         self.sim_fail_time = datetime.now()
         rand = random.randint(0, len(FAILURE_TOPICS) - 1)
-        rospy.loginfo("random failure: %s", FAILURE_TOPICS[rand])
+        random_topic = FAILURE_TOPICS[rand]
+        rospy.loginfo("init random failure: %s", random_topic)
+        pub = rospy.Publisher(random_topic, String, queue_size=1)
+        # needs a moment to init the publisher
+        rospy.sleep(3)
+        pub.publish("sim fail")
 
     def run_experiment(self):
         while not rospy.is_shutdown():
