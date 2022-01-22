@@ -177,6 +177,7 @@ catkin_install_python(PROGRAMS
   scripts/gnss_simulator.py
   scripts/os_specific/wifi_monitor.py
   scripts/experiments.py
+  scripts/plan_deployment_monitoring.py
   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
 
