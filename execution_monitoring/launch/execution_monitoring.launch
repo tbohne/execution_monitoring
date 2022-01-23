@@ -2,6 +2,7 @@
 
 <launch>
     <!-- <param name="/use_sim_time" value="true" /> -->
+    <include file="$(find plan_generation)/launch/plan_generation.launch" />
     <node pkg="execution_monitoring" type="high_level_smach.py" name="high_level_smach" output="screen" />
     <node pkg="execution_monitoring" type="dummy_scanner.py" name="dummy_scanner" output="screen" />
     <node pkg="execution_monitoring" type="sensor_monitoring.py" name="sensor_monitoring" output="screen" />
@@ -17,5 +18,4 @@
     <node pkg="execution_monitoring" type="physics_controller.py" name="physics_controller" output="screen" />
     <node pkg="execution_monitoring" type="plan_deployment_monitoring.py" name="plan_deployment_monitoring" output="screen" />
     <node pkg="arox_engine" type="arox_battery.py" name="arox_battery" output="screen" />
-    <include file="$(find plan_generation)/launch/plan_generation.launch" />
 </launch>
