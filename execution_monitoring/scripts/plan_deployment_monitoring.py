@@ -32,18 +32,20 @@ class PlanDeploymentMonitor:
         rospy.loginfo("state of operation: %s", operation_state)
         self.time_since_last_op = datetime.now()
     
-    def plan_fail_callback(self, plan_fail_code):
-        if plan_fail_code == 0:
-            rospy.loginfo("plan retrieval service timeout: %s", plan_fail_code)
+    def plan_fail_callback(self, msg):
+        if msg.data == 0:
+            rospy.loginfo("plan retrieval service timeout: %s", msg.data)
+            rospy.sleep(1) # need a delay for some reason
             self.contingency_pub.publish(config.PLAN_DEPLOYMENT_FAILURE_TWO)
-        elif plan_fail_code == 1:
-            rospy.loginfo("empty plan: %s", plan_fail_code)
+        elif msg.data == 1:
+            rospy.loginfo("empty plan: %s", msg.data)
+            rospy.sleep(1) # need a delay for some reason
             self.contingency_pub.publish(config.PLAN_DEPLOYMENT_FAILURE_THREE)
-        elif plan_fail_code == 2:
-            rospy.loginfo("corrupted / infeasible plan: %s", plan_fail_code)
+        elif msg.data == 2:
+            rospy.loginfo("corrupted / infeasible plan: %s", msg.data)
             self.contingency_pub.publish(config.PLAN_DEPLOYMENT_FAILURE_FOUR)
         else:
-            rospy.loginfo("unknown plan fail code: %s", plan_fail_code)
+            rospy.loginfo("unknown plan fail code: %s", msg.data)
             self.contingency_pub.publish(config.PLAN_DEPLOYMENT_FAILURE_FIVE)
 
 

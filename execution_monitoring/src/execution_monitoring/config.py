@@ -13,8 +13,8 @@ MBF_PAT_EXCEEDED = 103
 #############################################################################
 ######################## PLAN DEPLOYMENT MONITORING #########################
 #############################################################################
-MON_FREQ = 1800
-IDLE_THRESH = 1800
+MON_FREQ = 10
+IDLE_THRESH = 30
 
 PLAN_DEPLOYMENT_FAILURE_ONE = "robot idle for an extended period of time"
 PLAN_DEPLOYMENT_FAILURE_TWO = "plan retrieval service unavailable"
