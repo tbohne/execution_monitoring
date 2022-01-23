@@ -51,17 +51,20 @@ class Idle(smach.State):
 
         rospy.loginfo("waiting for available plan from plan provider..")
         plan = self.get_plan()
+
         if plan is not None:
             rospy.loginfo("received plan..")
 
             if len(plan) == 0:
                 rospy.loginfo("empty plan..")
                 self.exception_pub.publish(config.EMPTY_PLAN_CODE)
+                rospy.sleep(2)
                 return "waiting_for_plan"
             for i in range(len(plan)):
                 if plan[i].name not in config.FEASIBLE_ACTIONS:
                     rospy.loginfo("infeasible action: %s", plan[i].name)
                     self.exception_pub.publish(config.INFEASIBLE_PLAN_CODE)
+                    rospy.sleep(2)
                     return "waiting_for_plan"
 
             userdata.output_plan = plan
