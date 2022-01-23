@@ -438,6 +438,63 @@ class LocalizationFailureResolver(GeneralFailureResolver):
 
         self.problem_resolved = True
 
+class PlanDeploymentFailureResolver(GeneralFailureResolver):
+
+    def __init__(self):
+        super(PlanDeploymentFailureResolver, self).__init__()
+        rospy.Subscriber('/resolve_plan_deployment_failure', String, self.resolve_callback, queue_size=1)
+        self.success_pub = rospy.Publisher('/resolve_plan_deployment_failure_success', Bool, queue_size=1)
+
+    def resolve_callback(self, msg):
+        rospy.loginfo("launch plan deployment failure resolver..")
+        rospy.loginfo("type of plan deployment failure: %s", msg.data)
+        self.problem_resolved = False
+
+        # different types of resolution are required based on the type of issue
+        if msg.data == config.PLAN_DEPLOYMENT_FAILURE_ONE:
+            self.resolve_type_one_failure(config.PLAN_DEPLOYMENT_FAILURE_ONE)
+        elif msg.data == config.PLAN_DEPLOYMENT_FAILURE_TWO:
+            self.resolve_type_two_failure(config.PLAN_DEPLOYMENT_FAILURE_TWO)
+        elif msg.data == config.PLAN_DEPLOYMENT_FAILURE_THREE:
+            self.resolve_type_three_failure(config.PLAN_DEPLOYMENT_FAILURE_THREE)
+        elif msg.data == config.PLAN_DEPLOYMENT_FAILURE_FOUR:
+            self.resolve_type_four_failure(config.PLAN_DEPLOYMENT_FAILURE_FOUR)
+        elif msg.data == config.PLAN_DEPLOYMENT_FAILURE_FIVE:
+            self.resolve_type_five_failure(config.PLAN_DEPLOYMENT_FAILURE_FIVE)
+
+        if self.problem_resolved:
+            self.success_pub.publish(True)
+
+    def resolve_type_one_failure(self, msg):
+        rospy.loginfo("resolve type one failure..")
+        self.fallback_pub.publish(msg)
+        while not self.problem_resolved:
+            rospy.sleep(5)
+
+    def resolve_type_two_failure(self, msg):
+        rospy.loginfo("resolve type two failure..")
+        self.fallback_pub.publish(msg)
+        while not self.problem_resolved:
+            rospy.sleep(5)
+
+    def resolve_type_three_failure(self, msg):
+        rospy.loginfo("resolve type three failure..")
+        self.fallback_pub.publish(msg)
+        while not self.problem_resolved:
+            rospy.sleep(5)
+
+    def resolve_type_four_failure(self, msg):
+        rospy.loginfo("resolve type four failure..")
+        self.fallback_pub.publish(msg)
+        while not self.problem_resolved:
+            rospy.sleep(5)
+
+    def resolve_type_five_failure(self, msg):
+        rospy.loginfo("resolve type five failure..")
+        self.fallback_pub.publish(msg)
+        while not self.problem_resolved:
+            rospy.sleep(5)
+
 def node():
     rospy.init_node('failure_resolver')
     rospy.wait_for_message('SMACH_runnning', String)
@@ -447,6 +504,7 @@ def node():
     DataManagementFailureResolver()
     FallbackResolver()
     LocalizationFailureResolver()
+    PlanDeploymentFailureResolver()
     rospy.spin()
 
 if __name__ == '__main__':
