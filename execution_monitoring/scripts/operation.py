@@ -7,7 +7,7 @@ from arox_navigation_flex.msg import drive_to_goalAction
 from execution_monitoring.msg import ScanAction, ScanGoal
 from arox_performance_parameters.msg import arox_operational_param
 from arox_performance_parameters.msg import arox_battery_params
-from std_msgs.msg import String
+from std_msgs.msg import String, UInt16
 from datetime import datetime
 from execution_monitoring import config, util
 
@@ -19,19 +19,18 @@ class Idle(smach.State):
                              output_keys=['output_plan'])
         
         self.mission_name_pub = rospy.Publisher('/mission_name', String, queue_size=1)
+        self.exception_pub = rospy.Publisher('/plan_retrieval_failure', UInt16, queue_size=1)
 
-    @staticmethod
-    def get_plan():
+    def get_plan(self):
         try:
-            rospy.wait_for_service('arox_planner/get_plan', timeout=5)
+            rospy.wait_for_service('arox_planner/get_plan', timeout=10)
             res = rospy.ServiceProxy('arox_planner/get_plan', get_plan)()
             if res.succeeded:
                 return res.generated_plan.actions
             return None
-        except rospy.ServiceException as e:
-            print("service call failed: %s", e)
-            return None
-        except rospy.ROSException:
+        except rospy.ROSException as e:
+            rospy.loginfo("exception during plan retrieval: %s", e)
+            self.exception_pub.publish(config.PLAN_RETRIEVAL_TIMEOUT_CODE)
             return None
 
     def execute(self, userdata):
@@ -44,8 +43,8 @@ class Idle(smach.State):
 
         # if LTA episode ends: return "end_of_episode_signal", e.g. via topic
 
-        rospy.loginfo("input_plan: %s", userdata.input_plan)
         if len(userdata.input_plan) > 0:
+            rospy.loginfo("input_plan: %s", userdata.input_plan)
             rospy.loginfo("continuing preempted plan..")
             userdata.output_plan = userdata.input_plan
             return "plan_received"
@@ -54,10 +53,20 @@ class Idle(smach.State):
         plan = self.get_plan()
         if plan is not None:
             rospy.loginfo("received plan..")
+
+            if len(plan) == 0:
+                self.exception_pub.publish(config.EMPTY_PLAN_CODE)
+
+            for i in range(len(plan)):
+                if plan[i].name not in config.FEASIBLE_ACTIONS:
+                    rospy.loginfo("infeasible action: %s", plan[i].name)
+                    self.exception_pub.publish(config.INFEASIBLE_PLAN_CODE)
+
             userdata.output_plan = plan
             self.mission_name_pub.publish(datetime.fromtimestamp(rospy.get_time()).strftime("%m_%d_%Y"))
             return "plan_received"
         else:
+            rospy.sleep(10)
             rospy.loginfo("waiting for plan..")
             return "waiting_for_plan"
 
@@ -185,6 +194,7 @@ class ExecutePlan(smach.State):
 
 
 class OperationStateMachine(smach.StateMachine):
+
     def __init__(self):
         super(OperationStateMachine, self).__init__(
             outcomes=['minor_complication', 'critical_complication', 'end_of_episode', 'preempted'],
