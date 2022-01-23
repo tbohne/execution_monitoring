@@ -74,6 +74,11 @@
     - **IMU acceleration although no active nav goal:** `rostopic pub -1 /moving_although_standing_still_imu std_msgs/String fail`
         - *note: only working if both the active and passive history is complete (e.g. 1500)*
     - **odometry twist although no active nav goal:** `rostopic pub -1 /moving_although_standing_still_odom std_msgs/String fail`
+- **plan deployment failures**
+    - **extended idle time:** `rostopic pub -1 /sim_extended_idle_time std_msgs/String fail`
+    - **unavailable plan service:** `rostopic pub -1 /toggle_unavailable_plan_service std_msgs/String fail`
+    - **empty plan:** `rostopic pub -1 /sim_empty_plan std_msgs/String fail`
+    - **infeasible plan:** `rostopic pub -1 /sim_infeasible_plan std_msgs/String fail`
 
 ## Communication with Human Operator
 
