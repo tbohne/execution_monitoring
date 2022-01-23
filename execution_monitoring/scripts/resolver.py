@@ -5,6 +5,7 @@ import actionlib
 from arox_navigation_flex.msg import drive_to_goalAction
 from execution_monitoring import config, util
 from geometry_msgs.msg import Twist
+from arox_performance_parameters.msg import arox_operational_param
 from mbf_msgs.msg import RecoveryAction, RecoveryGoal
 
 
@@ -443,7 +444,15 @@ class PlanDeploymentFailureResolver(GeneralFailureResolver):
     def __init__(self):
         super(PlanDeploymentFailureResolver, self).__init__()
         rospy.Subscriber('/resolve_plan_deployment_failure', String, self.resolve_callback, queue_size=1)
+        rospy.Subscriber('arox/ongoing_operation', arox_operational_param, self.operation_callback, queue_size=1)
         self.success_pub = rospy.Publisher('/resolve_plan_deployment_failure_success', Bool, queue_size=1)
+
+        self.infeasible_plan_cnt = 0
+        self.empty_plan_cnt = 0
+
+    def operation_callback(self, msg):
+        # the repetition of the plan retrieval attempt was obviously successful
+        self.infeasible_plan_cnt = self.empty_plan_cnt = 0
 
     def resolve_callback(self, msg):
         rospy.loginfo("launch plan deployment failure resolver..")
@@ -479,15 +488,29 @@ class PlanDeploymentFailureResolver(GeneralFailureResolver):
 
     def resolve_type_three_failure(self, msg):
         rospy.loginfo("resolve type three failure..")
-        self.fallback_pub.publish(msg)
-        while not self.problem_resolved:
-            rospy.sleep(5)
+        if self.empty_plan_cnt == 0:
+            rospy.loginfo("resolve by trying again..")
+            self.empty_plan_cnt += 1
+            self.problem_resolved = True
+        else:
+            rospy.loginfo("plan retrieval failed repeatedly..")
+            self.empty_plan_cnt = 0
+            self.fallback_pub.publish(msg)
+            while not self.problem_resolved:
+                rospy.sleep(5)
 
     def resolve_type_four_failure(self, msg):
         rospy.loginfo("resolve type four failure..")
-        self.fallback_pub.publish(msg)
-        while not self.problem_resolved:
-            rospy.sleep(5)
+        if self.infeasible_plan_cnt == 0:
+            rospy.loginfo("resolve by trying again..")
+            self.infeasible_plan_cnt += 1
+            self.problem_resolved = True
+        else:
+            rospy.loginfo("plan retrieval failed repeatedly..")
+            self.infeasible_plan_cnt = 0
+            self.fallback_pub.publish(msg)
+            while not self.problem_resolved:
+                rospy.sleep(5)
 
     def resolve_type_five_failure(self, msg):
         rospy.loginfo("resolve type five failure..")
