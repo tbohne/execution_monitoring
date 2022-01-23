@@ -11,6 +11,19 @@ class GNSSSimulator:
     """
 
     def __init__(self):
+        self.sim_timeout = False
+        self.sim_good_quality = True
+        self.sim_med_quality = False
+        self.sim_low_quality = False
+        self.sim_unknown_status = False
+        self.sim_no_fix = False
+        self.sim_no_rtk = False
+        self.sim_unknown_service = False
+        self.sim_infeasible_lat_lng = False
+        self.sim_variance_history_failure = False
+        self.sim_high_dev = False
+        self.sim_teleport = False
+
         # subscribe to topic of quadrotor_gps_sim (libhector_gazebo_ros_gps.so)
         #    -> gazebo plugin that simulates GPS data
         self.gnss_sub = rospy.Subscriber('/fix_plugin', NavSatFix, self.sim_gps_callback, queue_size=1)
@@ -27,18 +40,6 @@ class GNSSSimulator:
         rospy.Subscriber("/toggle_simulated_variance_history_failure", String, self.toggle_var_history_failure_callback, queue_size=1)
         rospy.Subscriber("/toggle_simulated_high_deviation", String, self.toggle_high_dev_callback, queue_size=1)
         rospy.Subscriber("/toggle_simulated_teleport", String, self.toggle_sim_teleport_callback, queue_size=1)
-        self.sim_timeout = False
-        self.sim_good_quality = True
-        self.sim_med_quality = False
-        self.sim_low_quality = False
-        self.sim_unknown_status = False
-        self.sim_no_fix = False
-        self.sim_no_rtk = False
-        self.sim_unknown_service = False
-        self.sim_infeasible_lat_lng = False
-        self.sim_variance_history_failure = False
-        self.sim_high_dev = False
-        self.sim_teleport = False
 
         self.gps_publisher = rospy.Publisher('/fix', NavSatFix, queue_size=1)
 
