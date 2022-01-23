@@ -20,6 +20,7 @@ class Contingency(smach.State):
         rospy.Subscriber('/resolve_data_management_failure_success', Bool, self.resolve_failure_success_callback, queue_size=1)
         rospy.Subscriber('/resolve_weather_failure_success', Bool, self.resolve_failure_success_callback, queue_size=1)
         rospy.Subscriber('/resolve_localization_failure_success', Bool, self.resolve_failure_success_callback, queue_size=1)
+        rospy.Subscriber('/resolve_plan_deployment_failure_success', Bool, self.resolve_failure_success_callback, queue_size=1)
         self.sensor_failure_resolver_pub = rospy.Publisher('/resolve_sensor_failure', String, queue_size=1)
         self.wifi_failure_resolver_pub = rospy.Publisher('/resolve_wifi_failure', String, queue_size=1)
         self.internet_failure_resolver_pub = rospy.Publisher('/resolve_internet_failure', String, queue_size=1)
@@ -27,6 +28,7 @@ class Contingency(smach.State):
         self.data_management_failure_resolver_pub = rospy.Publisher('/resolve_data_management_failure', String, queue_size=1)
         self.weather_failure_resolver_pub = rospy.Publisher('/resolve_weather_failure', String, queue_size=1)
         self.localization_failure_resolver_pub = rospy.Publisher('/resolve_localization_failure', String, queue_size=1)
+        self.plan_deployment_failure_resolver_pub = rospy.Publisher('/resolve_plan_deployment_failure', String, queue_size=1)
 
     def interrupt_reason_callback(self, reason):
         self.interrupt_reason = reason.data
@@ -143,6 +145,16 @@ class Contingency(smach.State):
             self.localization_failure_resolver_pub.publish(config.LOCALIZATION_FAILURE_TWELVE)
         elif self.interrupt_reason == config.LOCALIZATION_FAILURE_THIRTEEN:
             self.localization_failure_resolver_pub.publish(config.LOCALIZATION_FAILURE_THIRTEEN)
+        elif self.interrupt_reason == config.PLAN_DEPLOYMENT_FAILURE_ONE:
+            self.plan_deployment_failure_resolver_pub.publish(config.PLAN_DEPLOYMENT_FAILURE_ONE)
+        elif self.interrupt_reason == config.PLAN_DEPLOYMENT_FAILURE_TWO:
+            self.plan_deployment_failure_resolver_pub.publish(config.PLAN_DEPLOYMENT_FAILURE_TWO)
+        elif self.interrupt_reason == config.PLAN_DEPLOYMENT_FAILURE_THREE:
+            self.plan_deployment_failure_resolver_pub.publish(config.PLAN_DEPLOYMENT_FAILURE_THREE)
+        elif self.interrupt_reason == config.PLAN_DEPLOYMENT_FAILURE_FOUR:
+            self.plan_deployment_failure_resolver_pub.publish(config.PLAN_DEPLOYMENT_FAILURE_FOUR)
+        elif self.interrupt_reason == config.PLAN_DEPLOYMENT_FAILURE_FIVE:
+            self.plan_deployment_failure_resolver_pub.publish(config.PLAN_DEPLOYMENT_FAILURE_FIVE)
         else:
             rospy.loginfo("unkonwn interrupt reason: %s", self.interrupt_reason)
 
