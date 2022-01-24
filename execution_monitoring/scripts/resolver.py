@@ -446,9 +446,11 @@ class PlanDeploymentFailureResolver(GeneralFailureResolver):
         rospy.Subscriber('/resolve_plan_deployment_failure', String, self.resolve_callback, queue_size=1)
         rospy.Subscriber('arox/ongoing_operation', arox_operational_param, self.operation_callback, queue_size=1)
         self.success_pub = rospy.Publisher('/resolve_plan_deployment_failure_success', Bool, queue_size=1)
+        self.activate_plan_service_pub = rospy.Publisher('/activate_plan_service', String, queue_size=1)
 
         self.infeasible_plan_cnt = 0
         self.empty_plan_cnt = 0
+        self.unavailable_service_cnt = 0
 
     def operation_callback(self, msg):
         # the repetition of the plan retrieval attempt was obviously successful
@@ -482,9 +484,17 @@ class PlanDeploymentFailureResolver(GeneralFailureResolver):
 
     def resolve_type_two_failure(self, msg):
         rospy.loginfo("resolve type two failure..")
-        self.fallback_pub.publish(msg)
-        while not self.problem_resolved:
-            rospy.sleep(5)
+        if self.unavailable_service_cnt == 0:
+            rospy.loginfo("resolve by trying to bring up the service..")
+            self.activate_plan_service_pub.publish("bring up service")
+            self.unavailable_service_cnt += 1
+            self.problem_resolved = True
+        else:
+            rospy.loginfo("plan generation service repeatedly unavailable..")
+            self.unavailable_service_cnt = 0
+            self.fallback_pub.publish(msg)
+            while not self.problem_resolved:
+                rospy.sleep(5)
 
     def resolve_type_three_failure(self, msg):
         rospy.loginfo("resolve type three failure..")

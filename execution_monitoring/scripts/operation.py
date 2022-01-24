@@ -31,6 +31,7 @@ class Idle(smach.State):
         except rospy.ROSException as e:
             rospy.loginfo("exception during plan retrieval: %s", e)
             self.exception_pub.publish(config.PLAN_RETRIEVAL_TIMEOUT_CODE)
+            rospy.sleep(2)
             return None
 
     def execute(self, userdata):

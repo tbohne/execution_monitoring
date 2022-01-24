@@ -89,7 +89,7 @@ class Experiment:
         rospy.loginfo("total completed goals: %s", self.total_completed_goals + self.completed_goals_current_mission)
         rospy.loginfo("goals curr mission: %s / %s", self.completed_goals_current_mission, self.total_goals_current_mission)
         rospy.loginfo("battery charge: %s, cycle: %s", self.battery_charge, self.battery_charging_cycle)
-        rospy.loginfo("###########################################################")    
+        rospy.loginfo("###########################################################")
 
 def node():
     rospy.init_node('experiments')

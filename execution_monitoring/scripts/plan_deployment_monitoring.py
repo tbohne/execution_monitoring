@@ -13,7 +13,6 @@ class PlanDeploymentMonitor:
         rospy.Subscriber('/plan_retrieval_failure', UInt16, self.plan_fail_callback, queue_size=1)
 
         self.contingency_pub = rospy.Publisher('/contingency_preemption', String, queue_size=1)
-        self.catastrophe_pub = rospy.Publisher('/catastrophe_preemption', String, queue_size=1)
         self.robot_info_pub = rospy.Publisher('/robot_info', String, queue_size=1)
 
         self.last_op_time = datetime.now()
@@ -27,7 +26,7 @@ class PlanDeploymentMonitor:
                 # extended idle time -- worth an operator notification
                 self.robot_info_pub.publish(config.PLAN_DEPLOYMENT_FAILURE_ONE)
             rospy.sleep(config.MON_FREQ)
-    
+
     def operation_callback(self, operation_state):
         rospy.loginfo("state of operation: %s", operation_state)
         self.time_since_last_op = datetime.now()
