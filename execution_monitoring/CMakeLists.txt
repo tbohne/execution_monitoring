@@ -178,6 +178,7 @@ catkin_install_python(PROGRAMS
   scripts/os_specific/wifi_monitor.py
   scripts/experiments.py
   scripts/plan_deployment_monitoring.py
+  scripts/navigation_monitoring.py
   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
 
