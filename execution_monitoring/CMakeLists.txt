@@ -179,6 +179,7 @@ catkin_install_python(PROGRAMS
   scripts/experiments.py
   scripts/plan_deployment_monitoring.py
   scripts/navigation_monitoring.py
+  scripts/obstacle_spawner.py
   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
 

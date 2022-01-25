@@ -26,8 +26,10 @@ class NavigationMonitoring:
             self.mbf_status = mbf_status.status_list[-1].status
             if self.mbf_status != self.status_before:
                 if self.status_before == config.GOAL_STATUS_ACTIVE and self.mbf_status == config.GOAL_STATUS_ABORTED:
+                    # transition from ACTIVE to ABORTED -> recovery
                     self.recovery_cnt += 1
                 elif self.mbf_status == config.GOAL_STATUS_SUCCEEDED:
+                    # SUCCESS resets recovery counter
                     self.recovery_cnt = 0    
             self.status_before = self.mbf_status
 
