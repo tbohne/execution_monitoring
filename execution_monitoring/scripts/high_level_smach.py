@@ -21,6 +21,7 @@ class Contingency(smach.State):
         rospy.Subscriber('/resolve_weather_failure_success', Bool, self.resolve_failure_success_callback, queue_size=1)
         rospy.Subscriber('/resolve_localization_failure_success', Bool, self.resolve_failure_success_callback, queue_size=1)
         rospy.Subscriber('/resolve_plan_deployment_failure_success', Bool, self.resolve_failure_success_callback, queue_size=1)
+        rospy.Subscriber('/resolve_navigation_failure_success', Bool, self.resolve_failure_success_callback, queue_size=1)
         self.sensor_failure_resolver_pub = rospy.Publisher('/resolve_sensor_failure', String, queue_size=1)
         self.wifi_failure_resolver_pub = rospy.Publisher('/resolve_wifi_failure', String, queue_size=1)
         self.internet_failure_resolver_pub = rospy.Publisher('/resolve_internet_failure', String, queue_size=1)
@@ -29,6 +30,7 @@ class Contingency(smach.State):
         self.weather_failure_resolver_pub = rospy.Publisher('/resolve_weather_failure', String, queue_size=1)
         self.localization_failure_resolver_pub = rospy.Publisher('/resolve_localization_failure', String, queue_size=1)
         self.plan_deployment_failure_resolver_pub = rospy.Publisher('/resolve_plan_deployment_failure', String, queue_size=1)
+        self.navigation_failure_resolver_pub = rospy.Publisher('/resolve_navigation_failure', String, queue_size=1)
 
     def interrupt_reason_callback(self, reason):
         self.interrupt_reason = reason.data
@@ -155,6 +157,8 @@ class Contingency(smach.State):
             self.plan_deployment_failure_resolver_pub.publish(config.PLAN_DEPLOYMENT_FAILURE_FOUR)
         elif self.interrupt_reason == config.PLAN_DEPLOYMENT_FAILURE_FIVE:
             self.plan_deployment_failure_resolver_pub.publish(config.PLAN_DEPLOYMENT_FAILURE_FIVE)
+        elif self.interrupt_reason == config.NAV_FAILURE_ONE:
+            self.navigation_failure_resolver_pub.publish(config.NAV_FAILURE_ONE)
         else:
             rospy.loginfo("unkonwn interrupt reason: %s", self.interrupt_reason)
 
