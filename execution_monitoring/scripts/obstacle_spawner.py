@@ -7,7 +7,9 @@ from gazebo_msgs.srv import SpawnModel
 from geometry_msgs.msg import Pose, Point, PoseStamped
 from tf.transformations import quaternion_from_euler, euler_from_quaternion
 from nav_msgs.msg import Odometry
+from sensor_msgs.msg import NavSatFix
 import math
+from geopy import distance
 
 STOP_SIGN_POSES = [
     [30.702585, -23.646406, 0.671698, 0.0, 0.0, 0.619839],
@@ -31,6 +33,27 @@ class NavigationMonitoring:
     def __init__(self):
         rospy.Subscriber('/spawn_scenario_one_obstacles', String, self.spawn_scenario_one_obstacles, queue_size=1)
         rospy.Subscriber('/spawn_scenario_two_obstacles', String, self.spawn_scenario_two_obstacles, queue_size=1)
+        rospy.Subscriber('/trigger_nav_fail', String, self.trigger_nav_fail, queue_size=1)
+        rospy.Subscriber('/fix', NavSatFix, self.gnss_update, queue_size=1)
+        self.robot_location = None
+        self.insert_goal_pub = rospy.Publisher('introduce_intermediate_nav_goal', String, queue_size=1)
+
+    def gnss_update(self, nav_sat_fix):
+        self.robot_location = (nav_sat_fix.latitude, nav_sat_fix.longitude)
+
+    def trigger_nav_fail(self, msg):
+        # 0 -> base, 1 -> in between, 2 -> far off
+        if self.robot_location is not None:
+            dist_base = distance.distance((config.BASE_POSE[0], config.BASE_POSE[1]), self.robot_location).km
+            dist_in_between = distance.distance((config.INBETWEEN_POINT[0], config.INBETWEEN_POINT[1]), self.robot_location).km
+            dist_far_off = distance.distance((config.FAR_OFF_POINT[0], config.FAR_OFF_POINT[1]), self.robot_location).km
+
+            if dist_base >= dist_in_between >= dist_far_off:
+                self.insert_goal_pub.publish("0")
+            elif dist_in_between >= dist_base >= dist_far_off:
+                self.insert_goal_pub.publish("1")
+            else:
+                self.insert_goal_pub.publish("2")
 
     def spawn_scenario_two_obstacles(self, msg):
         rospy.wait_for_service("/gazebo/spawn_sdf_model")
@@ -52,12 +75,9 @@ class NavigationMonitoring:
             self.spawn_object('barrier_left', spawn_model_client, BARRIER_MODEL, pos_x + offset, pos_y, barrier_height, 0.0, 0.0, yaw)
             self.spawn_object('barrier_front', spawn_model_client, BARRIER_MODEL, pos_x, pos_y - offset, barrier_height, 0.0, 0.0, yaw + math.pi / 2)
             self.spawn_object('barrier_back', spawn_model_client, BARRIER_MODEL, pos_x, pos_y + offset, barrier_height, 0.0, 0.0, yaw + math.pi / 2)
-                
 
         except rospy.ServiceException as e:
             print("Service call failed: ",e)
-
-        
 
     def spawn_object(self, name, client, model, x, y, z, roll, pitch, yaw):
         spawn_pose = Pose()
