@@ -104,9 +104,9 @@ class ExecutePlan(smach.State):
         if msg.data == "0":
             self.intermediate_nav_goal_pose = config.BASE_POSE
         elif msg.data == "1":
-            self.intermediate_nav_goal_pose = config.INBETWEEN_POINT
+            self.intermediate_nav_goal_pose = config.STREET
         elif msg.data == "2":
-            self.intermediate_nav_goal_pose = config.FAR_OFF_POINT
+            self.intermediate_nav_goal_pose = config.FIELD
 
     def interrupt_active_goals(self, msg):
         self.drive_to_goal_client.cancel_all_goals()

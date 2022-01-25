@@ -42,15 +42,15 @@ class NavigationMonitoring:
         self.robot_location = (nav_sat_fix.latitude, nav_sat_fix.longitude)
 
     def trigger_nav_fail(self, msg):
-        # 0 -> base, 1 -> in between, 2 -> far off
+        # 0 -> base, 1 -> street, 2 -> field
         if self.robot_location is not None:
             dist_base = distance.distance((config.BASE_POSE[0], config.BASE_POSE[1]), self.robot_location).km
-            dist_in_between = distance.distance((config.INBETWEEN_POINT[0], config.INBETWEEN_POINT[1]), self.robot_location).km
-            dist_far_off = distance.distance((config.FAR_OFF_POINT[0], config.FAR_OFF_POINT[1]), self.robot_location).km
+            dist_street = distance.distance((config.STREET[0], config.STREET[1]), self.robot_location).km
+            dist_field = distance.distance((config.FIELD[0], config.FIELD[1]), self.robot_location).km
 
-            if dist_base >= dist_in_between >= dist_far_off:
+            if dist_base >= dist_street >= dist_field:
                 self.insert_goal_pub.publish("0")
-            elif dist_in_between >= dist_base >= dist_far_off:
+            elif dist_street >= dist_base >= dist_field:
                 self.insert_goal_pub.publish("1")
             else:
                 self.insert_goal_pub.publish("2")
