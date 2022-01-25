@@ -528,6 +528,40 @@ class PlanDeploymentFailureResolver(GeneralFailureResolver):
         while not self.problem_resolved:
             rospy.sleep(5)
 
+class NavigationFailureResolver(GeneralFailureResolver):
+
+    def __init__(self):
+        super(NavigationFailureResolver, self).__init__()
+        rospy.Subscriber('/resolve_navigation_failure', String, self.resolve_callback, queue_size=1)
+        self.success_pub = rospy.Publisher('/resolve_navigation_failure_success', Bool, queue_size=1)
+        self.drive_to_goal_client = actionlib.SimpleActionClient('drive_to_goal', drive_to_goalAction)
+
+    def resolve_callback(self, msg):
+        rospy.loginfo("launch navigation failure resolver..")
+        rospy.loginfo("type of navigation failure: %s", msg.data)
+        self.problem_resolved = False
+
+        if msg.data == config.NAV_FAILURE_ONE:
+            self.resolve_nav_failure(config.NAV_FAILURE_ONE)
+
+        if self.problem_resolved:
+            self.success_pub.publish(True)
+
+    def resolve_nav_failure(self, msg):
+        rospy.loginfo("resolve navigation failure.. driving to recovery point..")
+
+        action_goal = util.create_dtg_goal(config.RECOVERY_POINT_ONE, None)
+        self.drive_to_goal_client.wait_for_server()
+        self.drive_to_goal_client.send_goal(action_goal)
+        rospy.loginfo("goal sent, wait for accomplishment..")
+        self.drive_to_goal_client.wait_for_result()
+
+        out = self.drive_to_goal_client.get_result()
+        if out.progress > 0:
+            self.fallback_pub.publish(msg)
+            while not self.problem_resolved:
+                rospy.sleep(5)
+
 def node():
     rospy.init_node('failure_resolver')
     rospy.wait_for_message('SMACH_runnning', String)
@@ -538,6 +572,7 @@ def node():
     FallbackResolver()
     LocalizationFailureResolver()
     PlanDeploymentFailureResolver()
+    NavigationFailureResolver()
     rospy.spin()
 
 if __name__ == '__main__':
