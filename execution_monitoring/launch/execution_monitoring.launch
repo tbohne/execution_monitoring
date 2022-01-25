@@ -17,5 +17,6 @@
     <node pkg="execution_monitoring" type="localization_monitoring.py" name="localization_monitoring" output="screen" />
     <node pkg="execution_monitoring" type="physics_controller.py" name="physics_controller" output="screen" />
     <node pkg="execution_monitoring" type="plan_deployment_monitoring.py" name="plan_deployment_monitoring" output="screen" />
+    <node pkg="execution_monitoring" type="obstacle_spawner.py" name="obstacle_spawner" output="screen" />
     <node pkg="arox_engine" type="arox_battery.py" name="arox_battery" output="screen" />
 </launch>

@@ -28,7 +28,7 @@ BARRIER_POSES = [
 STOP_SIGN_MODEL = "/home/docker/catkin_ws/src/execution_monitoring/models/stop_sign/model.sdf"
 BARRIER_MODEL = "/home/docker/catkin_ws/src/execution_monitoring/models/jersey_barrier/model.sdf"
 
-class NavigationMonitoring:
+class ObstacleSpawner:
 
     def __init__(self):
         rospy.Subscriber('/spawn_scenario_one_obstacles', String, self.spawn_scenario_one_obstacles, queue_size=1)
@@ -119,9 +119,9 @@ class NavigationMonitoring:
 
 
 def node():
-    rospy.init_node('navigation_monitoring')
-    rospy.loginfo("launch navigation monitoring..")
-    NavigationMonitoring()
+    rospy.init_node('obstacle_spawner')
+    rospy.loginfo("launch obstacle spawner..")
+    ObstacleSpawner()
     rospy.spin()
 
 if __name__ == '__main__':
