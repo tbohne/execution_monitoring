@@ -35,8 +35,20 @@ class ObstacleSpawner:
         rospy.Subscriber('/spawn_robot_prison', String, self.spawn_robot_prison, queue_size=1)
         rospy.Subscriber('/trigger_nav_fail', String, self.trigger_nav_fail, queue_size=1)
         rospy.Subscriber('/fix', NavSatFix, self.gnss_update, queue_size=1)
+        rospy.Subscriber('/move_base_flex/exe_path/status', GoalStatusArray, self.mbf_status_callback, queue_size=1)
         self.robot_location = None
         self.insert_goal_pub = rospy.Publisher('introduce_intermediate_nav_goal', String, queue_size=1)
+        self.mbf_status = None
+        self.sim_prison_retarded = False
+
+    def mbf_status_callback(self, mbf_status):
+        if len(mbf_status.status_list) > 0:
+            # the last element in the list is the latest (most recent)
+            if self.mbf_status == config.GOAL_STATUS_ACTIVE and mbf_status.status_list[-1].status != self.mbf_status and self.sim_prison_retarded:
+                self.mbf_status = mbf_status.status_list[-1].status
+                self.spawn_robot_prison("")
+                self.sim_prison_retarded = False
+            self.mbf_status = mbf_status.status_list[-1].status
 
     def gnss_update(self, nav_sat_fix):
         self.robot_location = (nav_sat_fix.latitude, nav_sat_fix.longitude)
@@ -56,28 +68,32 @@ class ObstacleSpawner:
                 self.insert_goal_pub.publish("2")
 
     def spawn_robot_prison(self, msg):
-        rospy.wait_for_service("/gazebo/spawn_sdf_model")
-        rospy.loginfo("spawning scenario two obstacles..")
-        # create a new subscription to the topic, receive one message, then unsubscribe
-        robot_pose = rospy.wait_for_message('/pose_ground_truth', Odometry, timeout=config.SCAN_TIME_LIMIT)
-        pos_x = robot_pose.pose.pose.position.x
-        pos_y = robot_pose.pose.pose.position.y
-        quaternion = robot_pose.pose.pose.orientation
-        _, _, yaw = euler_from_quaternion([quaternion.x, quaternion.y, quaternion.z, quaternion.w])
+        if self.mbf_status == config.GOAL_STATUS_SUCCEEDED or self.mbf_status == config.GOAL_STATUS_ABORTED:
+            rospy.wait_for_service("/gazebo/spawn_sdf_model")
+            rospy.loginfo("spawning scenario two obstacles..")
+            # create a new subscription to the topic, receive one message, then unsubscribe
+            robot_pose = rospy.wait_for_message('/pose_ground_truth', Odometry, timeout=config.SCAN_TIME_LIMIT)
+            pos_x = robot_pose.pose.pose.position.x
+            pos_y = robot_pose.pose.pose.position.y
+            quaternion = robot_pose.pose.pose.orientation
+            _, _, yaw = euler_from_quaternion([quaternion.x, quaternion.y, quaternion.z, quaternion.w])
 
-        # spawn robot "prison"
-        barrier_height = 0.833558
-        offset = 2.0
-        try:
-            spawn_model_client = rospy.ServiceProxy('/gazebo/spawn_sdf_model', SpawnModel)
+            # spawn robot "prison"
+            barrier_height = 0.833558
+            offset = 2.0
+            try:
+                spawn_model_client = rospy.ServiceProxy('/gazebo/spawn_sdf_model', SpawnModel)
 
-            self.spawn_object('barrier_right', spawn_model_client, BARRIER_MODEL, pos_x - offset, pos_y, barrier_height, 0.0, 0.0, yaw)
-            self.spawn_object('barrier_left', spawn_model_client, BARRIER_MODEL, pos_x + offset, pos_y, barrier_height, 0.0, 0.0, yaw)
-            self.spawn_object('barrier_front', spawn_model_client, BARRIER_MODEL, pos_x, pos_y - offset, barrier_height, 0.0, 0.0, yaw + math.pi / 2)
-            self.spawn_object('barrier_back', spawn_model_client, BARRIER_MODEL, pos_x, pos_y + offset, barrier_height, 0.0, 0.0, yaw + math.pi / 2)
+                self.spawn_object('barrier_right', spawn_model_client, BARRIER_MODEL, pos_x - offset, pos_y, barrier_height, 0.0, 0.0, yaw)
+                self.spawn_object('barrier_left', spawn_model_client, BARRIER_MODEL, pos_x + offset, pos_y, barrier_height, 0.0, 0.0, yaw)
+                self.spawn_object('barrier_front', spawn_model_client, BARRIER_MODEL, pos_x, pos_y - offset, barrier_height, 0.0, 0.0, yaw + math.pi / 2)
+                self.spawn_object('barrier_back', spawn_model_client, BARRIER_MODEL, pos_x, pos_y + offset, barrier_height, 0.0, 0.0, yaw + math.pi / 2)
 
-        except rospy.ServiceException as e:
-            print("Service call failed: ",e)
+            except rospy.ServiceException as e:
+                print("Service call failed: ",e)
+        else:
+            rospy.loginfo("spawning obstacles when robot stands still..")
+            self.sim_prison_retarded = True
 
     def spawn_object(self, name, client, model, x, y, z, roll, pitch, yaw):
         spawn_pose = Pose()
