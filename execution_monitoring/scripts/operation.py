@@ -10,6 +10,7 @@ from arox_performance_parameters.msg import arox_battery_params
 from std_msgs.msg import String, UInt16
 from datetime import datetime
 from execution_monitoring import config, util
+from plan_generation.msg import plan, action
 
 
 class Idle(smach.State):
@@ -85,13 +86,27 @@ class ExecutePlan(smach.State):
 
         rospy.Subscriber('/interrupt_active_goals', String, self.interrupt_active_goals, queue_size=1)
         rospy.Subscriber('/arox/battery_param', arox_battery_params, self.battery_callback, queue_size=1)
+        rospy.Subscriber('introduce_intermediate_nav_goal', String, self.introduce_intermediate_nav_goal, queue_size=1)
+
         self.drive_to_goal_client = actionlib.SimpleActionClient('drive_to_goal', drive_to_goalAction)
         self.scan_client = actionlib.SimpleActionClient('dummy_scanner', ScanAction)
         self.operation_pub = rospy.Publisher('arox/ongoing_operation', arox_operational_param, queue_size=1)
         self.battery_discharged = False
         self.remaining_tasks = 0
         self.completed_tasks = 0
+        self.introduce_nav_goal = False
+        self.intermediate_nav_goal_pose = None
         self.latest_action = None
+
+    def introduce_intermediate_nav_goal(self, msg):
+        rospy.loginfo("preparing introduction of intermediate nav goal - code: %s", msg.data)
+        self.introduce_nav_goal = True
+        if msg.data == "0":
+            self.intermediate_nav_goal_pose = config.BASE_POSE
+        elif msg.data == "1":
+            self.intermediate_nav_goal_pose = config.INBETWEEN_POINT
+        elif msg.data == "2":
+            self.intermediate_nav_goal_pose = config.FAR_OFF_POINT
 
     def interrupt_active_goals(self, msg):
         self.drive_to_goal_client.cancel_all_goals()
@@ -175,10 +190,10 @@ class ExecutePlan(smach.State):
             return "plan_completed"
         else:
             rospy.loginfo("executing plan - remaining actions: %s", len(userdata.plan))
-            action = userdata.plan.pop(0)
-            self.latest_action = action
+            a = userdata.plan.pop(0)
+            self.latest_action = a
             if not self.battery_discharged:
-                action_successfully_performed = self.perform_action(action)
+                action_successfully_performed = self.perform_action(a)
             else:
                 rospy.loginfo("hard failure..")
                 return "hard_failure"
@@ -192,6 +207,14 @@ class ExecutePlan(smach.State):
 
             if action_successfully_performed:
                 rospy.loginfo("action successfully completed - executing rest of plan..")
+
+                if self.introduce_nav_goal and self.intermediate_nav_goal_pose is not None:
+                    rospy.loginfo("introducing intermediate nav goal..")
+                    self.introduce_nav_goal = False
+                    a = action()
+                    a.name = "drive_to"
+                    a.pose = self.intermediate_nav_goal_pose
+                    userdata.plan.insert(0, a)
                 self.completed_tasks += 1
                 return "action_completed"
             else:
