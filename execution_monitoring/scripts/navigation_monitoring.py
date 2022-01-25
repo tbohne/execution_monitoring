@@ -3,21 +3,40 @@ import rospy
 from std_msgs.msg import String
 from actionlib_msgs.msg import GoalStatusArray, GoalStatus
 from execution_monitoring import config, util
+from sensor_msgs.msg import NavSatFix
+from geopy import distance
 
 class NavigationMonitoring:
 
     def __init__(self):
         rospy.Subscriber('/move_base_flex/exe_path/status', GoalStatusArray, self.mbf_status_callback, queue_size=1)
+        rospy.Subscriber('/fix', NavSatFix, self.gnss_update, queue_size=1)
         self.mbf_status = None
         self.status_before = None
         self.active_monitoring = True
         self.recovery_cnt = 0
+        self.robot_pos = None
+        self.robot_pos_when_started_recovery = None
         self.navigation_monitoring()
+
+    def gnss_update(self, nav_sat_fix):
+        self.robot_pos = (nav_sat_fix.latitude, nav_sat_fix.longitude)
 
     def navigation_monitoring(self):
         while not rospy.is_shutdown():
+
+            if self.recovery_cnt == 1:
+                self.robot_pos_when_started_recovery = self.robot_pos
+
             if self.recovery_cnt >= config.RECOVERY_LIMIT:
-                rospy.loginfo("DETECTED NAVIGATION FAILURE -- SUSTAINED RECOVERY")
+                # reached limit of recovery attempts without making progress -> < 1m
+                if distance.distance(self.robot_pos, self.robot_pos_when_started_recovery).km <= 0.001:
+                    rospy.loginfo("detected navigation failure -- SUSTAINED RECOVERY")
+                else:
+                    # made some progress, should reconsider from here on
+                    rospy.loginfo("detected navigation failure -- SUSTAINED RECOVERY, but made some progress during recoveries -- continuing recovery")
+                    self.recovery_cnt = 1
+                    self.robot_pos_when_started_recovery = self.robot_pos
             rospy.sleep(5)
 
     def mbf_status_callback(self, mbf_status):
@@ -30,7 +49,8 @@ class NavigationMonitoring:
                     self.recovery_cnt += 1
                 elif self.mbf_status == config.GOAL_STATUS_SUCCEEDED:
                     # SUCCESS resets recovery counter
-                    self.recovery_cnt = 0    
+                    self.recovery_cnt = 0
+                    self.robot_pos_when_started_recovery = None
             self.status_before = self.mbf_status
 
 
