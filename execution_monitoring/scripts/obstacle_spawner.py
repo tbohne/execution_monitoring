@@ -31,8 +31,8 @@ BARRIER_MODEL = "/home/docker/catkin_ws/src/execution_monitoring/models/jersey_b
 class ObstacleSpawner:
 
     def __init__(self):
-        rospy.Subscriber('/spawn_scenario_one_obstacles', String, self.spawn_scenario_one_obstacles, queue_size=1)
-        rospy.Subscriber('/spawn_scenario_two_obstacles', String, self.spawn_scenario_two_obstacles, queue_size=1)
+        rospy.Subscriber('/spawn_static_obstacles', String, self.spawn_static_obstacles, queue_size=1)
+        rospy.Subscriber('/spawn_robot_prison', String, self.spawn_robot_prison, queue_size=1)
         rospy.Subscriber('/trigger_nav_fail', String, self.trigger_nav_fail, queue_size=1)
         rospy.Subscriber('/fix', NavSatFix, self.gnss_update, queue_size=1)
         self.robot_location = None
@@ -55,7 +55,7 @@ class ObstacleSpawner:
             else:
                 self.insert_goal_pub.publish("2")
 
-    def spawn_scenario_two_obstacles(self, msg):
+    def spawn_robot_prison(self, msg):
         rospy.wait_for_service("/gazebo/spawn_sdf_model")
         rospy.loginfo("spawning scenario two obstacles..")
         # create a new subscription to the topic, receive one message, then unsubscribe
@@ -98,7 +98,7 @@ class ObstacleSpawner:
             reference_frame='world'
         )
 
-    def spawn_scenario_one_obstacles(self, msg):
+    def spawn_static_obstacles(self, msg):
         rospy.wait_for_service("/gazebo/spawn_sdf_model")
         rospy.loginfo("spawning scenario one obstacles..")
 
