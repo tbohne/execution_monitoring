@@ -9,14 +9,18 @@ from geopy import distance
 class NavigationMonitoring:
 
     def __init__(self):
-        rospy.Subscriber('/move_base_flex/exe_path/status', GoalStatusArray, self.mbf_status_callback, queue_size=1)
-        rospy.Subscriber('/fix', NavSatFix, self.gnss_update, queue_size=1)
         self.mbf_status = None
         self.status_before = None
         self.active_monitoring = True
         self.recovery_cnt = 0
         self.robot_pos = None
         self.robot_pos_when_started_recovery = None
+
+        rospy.Subscriber('/move_base_flex/exe_path/status', GoalStatusArray, self.mbf_status_callback, queue_size=1)
+        rospy.Subscriber('/fix', NavSatFix, self.gnss_update, queue_size=1)
+
+        self.contingency_pub = rospy.Publisher('/contingency_preemption', String, queue_size=1)
+        self.robot_info_pub = rospy.Publisher('/robot_info', String, queue_size=1)
         self.navigation_monitoring()
 
     def gnss_update(self, nav_sat_fix):
@@ -24,17 +28,18 @@ class NavigationMonitoring:
 
     def navigation_monitoring(self):
         while not rospy.is_shutdown():
-
             if self.recovery_cnt == 1:
                 self.robot_pos_when_started_recovery = self.robot_pos
 
             if self.recovery_cnt >= config.RECOVERY_LIMIT:
                 # reached limit of recovery attempts without making progress -> < 1m
                 if distance.distance(self.robot_pos, self.robot_pos_when_started_recovery).km <= 0.001:
-                    rospy.loginfo("detected navigation failure -- SUSTAINED RECOVERY")
+                    rospy.loginfo("CONTINGENCY: detected navigation failure -- SUSTAINED RECOVERY")
+                    self.contingency_pub.publish(config.NAV_FAILURE_ONE)
                 else:
                     # made some progress, should reconsider from here on
                     rospy.loginfo("detected navigation failure -- SUSTAINED RECOVERY, but made some progress during recoveries -- continuing recovery")
+                    self.robot_info_pub.publish(config.NAV_FAILURE_TWO)
                     self.recovery_cnt = 1
                     self.robot_pos_when_started_recovery = self.robot_pos
             rospy.sleep(5)

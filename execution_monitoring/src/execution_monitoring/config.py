@@ -19,6 +19,9 @@ GOAL_STATUS_ACTIVE = 1
 GOAL_STATUS_SUCCEEDED = 3
 GOAL_STATUS_ABORTED = 4
 
+NAV_FAILURE_ONE = "sustained recovery - mbf cannot recover"
+NAV_FAILURE_TWO = "sustained recover - but still making progress - continuing for now"
+
 STREET = [52.320786493558508, 8.153624127240558, 270]
 FIELD = [52.32042638488258,  8.153084460244127, 270]
 #############################################################################
