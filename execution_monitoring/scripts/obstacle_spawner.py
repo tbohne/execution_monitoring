@@ -80,14 +80,13 @@ class ObstacleSpawner:
 
             # spawn robot "prison"
             barrier_height = 0.833558
-            offset = 2.0
+            d = 2.0
             try:
                 spawn_model_client = rospy.ServiceProxy('/gazebo/spawn_sdf_model', SpawnModel)
-
-                self.spawn_object('barrier_right', spawn_model_client, BARRIER_MODEL, pos_x - offset, pos_y, barrier_height, 0.0, 0.0, yaw)
-                self.spawn_object('barrier_left', spawn_model_client, BARRIER_MODEL, pos_x + offset, pos_y, barrier_height, 0.0, 0.0, yaw)
-                self.spawn_object('barrier_front', spawn_model_client, BARRIER_MODEL, pos_x, pos_y - offset, barrier_height, 0.0, 0.0, yaw + math.pi / 2)
-                self.spawn_object('barrier_back', spawn_model_client, BARRIER_MODEL, pos_x, pos_y + offset, barrier_height, 0.0, 0.0, yaw + math.pi / 2)
+                self.spawn_object('barrier_right', spawn_model_client, BARRIER_MODEL, pos_x + (d * math.cos(math.radians(90) + yaw)), pos_y + (d * math.sin(math.radians(90) + yaw)), barrier_height, 0.0, 0.0, yaw)
+                self.spawn_object('barrier_left', spawn_model_client, BARRIER_MODEL,pos_x + (d * math.cos(math.radians(270) + yaw)), pos_y + (d * math.sin(math.radians(270) + yaw)), barrier_height, 0.0, 0.0, yaw)
+                self.spawn_object('barrier_front', spawn_model_client, BARRIER_MODEL, pos_x + (d * math.cos(math.radians(0) + yaw)), pos_y + (d * math.sin(math.radians(0) + yaw)), barrier_height, 0.0, 0.0, yaw + math.pi / 2)
+                self.spawn_object('barrier_back', spawn_model_client, BARRIER_MODEL, pos_x + (d * math.cos(math.radians(180) + yaw)), pos_y + (d * math.sin(math.radians(180) + yaw)), barrier_height, 0.0, 0.0, yaw + math.pi / 2)
 
             except rospy.ServiceException as e:
                 print("Service call failed: ",e)
