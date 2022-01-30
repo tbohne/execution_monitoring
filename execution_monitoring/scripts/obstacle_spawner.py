@@ -31,6 +31,13 @@ STOP_SIGN_POSES_SCENE_THREE = [
     [20.724546, -4.331711, 0.671698, 0.0, 0.0, 1.311019]
 ]
 
+STOP_SIGN_POSES_SCENE_FOUR = [
+    [0.382557, -2.998463, 1.468006, 0.0, 0.0, 2.896465],
+    [-0.218533, -2.857140, 1.468010, 0.0, 0.0, 2.896465],
+    [-0.821764, -2.707880, 1.468010, 0.0, 0.0, 2.896465],
+    [-1.425310, -2.558510, 1.468010, 0.0, 0.0, 2.896465]
+]
+
 BARRIER_POSES_SCENE_ONE = [
     [28.351700, -23.712500, 0.782270, 0.0, 0.0, 0.0],
     [33.595978, -19.534710, 0.833558, 0.0, 0.0, 1.393767]
@@ -43,6 +50,11 @@ BARRIER_POSES_SCENE_TWO = [
 
 BARRIER_POSES_SCENE_THREE = [
     [20.170605, -6.542426, 0.833558, 0.0, 0.0, 1.377083]
+]
+
+BARRIER_POSES_SCENE_FOUR = [
+    [2.577835, -4.190211, 1.411332, 0.0, 0.0, -0.519839],
+    [-3.797018, -2.632295, 1.411332, 0.0, 0.0, 0.041027]
 ]
 
 STOP_SIGN_MODEL = "/home/docker/catkin_ws/src/execution_monitoring/models/stop_sign/model.sdf"
@@ -145,8 +157,13 @@ class ObstacleSpawner:
             sign_poses = STOP_SIGN_POSES_SCENE_TWO
             barrier_poses = BARRIER_POSES_SCENE_TWO
         elif msg.data == "scene_three":
+            rospy.loginfo("spawning scenario three obstacles..")
             sign_poses = STOP_SIGN_POSES_SCENE_THREE
             barrier_poses = BARRIER_POSES_SCENE_THREE
+        elif msg.data == "scene_four":
+            rospy.loginfo("spawning scenario four obstacles..")
+            sign_poses = STOP_SIGN_POSES_SCENE_FOUR
+            barrier_poses = BARRIER_POSES_SCENE_FOUR
         else:
             rospy.loginfo("unknown scene: %s", msg.data)
             rospy.loginfo("using default scene (one)..")
