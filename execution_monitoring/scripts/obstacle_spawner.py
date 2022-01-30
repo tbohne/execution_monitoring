@@ -11,7 +11,7 @@ from sensor_msgs.msg import NavSatFix
 import math
 from geopy import distance
 
-STOP_SIGN_POSES = [
+STOP_SIGN_POSES_SCENE_ONE = [
     [30.702585, -23.646406, 0.671698, 0.0, 0.0, 0.619839],
     [31.195600, -23.287600, 0.671698, 0.0, 0.0, 0.619839],
     [31.688100, -22.930900, 0.671698, 0.0, 0.0, 0.619839],
@@ -20,9 +20,29 @@ STOP_SIGN_POSES = [
     [33.175500, -21.848200, 0.671698, 0.0, 0.0, 0.619839]
 ]
 
-BARRIER_POSES = [
+STOP_SIGN_POSES_SCENE_TWO = [
+    [35.508858, -2.809350, 0.671698, 0.0, 0.0, 0.693925],
+    [35.988500, -2.413980, 0.671698, 0.0, 0.0, 0.693925],
+    [36.459300, -2.011220, 0.671698, 0.0, 0.0, 0.693925],
+    [36.957800, -1.602300, 0.671698, 0.0, 0.0, 0.693925]
+]
+
+STOP_SIGN_POSES_SCENE_THREE = [
+    [20.724546, -4.331711, 0.671698, 0.0, 0.0, 1.311019]
+]
+
+BARRIER_POSES_SCENE_ONE = [
     [28.351700, -23.712500, 0.782270, 0.0, 0.0, 0.0],
     [33.595978, -19.534710, 0.833558, 0.0, 0.0, 1.393767]
+]
+
+BARRIER_POSES_SCENE_TWO = [
+    [33.112300, -3.033610, 0.833558, 0.0, 0.0, 0.0],
+    [37.379513, 0.590976, 0.833558, 0.0, 0.0, -1.769417]
+]
+
+BARRIER_POSES_SCENE_THREE = [
+    [20.170605, -6.542426, 0.833558, 0.0, 0.0, 1.377083]
 ]
 
 STOP_SIGN_MODEL = "/home/docker/catkin_ws/src/execution_monitoring/models/stop_sign/model.sdf"
@@ -115,18 +135,32 @@ class ObstacleSpawner:
 
     def spawn_static_obstacles(self, msg):
         rospy.wait_for_service("/gazebo/spawn_sdf_model")
-        rospy.loginfo("spawning scenario one obstacles..")
+
+        if msg.data == "scene_one":
+            rospy.loginfo("spawning scenario one obstacles..")
+            sign_poses = STOP_SIGN_POSES_SCENE_ONE
+            barrier_poses = BARRIER_POSES_SCENE_ONE
+        elif msg.data == "scene_two":
+            rospy.loginfo("spawning scenario two obstacles..")
+            sign_poses = STOP_SIGN_POSES_SCENE_TWO
+            barrier_poses = BARRIER_POSES_SCENE_TWO
+        elif msg.data == "scene_three":
+            sign_poses = STOP_SIGN_POSES_SCENE_THREE
+            barrier_poses = BARRIER_POSES_SCENE_THREE
+        else:
+            rospy.loginfo("unknown scene: %s", msg.data)
+            rospy.loginfo("using default scene (one)..")
 
         try:
             spawn_model_client = rospy.ServiceProxy('/gazebo/spawn_sdf_model', SpawnModel)
 
             # spawn stop signs
-            for i in range(len(STOP_SIGN_POSES)):
-                self.spawn_object('stop_sign_' + str(i), spawn_model_client, STOP_SIGN_MODEL, *STOP_SIGN_POSES[i])
+            for i in range(len(sign_poses)):
+                self.spawn_object('stop_sign_' + msg.data + str(i), spawn_model_client, STOP_SIGN_MODEL, *sign_poses[i])
 
             # barriers
-            for i in range(len(BARRIER_POSES)):
-                self.spawn_object('barrier_' + str(i), spawn_model_client, BARRIER_MODEL, *BARRIER_POSES[i])
+            for i in range(len(barrier_poses)):
+                self.spawn_object('barrier_' + msg.data + str(i), spawn_model_client, BARRIER_MODEL, *barrier_poses[i])
                 
 
         except rospy.ServiceException as e:
