@@ -3,7 +3,7 @@ import rospy
 from std_msgs.msg import String
 from actionlib_msgs.msg import GoalStatusArray, GoalStatus
 from execution_monitoring import config, util
-from gazebo_msgs.srv import SpawnModel
+from gazebo_msgs.srv import SpawnModel, DeleteModel
 from geometry_msgs.msg import Pose, Point, PoseStamped
 from tf.transformations import quaternion_from_euler, euler_from_quaternion
 from nav_msgs.msg import Odometry
@@ -68,10 +68,12 @@ class ObstacleSpawner:
         rospy.Subscriber('/trigger_nav_fail', String, self.trigger_nav_fail, queue_size=1)
         rospy.Subscriber('/fix', NavSatFix, self.gnss_update, queue_size=1)
         rospy.Subscriber('/move_base_flex/exe_path/status', GoalStatusArray, self.mbf_status_callback, queue_size=1)
+        rospy.Subscriber('/clear_spawned_obstacles', String, self.delete_spawned_obstacles, queue_size=1)
         self.robot_location = None
         self.insert_goal_pub = rospy.Publisher('introduce_intermediate_nav_goal', String, queue_size=1)
         self.mbf_status = None
         self.sim_prison_retarded = False
+        self.spawned_obstacles = []
 
     def mbf_status_callback(self, mbf_status):
         if len(mbf_status.status_list) > 0:
@@ -127,6 +129,7 @@ class ObstacleSpawner:
             self.sim_prison_retarded = True
 
     def spawn_object(self, name, client, model, x, y, z, roll, pitch, yaw):
+        self.spawned_obstacles.append(name)
         spawn_pose = Pose()
         spawn_pose.position.x = x
         spawn_pose.position.y = y
@@ -144,6 +147,12 @@ class ObstacleSpawner:
             initial_pose=spawn_pose,
             reference_frame='world'
         )
+
+    def delete_spawned_obstacles(self, msg):
+        delete_model_prox = rospy.ServiceProxy('gazebo/delete_model', DeleteModel)
+        for obstacle in self.spawned_obstacles:
+            delete_model_prox(obstacle)
+        self.spawned_obstacles = []
 
     def spawn_static_obstacles(self, msg):
         rospy.wait_for_service("/gazebo/spawn_sdf_model")
