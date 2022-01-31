@@ -91,6 +91,7 @@ class ExecutePlan(smach.State):
         self.drive_to_goal_client = actionlib.SimpleActionClient('drive_to_goal', drive_to_goalAction)
         self.scan_client = actionlib.SimpleActionClient('dummy_scanner', ScanAction)
         self.operation_pub = rospy.Publisher('arox/ongoing_operation', arox_operational_param, queue_size=1)
+        self.nav_fail_pub = rospy.Publisher('/explicit_nav_failure', String, queue_size=1)
         self.battery_discharged = False
         self.remaining_tasks = 0
         self.completed_tasks = 0
@@ -137,12 +138,20 @@ class ExecutePlan(smach.State):
                 action.pose = config.BASE_POSE
 
             action_goal = util.create_dtg_goal(action.pose, None)
+
             self.drive_to_goal_client.wait_for_server()
             self.drive_to_goal_client.send_goal(action_goal)
             rospy.loginfo("goal sent, wait for accomplishment..")
             success = self.drive_to_goal_client.wait_for_result()
-
             out = self.drive_to_goal_client.get_result()
+            rospy.loginfo("out: %s, state: %s, succ: %s, txt: %s", out,  self.drive_to_goal_client.get_state(), success, self.drive_to_goal_client.get_goal_status_text())
+
+            # explicit navigation failure -- goal not reached -- trigger nav monitoring
+            if self.drive_to_goal_client.get_state() == config.GOAL_STATUS_ABORTED:
+                rospy.loginfo("explicit nav failure -- reporting to nav monitoring..")
+                self.nav_fail_pub.publish("")
+                return False
+
             if out.progress > 0:
                 rospy.loginfo("driving goal progress: %s", out.progress)
                 return False
