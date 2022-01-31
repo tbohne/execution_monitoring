@@ -533,8 +533,14 @@ class NavigationFailureResolver(GeneralFailureResolver):
     def __init__(self):
         super(NavigationFailureResolver, self).__init__()
         rospy.Subscriber('/resolve_navigation_failure', String, self.resolve_callback, queue_size=1)
+        rospy.Subscriber('/resolution_failure', String, self.resolution_failure_callback, queue_size=1)
         self.success_pub = rospy.Publisher('/resolve_navigation_failure_success', Bool, queue_size=1)
+        self.remove_obstacles_pub = rospy.Publisher('/clear_spawned_obstacles', String, queue_size=1)
         self.drive_to_goal_client = actionlib.SimpleActionClient('drive_to_goal', drive_to_goalAction)
+
+    def resolution_failure_callback(self):
+        rospy.loginfo("nav fail resolution failed.. cancelling resolution attempt..")
+        self.drive_to_goal_client.cancel_all_goals()
 
     def resolve_callback(self, msg):
         rospy.loginfo("launch navigation failure resolver..")
@@ -557,10 +563,17 @@ class NavigationFailureResolver(GeneralFailureResolver):
         self.drive_to_goal_client.wait_for_result()
 
         out = self.drive_to_goal_client.get_result()
-        if out.progress > 0:
+
+        # navigation failure during resolution -- goal not reached
+        if self.drive_to_goal_client.get_state() == config.GOAL_STATUS_ABORTED:
+            rospy.loginfo("nav failure during resolution -- notifying operator..")
+
             self.fallback_pub.publish(msg)
             while not self.problem_resolved:
                 rospy.sleep(5)
+            # solved -- obstacles removed
+            self.remove_obstacles_pub.publish("")
+
 
 def node():
     rospy.init_node('failure_resolver')
