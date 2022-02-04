@@ -159,6 +159,8 @@ class Contingency(smach.State):
             self.plan_deployment_failure_resolver_pub.publish(config.PLAN_DEPLOYMENT_FAILURE_FIVE)
         elif self.interrupt_reason == config.NAV_FAILURE_ONE:
             self.navigation_failure_resolver_pub.publish(config.NAV_FAILURE_ONE)
+        elif self.interrupt_reason == config.NAV_FAILURE_THREE:
+            self.navigation_failure_resolver_pub.publish(config.NAV_FAILURE_THREE)
         else:
             rospy.loginfo("unkonwn interrupt reason: %s", self.interrupt_reason)
 
