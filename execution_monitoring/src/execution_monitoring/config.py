@@ -13,7 +13,7 @@ MBF_PAT_EXCEEDED = 103
 #############################################################################
 ########################## NAVIGATION MONITORING ############################
 #############################################################################
-RECOVERY_LIMIT = 3
+RECOVERY_LIMIT = 10
 
 GOAL_STATUS_ACTIVE = 1
 GOAL_STATUS_SUCCEEDED = 3
@@ -21,6 +21,7 @@ GOAL_STATUS_ABORTED = 4
 
 NAV_FAILURE_ONE = "sustained recovery - mbf cannot recover"
 NAV_FAILURE_TWO = "sustained recover - but still making progress - continuing for now"
+NAV_FAILURE_THREE = "explicit nav failure reported by low-level operation state machine"
 
 RECOVERY_POINT_ONE = [52.32056824755535, 8.153337579568582, 270]
 

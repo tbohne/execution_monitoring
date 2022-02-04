@@ -114,7 +114,7 @@ class ObstacleSpawner:
 
             # spawn robot "prison"
             barrier_height = 0.833558
-            d = 2.0
+            d = 2.5
             try:
                 spawn_model_client = rospy.ServiceProxy('/gazebo/spawn_sdf_model', SpawnModel)
                 self.spawn_object('barrier_right', spawn_model_client, BARRIER_MODEL, pos_x + (d * math.cos(math.radians(90) + yaw)), pos_y + (d * math.sin(math.radians(90) + yaw)), barrier_height, 0.0, 0.0, yaw)
