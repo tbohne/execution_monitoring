@@ -539,7 +539,7 @@ class NavigationFailureResolver(GeneralFailureResolver):
         self.remove_obstacles_pub = rospy.Publisher('/clear_spawned_obstacles', String, queue_size=1)
         self.drive_to_goal_client = actionlib.SimpleActionClient('drive_to_goal', drive_to_goalAction)
 
-    def resolution_failure_callback(self):
+    def resolution_failure_callback(self, msg):
         rospy.loginfo("nav fail resolution failed.. cancelling resolution attempt..")
         self.drive_to_goal_client.cancel_all_goals()
 
