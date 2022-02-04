@@ -603,6 +603,8 @@ class NavigationFailureResolver(GeneralFailureResolver):
             # wait for obstacle removal before costmap clearance
             rospy.sleep(3)
             self.clear_costmaps()
+        elif self.drive_to_goal_client.get_state() == config.GOAL_STATUS_SUCCEEDED:
+            self.problem_resolved = True
 
 
 def node():
