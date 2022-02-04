@@ -29,7 +29,7 @@ class NavigationMonitoring:
 
     def explicit_fail_callback(self, msg):
         rospy.loginfo("CONTINGENCY: detected navigation failure -- SUSTAINED RECOVERY")
-        self.contingency_pub.publish(config.NAV_FAILURE_ONE)
+        self.contingency_pub.publish(config.NAV_FAILURE_THREE)
         self.active_monitoring = False
 
     def resolved_callback(self, msg):
@@ -59,13 +59,14 @@ class NavigationMonitoring:
                         self.recovery_cnt = 1
                         self.robot_pos_when_started_recovery = self.robot_pos
             else:
+                rospy.loginfo("recovery attempts: %s", self.recovery_attempts)
                 if self.recovery_attempts >= config.RECOVERY_LIMIT:
                     self.resolution_failure_pub.publish("")
 
             rospy.sleep(5)
 
     def mbf_status_callback(self, mbf_status):
-        if self.active_monitoring and len(mbf_status.status_list) > 0:
+        if len(mbf_status.status_list) > 0:
             # the last element in the list is the latest (most recent)
             self.mbf_status = mbf_status.status_list[-1].status
             if self.mbf_status != self.status_before:
@@ -74,9 +75,10 @@ class NavigationMonitoring:
 
                 if self.status_before == config.GOAL_STATUS_ACTIVE and self.mbf_status == config.GOAL_STATUS_ABORTED:
                     # transition from ACTIVE to ABORTED -> recovery
-                    self.recovery_cnt += 1
+                    if self.active_monitoring:
+                        self.recovery_cnt += 1
                     # currently in resolution mode
-                    if not self.active_monitoring:
+                    else:
                         self.recovery_attempts += 1
                 elif self.mbf_status == config.GOAL_STATUS_SUCCEEDED:
                     # SUCCESS resets recovery counter
