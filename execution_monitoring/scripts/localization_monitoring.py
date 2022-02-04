@@ -104,10 +104,10 @@ class LocalizationMonitoring:
                 rospy.loginfo("CONTINGENCY: GNSS (initial-current) and odometry (initial-current) distances are diverging quite a bit -> indicator for localization issue")
                 self.contingency_pub.publish(config.LOCALIZATION_FAILURE_TWO)
                 self.active_monitoring = False
-            elif abs(odom_dist - gps_dist) > 0.3:
+            elif abs(odom_dist - gps_dist) > 0.4:
                 rospy.loginfo("INFO: GNSS (initial-current) and odometry (initial-current) distances are slightly diverging -> indicator for minor localization issue")
                 self.robot_info_pub.publish(config.LOCALIZATION_FAILURE_THREE)
-            if abs(odom_dist - gps_dist) > 0.3:
+            if abs(odom_dist - gps_dist) > 0.4:
                 rospy.loginfo("2D dist between initial filtered odom and current: %s", odom_dist)
                 rospy.loginfo("2D dist between initial GPS and current: %s", gps_dist)
 
