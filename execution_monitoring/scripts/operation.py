@@ -150,6 +150,7 @@ class ExecutePlan(smach.State):
             if self.drive_to_goal_client.get_state() == config.GOAL_STATUS_ABORTED:
                 rospy.loginfo("explicit nav failure -- reporting to nav monitoring..")
                 self.nav_fail_pub.publish("")
+                rospy.sleep(5)
                 return False
 
             if out.progress > 0:
