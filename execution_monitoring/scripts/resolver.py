@@ -7,6 +7,7 @@ from execution_monitoring import config, util
 from geometry_msgs.msg import Twist
 from arox_performance_parameters.msg import arox_operational_param
 from mbf_msgs.msg import RecoveryAction, RecoveryGoal
+from std_srvs.srv import Empty
 
 
 class FallbackResolver:
@@ -547,14 +548,40 @@ class NavigationFailureResolver(GeneralFailureResolver):
         rospy.loginfo("type of navigation failure: %s", msg.data)
         self.problem_resolved = False
 
-        if msg.data == config.NAV_FAILURE_ONE:
+        if msg.data == config.NAV_FAILURE_ONE or msg.data == config.NAV_FAILURE_THREE:
             self.resolve_nav_failure(config.NAV_FAILURE_ONE)
+        else:
+            rospy.loginfo("cannot resolve unknown nav failure: %s", msg.data)
 
         if self.problem_resolved:
             self.success_pub.publish(True)
 
+    def clear_costmaps(self):
+        rospy.wait_for_service('/move_base_flex/clear_costmaps')
+        clear_costmaps_service = rospy.ServiceProxy('/move_base_flex/clear_costmaps', Empty)
+        rec_client = actionlib.SimpleActionClient("move_base_flex/recovery", RecoveryAction)
+        rec_client.wait_for_server()
+
+        # order matters -> first global, then local
+        rospy.loginfo("clearing global costmap..")
+        try:
+            clear_costmaps_service()
+        except rospy.ServiceException as e:
+            rospy.loginfo("error: %s", e)
+
+        rospy.loginfo("clearing local costmap..")
+        # concurrency_slot 3
+        clear_local_costmap_goal = RecoveryGoal('clear_costmap', 3)
+        rec_client.send_goal(clear_local_costmap_goal)
+        res = rec_client.wait_for_result()
+        if res:
+            rospy.loginfo("cleared costmap..")
+
+
     def resolve_nav_failure(self, msg):
         rospy.loginfo("resolve navigation failure.. driving to recovery point..")
+
+        self.clear_costmaps()
 
         action_goal = util.create_dtg_goal(config.RECOVERY_POINT_ONE, None)
         self.drive_to_goal_client.wait_for_server()
@@ -573,6 +600,9 @@ class NavigationFailureResolver(GeneralFailureResolver):
                 rospy.sleep(5)
             # solved -- obstacles removed
             self.remove_obstacles_pub.publish("")
+            # wait for obstacle removal before costmap clearance
+            rospy.sleep(3)
+            self.clear_costmaps()
 
 
 def node():
