@@ -63,6 +63,7 @@ class NavigationMonitoring:
                 if self.recovery_attempts >= config.RECOVERY_LIMIT:
                     self.resolution_failure_pub.publish("")
 
+            # TODO: user-specified frequency
             rospy.sleep(5)
 
     def mbf_status_callback(self, mbf_status):

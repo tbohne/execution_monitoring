@@ -583,6 +583,7 @@ class NavigationFailureResolver(GeneralFailureResolver):
 
         self.clear_costmaps()
 
+        # TODO: implement and try more potential recovery points
         action_goal = util.create_dtg_goal(config.RECOVERY_POINT_ONE, None)
         self.drive_to_goal_client.wait_for_server()
         self.drive_to_goal_client.send_goal(action_goal)
