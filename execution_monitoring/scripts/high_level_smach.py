@@ -2,7 +2,7 @@
 import rospy
 import smach
 import smach_ros
-from std_msgs.msg import String, Bool
+from std_msgs.msg import String, Bool, Float64
 from operation import OperationStateMachine
 from actionlib_msgs.msg import GoalID
 from execution_monitoring import config
@@ -304,6 +304,14 @@ def node():
         pub = rospy.Publisher('SMACH_runnning', String, queue_size=1)
         pub.publish("execution monitoring SMACH runs")
         rospy.sleep(1)
+
+    # if the docking is activated - open container front
+    if config.DOCKING:
+        rospy.loginfo("sending command to open container front..")
+        container_pub = rospy.Publisher('/container/rampB_position_controller/command', Float64, queue_size=1)
+        for _ in range(3):
+            container_pub.publish(2.0)
+            rospy.sleep(0.5)
 
     outcome = sm.execute()
     rospy.loginfo("outcome: %s", outcome)
