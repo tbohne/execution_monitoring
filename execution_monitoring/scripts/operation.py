@@ -93,6 +93,8 @@ class ExecutePlan(smach.State):
         rospy.Subscriber('/arox/battery_param', arox_battery_params, self.battery_callback, queue_size=1)
         rospy.Subscriber('introduce_intermediate_nav_goal', String, self.introduce_intermediate_nav_goal, queue_size=1)
 
+        rospy.Subscriber('/sim_docking_failure', String, self.sim_docking_fail_callback, queue_size=1)
+
         self.drive_to_goal_client = actionlib.SimpleActionClient('drive_to_goal', drive_to_goalAction)
         self.scan_client = actionlib.SimpleActionClient('dummy_scanner', ScanAction)
         self.operation_pub = rospy.Publisher('arox/ongoing_operation', arox_operational_param, queue_size=1)
@@ -105,12 +107,18 @@ class ExecutePlan(smach.State):
         self.activate_localization_pub = rospy.Publisher('/activate_localization_monitoring', String, queue_size=1)
         self.deactivate_localization_pub = rospy.Publisher('/deactivate_localization_monitoring', String, queue_size=1)
 
+        self.sim_docking_fail = False
+
         self.battery_discharged = False
         self.remaining_tasks = 0
         self.completed_tasks = 0
         self.introduce_nav_goal = False
         self.intermediate_nav_goal_pose = None
         self.latest_action = None
+
+    def sim_docking_fail_callback(self, msg):
+        rospy.loginfo("preparing simulation of docking failure..")
+        self.sim_docking_fail = True
 
     def odom_callback(self, odom):
         """
@@ -159,7 +167,13 @@ class ExecutePlan(smach.State):
             self.publish_state_of_ongoing_operation("moving")
 
             if action.name == "return_to_base" and config.DOCKING:
-                action.pose = config.DOCKING_BASE_POSE
+                if self.sim_docking_fail:
+                    rospy.loginfo("simulating docking fail -- wrong container pos..")
+                    action.pose = config.DOCKING_BASE_POSE_FAIL
+                    self.sim_docking_fail = False
+                else:
+                    action.pose = config.DOCKING_BASE_POSE
+
             elif action.name == "return_to_base":
                 action.pose = config.BASE_POSE
 
@@ -204,7 +218,8 @@ class ExecutePlan(smach.State):
 
             pose_in_front_of_container = self.robot_pose
 
-            self.dock_to_charging_station()
+            if not self.dock_to_charging_station():
+                return False
 
             rospy.set_param("charging_mode", True)
             charge_mode = rospy.get_param("charging_mode")
@@ -217,8 +232,7 @@ class ExecutePlan(smach.State):
             if not charge_mode:
                 rospy.loginfo("battery charged..")
                 self.activate_localization_pub.publish("")
-                self.undock_from_charging_station(pose_in_front_of_container)
-                return True
+                return self.undock_from_charging_station(pose_in_front_of_container)
         else:
             rospy.loginfo("error - unknown action: %s", action.name)
         return False
@@ -242,16 +256,18 @@ class ExecutePlan(smach.State):
 
             if docking_client.get_result().result_state == "success":
                 rospy.loginfo("successfully docked to charging station..")
+                return True
             else:
                 rospy.loginfo("docking failure..")
                 self.charge_fail_pub.publish(config.CHARGING_FAILURE_ONE)
                 # sleep to let monitoring detect the problem
-                rospy.sleep(3)
+                rospy.sleep(5)
         else:
             rospy.loginfo("SMACH execution failed: %s", docking_client.get_goal_status_text())
             self.charge_fail_pub.publish(config.CHARGING_FAILURE_ONE)
             # sleep to let monitoring detect the problem
-            rospy.sleep(3)
+            rospy.sleep(5)
+        return False
 
     def undock_from_charging_station(self, pose_in_front_of_container):
         undocking_client = actionlib.SimpleActionClient('undock_from_charging_station', UndockAction)
@@ -269,14 +285,16 @@ class ExecutePlan(smach.State):
             if undocking_client.get_result().result_state == "success":
                 # clear costmap due to ramp movement
                 self.clear_costmaps()
+                return True
             else:
                 rospy.loginfo("undocking failed..")
                 self.charge_fail_pub.publish(config.CHARGING_FAILURE_TWO)
-                rospy.sleep(3)
+                rospy.sleep(5)
         else:
             rospy.loginfo("SMACH execution failed: %s", undocking_client.get_goal_status_text())
             self.charge_fail_pub.publish(config.CHARGING_FAILURE_TWO)
-            rospy.sleep(3)
+            rospy.sleep(5)
+        return False
 
     def clear_costmaps(self):
         rospy.wait_for_service('/move_base_flex/clear_costmaps')
