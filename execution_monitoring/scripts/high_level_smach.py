@@ -31,6 +31,7 @@ class Contingency(smach.State):
         self.localization_failure_resolver_pub = rospy.Publisher('/resolve_localization_failure', String, queue_size=1)
         self.plan_deployment_failure_resolver_pub = rospy.Publisher('/resolve_plan_deployment_failure', String, queue_size=1)
         self.navigation_failure_resolver_pub = rospy.Publisher('/resolve_navigation_failure', String, queue_size=1)
+        self.charging_failure_resolver_pub = rospy.Publisher('/resolve_charging_failure', String, queue_size=1)
 
     def interrupt_reason_callback(self, reason):
         self.interrupt_reason = reason.data
@@ -161,6 +162,8 @@ class Contingency(smach.State):
             self.navigation_failure_resolver_pub.publish(config.NAV_FAILURE_ONE)
         elif self.interrupt_reason == config.NAV_FAILURE_THREE:
             self.navigation_failure_resolver_pub.publish(config.NAV_FAILURE_THREE)
+        elif self.interrupt_reason == config.CHARGING_FAILURE_ONE:
+            self.charging_failure_resolver_pub.publish(config.CHARGING_FAILURE_ONE)
         else:
             rospy.loginfo("unkonwn interrupt reason: %s", self.interrupt_reason)
 
