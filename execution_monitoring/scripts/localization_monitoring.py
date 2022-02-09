@@ -26,6 +26,10 @@ class LocalizationMonitoring:
         rospy.Subscriber('/odometry/gps', Odometry, self.gps_as_odom_callback, queue_size=1)
         rospy.Subscriber('/move_base_flex/exe_path/status', GoalStatusArray, self.mbf_status_callback, queue_size=1)
         rospy.Subscriber('/resolve_localization_failure_success', Bool, self.re_init, queue_size=1)
+
+        rospy.Subscriber('/deactivate_localization_monitoring', String, self.deactivate, queue_size=1)
+        rospy.Subscriber('/activate_localization_monitoring', String, self.activate, queue_size=1)
+
         self.contingency_pub = rospy.Publisher('/contingency_preemption', String, queue_size=1)
         self.catastrophe_pub = rospy.Publisher('/catastrophe_preemption', String, queue_size=1)
         self.robot_info_pub = rospy.Publisher('/robot_info', String, queue_size=1)
@@ -48,6 +52,14 @@ class LocalizationMonitoring:
         self.lin_acc_active_history = collections.deque([], config.LIN_ACC_HISTORY_LEN)
         self.lin_acc_passive_history = collections.deque([], config.LIN_ACC_HISTORY_LEN)
         self.localization_monitoring()
+
+    def deactivate(self, msg):
+        rospy.loginfo("DEACTIVATING LOCALIZATION MONITORING..")
+        self.active_monitoring = False
+
+    def activate(self, msg):
+        rospy.loginfo("ACTIVATING LOCALIZATION MONITORING..")
+        self.active_monitoring = True
 
     def re_init(self, msg):
         rospy.loginfo("re-initialiizing the localiization monitoring..")
