@@ -305,13 +305,13 @@ def node():
         pub.publish("execution monitoring SMACH runs")
         rospy.sleep(1)
 
-    # if the docking is activated - open container front
-    if config.DOCKING:
-        rospy.loginfo("sending command to open container front..")
-        container_pub = rospy.Publisher('/container/rampB_position_controller/command', Float64, queue_size=1)
-        for _ in range(3):
-            container_pub.publish(2.0)
-            rospy.sleep(0.5)
+    # # if the docking is activated - open container front
+    # if config.DOCKING:
+    #     rospy.loginfo("sending command to open container front..")
+    #     container_pub = rospy.Publisher('/container/rampB_position_controller/command', Float64, queue_size=1)
+    #     for _ in range(3):
+    #         container_pub.publish(2.0)
+    #         rospy.sleep(0.5)
 
     outcome = sm.execute()
     rospy.loginfo("outcome: %s", outcome)
