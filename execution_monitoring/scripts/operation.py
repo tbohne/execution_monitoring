@@ -244,7 +244,7 @@ class ExecutePlan(smach.State):
 
                 ####################################
                 undocking_client = actionlib.SimpleActionClient('undock_from_charging_station', UndockAction)
-                goal = UndockGoal
+                goal = UndockGoal()
                 goal.ramp_alignment_pose = pose_in_front_of_container
                 undocking_client.wait_for_server()
                 rospy.loginfo("START UNDOCKING PROCEDURE..")
