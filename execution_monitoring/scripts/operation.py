@@ -142,7 +142,7 @@ class ExecutePlan(smach.State):
         rospy.loginfo("preparing introduction of intermediate nav goal - code: %s", msg.data)
         self.introduce_nav_goal = True
         if msg.data == "0":
-            self.intermediate_nav_goal_pose = config.BASE_POSE
+            self.intermediate_nav_goal_pose = config.DOCKING_BASE_POSE if config.DOCKING else config.BASE_POSE
         elif msg.data == "1":
             self.intermediate_nav_goal_pose = config.STREET
         elif msg.data == "2":
@@ -337,6 +337,14 @@ class ExecutePlan(smach.State):
         rospy.loginfo("executing EXECUTE_PLAN state..")
 
         self.remaining_tasks = len(userdata.plan)
+
+        if self.introduce_nav_goal and self.intermediate_nav_goal_pose is not None:
+            rospy.loginfo("introducing intermediate nav goal..")
+            self.introduce_nav_goal = False
+            a = action()
+            a.name = "drive_to"
+            a.pose = self.intermediate_nav_goal_pose
+            userdata.plan.insert(0, a)
 
         if len(userdata.plan) == 0:
             rospy.loginfo("plan successfully executed..")
