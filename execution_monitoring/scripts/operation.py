@@ -233,11 +233,14 @@ class ExecutePlan(smach.State):
             # notify charge failure monitoring that charging starts
             self.charge_action_pub.publish("")
 
+            charge_mode = False
+
             if self.sim_charge_fail:
                 rospy.loginfo("simulating charging failure..")
                 self.sim_charge_fail = False
                 # just sleep for some time to trigger charge fail
-                rospy.sleep(20)
+                rospy.sleep(config.CHARGING_FAILURE_TIME)
+                return False
             else:
                 rospy.set_param("charging_mode", True)
                 charge_mode = rospy.get_param("charging_mode")
