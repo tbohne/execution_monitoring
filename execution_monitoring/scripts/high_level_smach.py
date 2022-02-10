@@ -22,6 +22,7 @@ class Contingency(smach.State):
         rospy.Subscriber('/resolve_localization_failure_success', Bool, self.resolve_failure_success_callback, queue_size=1)
         rospy.Subscriber('/resolve_plan_deployment_failure_success', Bool, self.resolve_failure_success_callback, queue_size=1)
         rospy.Subscriber('/resolve_navigation_failure_success', Bool, self.resolve_failure_success_callback, queue_size=1)
+        rospy.Subscriber('/resolve_charging_failure_success', Bool, self.resolve_failure_success_callback, queue_size=1)
         self.sensor_failure_resolver_pub = rospy.Publisher('/resolve_sensor_failure', String, queue_size=1)
         self.wifi_failure_resolver_pub = rospy.Publisher('/resolve_wifi_failure', String, queue_size=1)
         self.internet_failure_resolver_pub = rospy.Publisher('/resolve_internet_failure', String, queue_size=1)
@@ -164,6 +165,10 @@ class Contingency(smach.State):
             self.navigation_failure_resolver_pub.publish(config.NAV_FAILURE_THREE)
         elif self.interrupt_reason == config.CHARGING_FAILURE_ONE:
             self.charging_failure_resolver_pub.publish(config.CHARGING_FAILURE_ONE)
+        elif self.interrupt_reason == config.CHARGING_FAILURE_TWO:
+            self.charging_failure_resolver_pub.publish(config.CHARGING_FAILURE_TWO)
+        elif self.interrupt_reason == config.CHARGING_FAILURE_THREE:
+            self.charging_failure_resolver_pub.publish(config.CHARGING_FAILURE_THREE)
         else:
             rospy.loginfo("unkonwn interrupt reason: %s", self.interrupt_reason)
 

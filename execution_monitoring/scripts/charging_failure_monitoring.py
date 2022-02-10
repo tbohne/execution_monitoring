@@ -24,7 +24,7 @@ class ChargingFailureMonitoring:
         rospy.sleep(15)
         if self.latest_charge_level <= start_charge:
             rospy.loginfo("CONTINGENCY: charge level not increasesing although it should..")
-            pass
+            self.contingency_pub.publish(config.CHARGING_FAILURE_THREE)
 
     def undocking_fail_callback(self, msg):
         # TODO: should be event-based in experiments later -- close container just before undocking starts
