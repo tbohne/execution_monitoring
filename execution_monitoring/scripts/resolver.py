@@ -664,12 +664,14 @@ class ChargingFailureResolver(GeneralFailureResolver):
             self.fallback_pub.publish(config.CHARGING_FAILURE_ONE)
             while not self.problem_resolved:
                 rospy.sleep(5)
-            # opening container again -- in case it was closed
+            # human would have opened the container -- in case it was closed
             rospy.loginfo("sending command to open container front..")
             container_pub = rospy.Publisher('/container/rampB_position_controller/command', Float64, queue_size=1)
             for _ in range(3):
                 container_pub.publish(2.0)
                 rospy.sleep(0.5)
+            # clear costmap to perceive that the door is open now
+            self.clear_costmaps()
 
         else:
             rospy.loginfo("introducing intermediate goal in plan -- aligning in front of container again..")
@@ -677,6 +679,26 @@ class ChargingFailureResolver(GeneralFailureResolver):
             self.problem_resolved = True
             self.fail_cnt += 1
 
+    def clear_costmaps(self):
+        rospy.wait_for_service('/move_base_flex/clear_costmaps')
+        clear_costmaps_service = rospy.ServiceProxy('/move_base_flex/clear_costmaps', Empty)
+        rec_client = actionlib.SimpleActionClient("move_base_flex/recovery", RecoveryAction)
+        rec_client.wait_for_server()
+
+        # order matters -> first global, then local
+        rospy.loginfo("clearing global costmap..")
+        try:
+            clear_costmaps_service()
+        except rospy.ServiceException as e:
+            rospy.loginfo("error: %s", e)
+
+        rospy.loginfo("clearing local costmap..")
+        # concurrency_slot 3
+        clear_local_costmap_goal = RecoveryGoal('clear_costmap', 3)
+        rec_client.send_goal(clear_local_costmap_goal)
+        res = rec_client.wait_for_result()
+        if res:
+            rospy.loginfo("cleared costmap..")
 
     def resolve_undocking_failure(self):
         pass
