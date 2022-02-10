@@ -671,6 +671,7 @@ class ChargingFailureResolver(GeneralFailureResolver):
                 container_pub.publish(2.0)
                 rospy.sleep(0.5)
             # clear costmap to perceive that the door is open now
+            rospy.sleep(5)
             self.clear_costmaps()
 
         else:
