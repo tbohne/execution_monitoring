@@ -26,6 +26,7 @@ class ChargingFailureMonitoring:
         if self.sim_undocking_fail:
             rospy.loginfo("sim undocking fail..")
             self.raise_container_ramp()
+            self.sim_undocking_fail = False
 
         start_charge = self.latest_charge_level
         rospy.sleep(config.CHARGING_FAILURE_TIME)

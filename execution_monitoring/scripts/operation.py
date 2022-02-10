@@ -239,7 +239,7 @@ class ExecutePlan(smach.State):
                 rospy.loginfo("simulating charging failure..")
                 self.sim_charge_fail = False
                 # just sleep for some time to trigger charge fail
-                rospy.sleep(config.CHARGING_FAILURE_TIME)
+                rospy.sleep(config.CHARGING_FAILURE_TIME + 5)
                 return False
             else:
                 rospy.set_param("charging_mode", True)
@@ -349,6 +349,9 @@ class ExecutePlan(smach.State):
             a = action()
             a.name = "drive_to"
             a.pose = self.intermediate_nav_goal_pose
+            # remove the wrong base point
+            userdata.plan.pop(0)
+            # insert the correct one
             userdata.plan.insert(0, a)
 
         if len(userdata.plan) == 0:
