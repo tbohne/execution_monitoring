@@ -9,6 +9,7 @@ from arox_performance_parameters.msg import arox_operational_param
 from mbf_msgs.msg import RecoveryAction, RecoveryGoal
 from std_srvs.srv import Empty
 from arox_performance_parameters.msg import arox_battery_params
+from actionlib_msgs.msg import GoalStatusArray, GoalStatus
 
 
 class FallbackResolver:
@@ -622,19 +623,27 @@ class ChargingFailureResolver(GeneralFailureResolver):
         super(ChargingFailureResolver, self).__init__()
         rospy.Subscriber('/resolve_charging_failure', String, self.resolve_callback, queue_size=1)
         rospy.Subscriber('/arox/battery_param', arox_battery_params, self.battery_callback, queue_size=1)
+        rospy.Subscriber('/move_base_flex/exe_path/status', GoalStatusArray, self.mbf_status_callback, queue_size=1)
 
+        self.cmd_vel_pub = rospy.Publisher("/cmd_vel", Twist, queue_size=1)
         self.success_pub = rospy.Publisher('/resolve_charging_failure_success', Bool, queue_size=1)
         self.insert_goal_pub = rospy.Publisher('introduce_intermediate_nav_goal', String, queue_size=1)
 
         self.charge_level_at_resolution = 0.0
         self.latest_charge_level = 0.0
-        self.fail_cnt = 0
+        self.docking_fail_cnt = 0
+        self.undocking_fail_cnt = 0
+
+    def mbf_status_callback(self, mbf_status):
+        if len(mbf_status.status_list) > 0 and mbf_status.status_list[-1].status == config.GOAL_STATUS_SUCCEEDED:
+            # undocking was obviously successful - reset fail cnt
+            self.undocking_fail_cnt = 0
 
     def battery_callback(self, msg):
         self.latest_charge_level = msg.charge
         if self.latest_charge_level > self.charge_level_at_resolution:
             # resolution successful - reset fail cnt
-            self.fail_cnt = 0
+            self.docking_fail_cnt = 0
 
     def resolve_callback(self, msg):
         rospy.loginfo("launch charging failure resolver..")
@@ -659,7 +668,7 @@ class ChargingFailureResolver(GeneralFailureResolver):
         self.charge_level_at_resolution = self.latest_charge_level
 
         # already tried resolution before - call human
-        if self.fail_cnt == 1:
+        if self.docking_fail_cnt == 1:
             rospy.loginfo("already tried autonomous resolution before -- calling human operator for help..")
             self.fallback_pub.publish(config.CHARGING_FAILURE_ONE)
             while not self.problem_resolved:
@@ -678,7 +687,7 @@ class ChargingFailureResolver(GeneralFailureResolver):
             rospy.loginfo("introducing intermediate goal in plan -- aligning in front of container again..")
             self.insert_goal_pub.publish("0")
             self.problem_resolved = True
-            self.fail_cnt += 1
+            self.docking_fail_cnt += 1
 
     def clear_costmaps(self):
         rospy.wait_for_service('/move_base_flex/clear_costmaps')
@@ -702,7 +711,34 @@ class ChargingFailureResolver(GeneralFailureResolver):
             rospy.loginfo("cleared costmap..")
 
     def resolve_undocking_failure(self):
-        pass
+         # already tried resolution before - call human
+        if self.undocking_fail_cnt == 1:
+            rospy.loginfo("already tried autonomous resolution before -- calling human operator for help..")
+            self.fallback_pub.publish(config.CHARGING_FAILURE_TWO)
+            while not self.problem_resolved:
+                rospy.sleep(5)
+            # human would have opened the container -- in case it was closed
+            rospy.loginfo("sending command to open container front..")
+            container_pub = rospy.Publisher('/container/rampB_position_controller/command', Float64, queue_size=1)
+            for _ in range(3):
+                container_pub.publish(2.0)
+                rospy.sleep(0.5)
+            # clear costmap to perceive that the door is open now
+            rospy.sleep(5)
+            self.clear_costmaps()
+        else:
+            # TODO: drive back and forth..
+            twist = Twist()
+            twist.linear.x = 3.0
+            rate = rospy.Rate(2)
+            for _ in range(2):
+                for _ in range(2):
+                    self.cmd_vel_pub.publish(twist)
+                    rate.sleep()
+                twist.linear.x = -3.0
+
+            self.problem_resolved = True
+            self.undocking_fail_cnt += 1
 
     def resolve_charging_failure(self):
         pass
