@@ -94,12 +94,14 @@ class ExecutePlan(smach.State):
         rospy.Subscriber('introduce_intermediate_nav_goal', String, self.introduce_intermediate_nav_goal, queue_size=1)
 
         rospy.Subscriber('/sim_docking_failure', String, self.sim_docking_fail_callback, queue_size=1)
+        rospy.Subscriber('/sim_charging_failure', String, self.sim_charge_fail_callback, queue_size=1)
 
         self.drive_to_goal_client = actionlib.SimpleActionClient('drive_to_goal', drive_to_goalAction)
         self.scan_client = actionlib.SimpleActionClient('dummy_scanner', ScanAction)
         self.operation_pub = rospy.Publisher('arox/ongoing_operation', arox_operational_param, queue_size=1)
         self.nav_fail_pub = rospy.Publisher('/explicit_nav_failure', String, queue_size=1)
         self.charge_fail_pub = rospy.Publisher('/explicit_charging_failure', String, queue_size=1)
+        self.charge_action_pub = rospy.Publisher('/charge_action', String, queue_size=1)
 
         self.robot_pose = None
         self.pose_sub = rospy.Subscriber("/odometry/filtered_odom", Odometry, self.odom_callback, queue_size=1)
@@ -108,6 +110,7 @@ class ExecutePlan(smach.State):
         self.deactivate_localization_pub = rospy.Publisher('/deactivate_localization_monitoring', String, queue_size=1)
 
         self.sim_docking_fail = False
+        self.sim_charge_fail = False
 
         self.battery_discharged = False
         self.remaining_tasks = 0
@@ -119,6 +122,10 @@ class ExecutePlan(smach.State):
     def sim_docking_fail_callback(self, msg):
         rospy.loginfo("preparing simulation of docking failure..")
         self.sim_docking_fail = True
+
+    def sim_charge_fail_callback(self, msg):
+        rospy.loginfo("preparing simulation of charging failure..")
+        self.sim_charge_fail = True
 
     def odom_callback(self, odom):
         """
@@ -221,8 +228,17 @@ class ExecutePlan(smach.State):
             if not self.dock_to_charging_station():
                 return False
 
-            rospy.set_param("charging_mode", True)
-            charge_mode = rospy.get_param("charging_mode")
+            # notify charge failure monitoring that charging starts
+            self.charge_action_pub.publish("")
+
+            if self.sim_charge_fail:
+                rospy.loginfo("simulating charging failure..")
+                self.sim_charge_fail = False
+                # just sleep for some time to trigger charge fail
+                rospy.sleep(20)
+            else:
+                rospy.set_param("charging_mode", True)
+                charge_mode = rospy.get_param("charging_mode")
 
             while charge_mode:
                 charge_mode = rospy.get_param("charging_mode")
