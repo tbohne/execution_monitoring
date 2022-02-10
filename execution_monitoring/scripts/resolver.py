@@ -633,6 +633,7 @@ class ChargingFailureResolver(GeneralFailureResolver):
         self.latest_charge_level = 0.0
         self.docking_fail_cnt = 0
         self.undocking_fail_cnt = 0
+        self.charge_fail_cnt = 0
 
     def mbf_status_callback(self, mbf_status):
         if len(mbf_status.status_list) > 0 and mbf_status.status_list[-1].status == config.GOAL_STATUS_SUCCEEDED:
@@ -644,6 +645,7 @@ class ChargingFailureResolver(GeneralFailureResolver):
         if self.latest_charge_level > self.charge_level_at_resolution:
             # resolution successful - reset fail cnt
             self.docking_fail_cnt = 0
+            self.charge_fail_cnt = 0
 
     def resolve_callback(self, msg):
         rospy.loginfo("launch charging failure resolver..")
@@ -741,8 +743,26 @@ class ChargingFailureResolver(GeneralFailureResolver):
             self.undocking_fail_cnt += 1
 
     def resolve_charging_failure(self):
-        pass
+        rospy.loginfo("resolving charging failure..")
+        self.charge_level_at_resolution =  self.latest_charge_level
 
+        if self.charge_fail_cnt == 1:
+            rospy.loginfo("already tried autonomous resolution before -- calling human operator for help..")
+            self.fallback_pub.publish(config.CHARGING_FAILURE_THREE)
+            while not self.problem_resolved:
+                rospy.sleep(5)
+        else:
+            twist = Twist()
+            twist.linear.x = 3.0
+            rate = rospy.Rate(2)
+            for _ in range(2):
+                for _ in range(2):
+                    self.cmd_vel_pub.publish(twist)
+                    rate.sleep()
+                twist.linear.x = -3.0
+
+            self.problem_resolved = True
+            self.charge_fail_cnt += 1
 
 def node():
     rospy.init_node('failure_resolver')
