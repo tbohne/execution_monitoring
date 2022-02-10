@@ -15,24 +15,33 @@ class ChargingFailureMonitoring:
 
         self.contingency_pub = rospy.Publisher('/contingency_preemption', String, queue_size=1)
         self.latest_charge_level = 0.0
+        self.sim_undocking_fail = False
 
     def battery_callback(self, msg):
         self.latest_charge_level = msg.charge
 
     def charge_monitoring(self, msg):
+
+        if self.sim_undocking_fail:
+            rospy.loginfo("sim undocking fail..")
+            self.raise_container_ramp()
+
         start_charge = self.latest_charge_level
-        rospy.sleep(15)
+        rospy.sleep(config.CHARGING_FAILURE_TIME)
         if self.latest_charge_level <= start_charge:
             rospy.loginfo("CONTINGENCY: charge level not increasesing although it should..")
             self.contingency_pub.publish(config.CHARGING_FAILURE_THREE)
 
-    def undocking_fail_callback(self, msg):
-        # TODO: should be event-based in experiments later -- close container just before undocking starts
-        rospy.loginfo("sim undocking fail -- sending command to close container front..")
+    def raise_container_ramp(self):
+        rospy.loginfo("raising container ramp..")
         container_pub = rospy.Publisher('/container/rampB_position_controller/command', Float64, queue_size=1)
         for _ in range(3):
             container_pub.publish(-2.0)
             rospy.sleep(0.5)
+
+    def undocking_fail_callback(self, msg):
+        rospy.loginfo("preparing undocking fail sim..")
+        self.sim_undocking_fail = True
 
     def explicit_failure_callback(self, msg):
         rospy.loginfo("explicit charging fail communicated by operation smach..")
