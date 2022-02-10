@@ -93,7 +93,7 @@ class ExecutePlan(smach.State):
         rospy.Subscriber('/arox/battery_param', arox_battery_params, self.battery_callback, queue_size=1)
         rospy.Subscriber('introduce_intermediate_nav_goal', String, self.introduce_intermediate_nav_goal, queue_size=1)
 
-        rospy.Subscriber('/sim_docking_failure', String, self.sim_docking_fail_callback, queue_size=1)
+        rospy.Subscriber('/sim_docking_failure_base_pose', String, self.sim_docking_fail_callback, queue_size=1)
         rospy.Subscriber('/sim_charging_failure', String, self.sim_charge_fail_callback, queue_size=1)
 
         self.drive_to_goal_client = actionlib.SimpleActionClient('drive_to_goal', drive_to_goalAction)

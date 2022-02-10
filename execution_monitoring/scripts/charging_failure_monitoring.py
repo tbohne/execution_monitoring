@@ -8,7 +8,8 @@ class ChargingFailureMonitoring:
 
     def __init__(self):
         rospy.Subscriber('/explicit_charging_failure', String, self.explicit_failure_callback, queue_size=1)
-        rospy.Subscriber('/undocking_fail_sim', String, self.undocking_fail_callback, queue_size=1)
+        rospy.Subscriber('/sim_undocking_failure', String, self.undocking_fail_callback, queue_size=1)
+        rospy.Subscriber('/sim_docking_failure_raised_ramp', String, self.docking_fail_callback, queue_size=1)
 
         rospy.Subscriber('/charge_action', String, self.charge_monitoring, queue_size=1)
         rospy.Subscriber('/arox/battery_param', arox_battery_params, self.battery_callback, queue_size=1)
@@ -42,6 +43,10 @@ class ChargingFailureMonitoring:
     def undocking_fail_callback(self, msg):
         rospy.loginfo("preparing undocking fail sim..")
         self.sim_undocking_fail = True
+
+    def docking_fail_callback(self, msg):
+        rospy.loginfo("sim docking fail..")
+        self.raise_container_ramp()
 
     def explicit_failure_callback(self, msg):
         rospy.loginfo("explicit charging fail communicated by operation smach..")
