@@ -104,6 +104,7 @@ class ExecutePlan(smach.State):
         self.charge_action_pub = rospy.Publisher('/charge_action', String, queue_size=1)
 
         self.robot_pose = None
+        self.pose_in_front_of_container = None
         self.pose_sub = rospy.Subscriber("/odometry/filtered_odom", Odometry, self.odom_callback, queue_size=1)
 
         self.activate_localization_pub = rospy.Publisher('/activate_localization_monitoring', String, queue_size=1)
@@ -204,6 +205,13 @@ class ExecutePlan(smach.State):
                 rospy.loginfo("driving goal progress: %s", out.progress)
                 return False
 
+            # in container scenarios "return_to_base" includes docking
+            if config.DOCKING:
+                self.pose_in_front_of_container = self.robot_pose
+                rospy.loginfo("start docking procedure..")
+                if not self.dock_to_charging_station():
+                    return False
+
             rospy.loginfo("successfully performed action: %s", success)
             return success
 
@@ -221,12 +229,6 @@ class ExecutePlan(smach.State):
 
         elif action.name == "charge":
             self.publish_state_of_ongoing_operation("charging")
-            rospy.loginfo("start docking procedure..")
-
-            pose_in_front_of_container = self.robot_pose
-
-            if not self.dock_to_charging_station():
-                return False
 
             # notify charge failure monitoring that charging starts
             self.charge_action_pub.publish("")
@@ -248,7 +250,7 @@ class ExecutePlan(smach.State):
             if not charge_mode:
                 rospy.loginfo("battery charged..")
                 self.activate_localization_pub.publish("")
-                return self.undock_from_charging_station(pose_in_front_of_container)
+                return self.undock_from_charging_station(self.pose_in_front_of_container)
         else:
             rospy.loginfo("error - unknown action: %s", action.name)
         return False
