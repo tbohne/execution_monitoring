@@ -40,7 +40,7 @@ FIELD = [52.32042638488258,  8.153084460244127, 270]
 #############################################################################
 DOCKING_BASE_POSE_FAIL = [52.32059819361085, 8.153113603063638, 90]
 
-CHARGING_FAILURE_TIME = 15
+CHARGING_FAILURE_TIME = 10
 
 CHARGING_FAILURE_ONE = "docking failure - explicit docking smach failure"
 CHARGING_FAILURE_TWO = "undocking failure - explicit undocking smach failure"
