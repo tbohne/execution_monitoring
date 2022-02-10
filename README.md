@@ -79,6 +79,15 @@
     - **unavailable plan service:** `rostopic pub -1 /toggle_unavailable_plan_service std_msgs/String fail`
     - **empty plan:** `rostopic pub -1 /sim_empty_plan std_msgs/String fail`
     - **infeasible plan:** `rostopic pub -1 /sim_infeasible_plan std_msgs/String fail`
+- **navigation failures**
+    - **static obstacles:** `rostopic pub -1 /spawn_static_obstacles std_msgs/String scene_[one, two, three, four]`
+    - **robot prison:** `rostopic pub -1 /spawn_robot_prison std_msgs/String fail`
+    - **navigation failure:** `rostopic pub -1 /trigger_nav_fail std_msgs/String fail`
+- **charging failures**
+    - **undocking failure (raised ramp):** `rostopic pub -1 /sim_undocking_failure std_msgs/String fail`
+    - **docking failure (raised ramp):** `rostopic pub -1 /sim_docking_failure_raised_ramp std_msgs/String fail`
+    - **docking failure (wrong base pose):** `rostopic pub -1 /sim_docking_failure_base_pose std_msgs/String fail`
+    - **charging failure:** `rostopic pub -1 /sim_charging_failure std_msgs/String fail`
 
 ## Communication with Human Operator
 
