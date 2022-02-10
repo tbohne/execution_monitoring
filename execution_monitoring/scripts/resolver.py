@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 import rospy
-from std_msgs.msg import String, Bool
+from std_msgs.msg import String, Bool, Float64
 import actionlib
 from arox_navigation_flex.msg import drive_to_goalAction
 from execution_monitoring import config, util
@@ -664,6 +664,13 @@ class ChargingFailureResolver(GeneralFailureResolver):
             self.fallback_pub.publish(config.CHARGING_FAILURE_ONE)
             while not self.problem_resolved:
                 rospy.sleep(5)
+            # opening container again -- in case it was closed
+            rospy.loginfo("sending command to open container front..")
+            container_pub = rospy.Publisher('/container/rampB_position_controller/command', Float64, queue_size=1)
+            for _ in range(3):
+                container_pub.publish(2.0)
+                rospy.sleep(0.5)
+
         else:
             rospy.loginfo("introducing intermediate goal in plan -- aligning in front of container again..")
             self.insert_goal_pub.publish("0")
