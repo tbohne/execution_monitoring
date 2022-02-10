@@ -2,6 +2,7 @@
 import rospy
 from std_msgs.msg import String, Float64
 from execution_monitoring import config
+from arox_performance_parameters.msg import arox_battery_params
 
 class ChargingFailureMonitoring:
 
@@ -9,7 +10,21 @@ class ChargingFailureMonitoring:
         rospy.Subscriber('/explicit_charging_failure', String, self.explicit_failure_callback, queue_size=1)
         rospy.Subscriber('/undocking_fail_sim', String, self.undocking_fail_callback, queue_size=1)
 
+        rospy.Subscriber('/charge_action', String, self.charge_monitoring, queue_size=1)
+        rospy.Subscriber('/arox/battery_param', arox_battery_params, self.battery_callback, queue_size=1)
+
         self.contingency_pub = rospy.Publisher('/contingency_preemption', String, queue_size=1)
+        self.latest_charge_level = 0.0
+
+    def battery_callback(self, msg):
+        self.latest_charge_level = msg.charge
+
+    def charge_monitoring(self, msg):
+        start_charge = self.latest_charge_level
+        rospy.sleep(15)
+        if self.latest_charge_level <= start_charge:
+            rospy.loginfo("CONTINGENCY: charge level not increasesing although it should..")
+            pass
 
     def undocking_fail_callback(self, msg):
         # TODO: should be event-based in experiments later -- close container just before undocking starts
