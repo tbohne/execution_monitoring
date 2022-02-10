@@ -8,6 +8,7 @@ from geometry_msgs.msg import Twist
 from arox_performance_parameters.msg import arox_operational_param
 from mbf_msgs.msg import RecoveryAction, RecoveryGoal
 from std_srvs.srv import Empty
+from arox_performance_parameters.msg import arox_battery_params
 
 
 class FallbackResolver:
@@ -542,6 +543,14 @@ class NavigationFailureResolver(GeneralFailureResolver):
     def resolution_failure_callback(self, msg):
         rospy.loginfo("nav fail resolution failed.. cancelling resolution attempt..")
         self.drive_to_goal_client.cancel_all_goals()
+        self.fallback_pub.publish(msg)
+        while not self.problem_resolved:
+            rospy.sleep(5)
+        # solved -- obstacles removed
+        self.remove_obstacles_pub.publish("")
+        # wait for obstacle removal before costmap clearance
+        rospy.sleep(3)
+        self.clear_costmaps()
 
     def resolve_callback(self, msg):
         rospy.loginfo("launch navigation failure resolver..")
@@ -607,6 +616,67 @@ class NavigationFailureResolver(GeneralFailureResolver):
         elif self.drive_to_goal_client.get_state() == config.GOAL_STATUS_SUCCEEDED:
             self.problem_resolved = True
 
+class ChargingFailureResolver(GeneralFailureResolver):
+
+    def __init__(self):
+        super(ChargingFailureResolver, self).__init__()
+        rospy.Subscriber('/resolve_charging_failure', String, self.resolve_callback, queue_size=1)
+        rospy.Subscriber('/arox/battery_param', arox_battery_params, self.battery_callback, queue_size=1)
+
+        self.success_pub = rospy.Publisher('/resolve_charging_failure_success', Bool, queue_size=1)
+        self.insert_goal_pub = rospy.Publisher('introduce_intermediate_nav_goal', String, queue_size=1)
+
+        self.charge_level_at_resolution = 0.0
+        self.latest_charge_level = 0.0
+        self.fail_cnt = 0
+
+    def battery_callback(self, msg):
+        self.latest_charge_level = msg.charge
+        if self.latest_charge_level > self.charge_level_at_resolution:
+            # resolution successful - reset fail cnt
+            self.fail_cnt = 0
+
+    def resolve_callback(self, msg):
+        rospy.loginfo("launch charging failure resolver..")
+        rospy.loginfo("type of charging failure: %s", msg.data)
+        self.problem_resolved = False
+
+        if msg.data == config.CHARGING_FAILURE_ONE:
+            self.resolve_docking_failure()
+        elif msg.data == config.CHARGING_FAILURE_TWO:
+            self.resolve_undocking_failure()
+        elif msg.data == config.CHARGING_FAILURE_THREE:
+            self.resolve_charging_failure()
+        else:
+            rospy.loginfo("cannot resolve unknown nav failure: %s", msg.data)
+
+        if self.problem_resolved:
+            self.success_pub.publish(True)
+
+    def resolve_docking_failure(self):
+        rospy.loginfo("resolving docking failure..")
+
+        self.charge_level_at_resolution = self.latest_charge_level
+
+        # already tried resolution before - call human
+        if self.fail_cnt == 1:
+            rospy.loginfo("already tried autonomous resolution before -- calling human operator for help..")
+            self.fallback_pub.publish(config.CHARGING_FAILURE_ONE)
+            while not self.problem_resolved:
+                rospy.sleep(5)
+        else:
+            rospy.loginfo("introducing intermediate goal in plan -- aligning in front of container again..")
+            self.insert_goal_pub.publish("0")
+            self.problem_resolved = True
+            self.fail_cnt += 1
+
+
+    def resolve_undocking_failure(self):
+        pass
+
+    def resolve_charging_failure(self):
+        pass
+
 
 def node():
     rospy.init_node('failure_resolver')
@@ -619,6 +689,7 @@ def node():
     LocalizationFailureResolver()
     PlanDeploymentFailureResolver()
     NavigationFailureResolver()
+    ChargingFailureResolver()
     rospy.spin()
 
 if __name__ == '__main__':
