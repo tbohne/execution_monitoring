@@ -38,7 +38,7 @@ class ChargingFailureMonitoring:
         rospy.loginfo("raising container ramp..")
         container_pub = rospy.Publisher('/container/rampB_position_controller/command', Float64, queue_size=1)
         for _ in range(3):
-            container_pub.publish(-2.0)
+            container_pub.publish(0.0)
             rospy.sleep(0.5)
 
     def undocking_fail_callback(self, msg):

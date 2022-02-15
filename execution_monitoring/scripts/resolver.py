@@ -686,8 +686,7 @@ class ChargingFailureResolver(GeneralFailureResolver):
             self.clear_costmaps()
 
         else:
-            rospy.loginfo("introducing intermediate goal in plan -- aligning in front of container again..")
-            self.insert_goal_pub.publish("0")
+            rospy.loginfo("just trying again..")
             self.problem_resolved = True
             self.docking_fail_cnt += 1
 

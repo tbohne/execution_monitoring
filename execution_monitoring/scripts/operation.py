@@ -206,7 +206,7 @@ class ExecutePlan(smach.State):
                 return False
 
             # in container scenarios "return_to_base" includes docking
-            if config.DOCKING:
+            if action.name == "return_to_base" and config.DOCKING:
                 self.pose_in_front_of_container = self.robot_pose
                 rospy.loginfo("start docking procedure..")
                 if not self.dock_to_charging_station():
@@ -342,17 +342,6 @@ class ExecutePlan(smach.State):
         rospy.loginfo("executing EXECUTE_PLAN state..")
 
         self.remaining_tasks = len(userdata.plan)
-
-        if self.introduce_nav_goal and self.intermediate_nav_goal_pose is not None:
-            rospy.loginfo("introducing intermediate nav goal..")
-            self.introduce_nav_goal = False
-            a = action()
-            a.name = "drive_to"
-            a.pose = self.intermediate_nav_goal_pose
-            # remove the wrong base point
-            userdata.plan.pop(0)
-            # insert the correct one
-            userdata.plan.insert(0, a)
 
         if len(userdata.plan) == 0:
             rospy.loginfo("plan successfully executed..")
