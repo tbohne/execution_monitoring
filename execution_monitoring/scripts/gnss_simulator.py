@@ -42,6 +42,7 @@ class GNSSSimulator:
         rospy.Subscriber("/toggle_simulated_teleport", String, self.toggle_sim_teleport_callback, queue_size=1)
 
         self.gps_publisher = rospy.Publisher('/fix', NavSatFix, queue_size=1)
+        self.sim_info_pub = rospy.Publisher('/sim_info', String, queue_size=1)
 
     def toggle_sim_teleport_callback(self, msg):
         self.sim_teleport = not self.sim_teleport
@@ -91,50 +92,60 @@ class GNSSSimulator:
         # timeout sim
         if self.sim_timeout:
             self.gnss_sub.unregister()
+            self.sim_info_pub.publish("GNSS simulator: sim GNSS timeout")
             rospy.sleep(config.GPS_TIMEOUT)
             self.sim_timeout = False
             self.gnss_sub = rospy.Subscriber('/fix_plugin', NavSatFix, self.sim_gps_callback, queue_size=1)
 
         # quality sim
         if self.sim_good_quality:
+            self.sim_info_pub.publish("GNSS simulator: sim good GNSS quality")
             nav_sat_fix.status.status = config.GNSS_STATUS_GBAS_FIX
             nav_sat_fix.position_covariance_type = config.GNSS_COVARIANCE_TYPE_DIAGONAL_KNOWN
             nav_sat_fix.position_covariance = [6, 0.0, 0.0, 0.0, 6, 0.0, 0.0, 0.0, 6]
             nav_sat_fix.status.service = config.GNSS_SERVICE_GPS
         elif self.sim_med_quality:
+            self.sim_info_pub.publish("GNSS simulator: sim medium GNSS quality")
             nav_sat_fix.status.status = config.GNSS_STATUS_FIX
             nav_sat_fix.position_covariance_type = config.GNSS_COVARIANCE_TYPE_APPROXIMATED
             nav_sat_fix.position_covariance = [6, 0.0, 0.0, 0.0, 6, 0.0, 0.0, 0.0, 6]
             nav_sat_fix.status.service = config.GNSS_SERVICE_GALILEO
         elif self.sim_low_quality:
+            self.sim_info_pub.publish("GNSS simulator: sim low GNSS quality")
             nav_sat_fix.status.status = config.GNSS_STATUS_FIX
             nav_sat_fix.position_covariance_type = config.GNSS_COVARIANCE_TYPE_UNKNOWN
             nav_sat_fix.status.service = config.GNSS_SERVICE_GALILEO
 
         # status sim
         if self.sim_unknown_status:
+            self.sim_info_pub.publish("GNSS simulator: sim unknown GNSS status")
             nav_sat_fix.status.status = 5
             self.sim_unknown_status = False
         elif self.sim_no_fix:
+            self.sim_info_pub.publish("GNSS simulator: sim no fix")
             nav_sat_fix.status.status = config.GNSS_STATUS_NO_FIX
             self.sim_no_fix = False
         elif self.sim_no_rtk:
+            self.sim_info_pub.publish("GNSS simulator: sim no RTK")
             nav_sat_fix.status.status = config.GNSS_STATUS_FIX
             self.sim_no_rtk = False
 
         # service sim
         if self.sim_unknown_service:
+            self.sim_info_pub.publish("GNSS simulator: sim unknown service")
             nav_sat_fix.status.service = 3
             self.sim_unknown_service = False
 
         # lat / lng belief state sim
         if self.sim_infeasible_lat_lng:
+            self.sim_info_pub.publish("GNSS simulator: sim infeasible lat / lng")
             nav_sat_fix.latitude = -120
             nav_sat_fix.longitude = 200
             self.sim_infeasible_lat_lng = False
 
         # covariance sim
         if self.sim_variance_history_failure:
+            self.sim_info_pub.publish("GNSS simulator: sim covariance failure")
             nav_sat_fix.position_covariance_type = config.GNSS_COVARIANCE_TYPE_DIAGONAL_KNOWN
             east = north = up = 1.0
             # fill history
@@ -145,12 +156,14 @@ class GNSSSimulator:
                 rospy.sleep(1)
             self.sim_variance_history_failure = False
         if self.sim_high_dev:
+            self.sim_info_pub.publish("GNSS simulator: sim high standard deviation")
             nav_sat_fix.position_covariance_type = config.GNSS_COVARIANCE_TYPE_DIAGONAL_KNOWN
             nav_sat_fix.position_covariance[0] = 101
             self.sim_high_dev = False
 
         if self.sim_teleport:
             # simulate GNSS jump
+            self.sim_info_pub.publish("GNSS simulator: sim GNSS jump")
             nav_sat_fix.latitude -= 0.0001
 
         self.gps_publisher.publish(nav_sat_fix)
