@@ -9,6 +9,7 @@ from geometry_msgs.msg import Pose, Point, Quaternion
 from arox_performance_parameters.msg import arox_operational_param
 from sensor_msgs.msg import NavSatFix
 from std_msgs.msg import String
+import json
 
 
 class DataAccumulator:
@@ -45,7 +46,7 @@ class DataAccumulator:
         circumstances['operation_time'] = str((datetime.now() - self.operation_start_time).total_seconds()) + "s"
 
         try:
-            self.msg_store.insert_named("failure_circumstances", circumstances)
+            self.msg_store.insert_named("failure_circumstances", String(json.dumps(circumstances)))
         except rospy.ServiceException as e:
             rospy.loginfo("service call failed: %s", e)
 
