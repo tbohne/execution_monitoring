@@ -1,9 +1,13 @@
 #!/usr/bin/env python
+import time
+from datetime import datetime
 import rospy
 import mongodb_store_msgs.srv as dc_srv
 import mongodb_store.util as dc_util
 from mongodb_store.message_store import MessageStoreProxy
 from geometry_msgs.msg import Pose, Point, Quaternion
+from arox_performance_parameters.msg import arox_operational_param
+from sensor_msgs.msg import NavSatFix
 from std_msgs.msg import String
 
 
@@ -12,16 +16,44 @@ class DataAccumulator:
     def __init__(self):
         self.msg_store = MessageStoreProxy()
 
-        rospy.Subscriber('/show_db_entries', String, self.show_db_entries, queue_size=1)
+        self.operation_start_time = datetime.now()
+        self.op_info = None
 
+        rospy.Subscriber('/show_db_entries', String, self.show_db_entries, queue_size=1)
         rospy.Subscriber('/contingency_preemption', String, self.contingency_callback, queue_size=1)
         rospy.Subscriber('/catastrophe_preemption', String, self.catastrophe_callback, queue_size=1)
         rospy.Subscriber('/robot_info', String, self.info_callback, queue_size=1)
+        rospy.Subscriber('/arox/ongoing_operation', arox_operational_param, self.operation_callback, queue_size=1)
+
+    def operation_callback(self, msg):
+        self.op_info = msg
+
+    def log_failure_circumstances(self):
+        rospy.loginfo("saving failure circumstances in DB..")
+
+        nav_sat_fix = None
+        try:
+            nav_sat_fix = rospy.wait_for_message('/fix', NavSatFix, timeout=10)
+        except rospy.ROSException as e:
+            rospy.loginfo("problem retrieving GNSS fix: %s", e)
+
+        # only meta information that are not already published by the monitoring procedures
+        # TODO: can be arbitrarily extended
+        circumstances = {}
+        circumstances['robot_pose'] = "lat: " + str(nav_sat_fix.latitude) + ", lng: "  + str(nav_sat_fix.longitude)
+        circumstances['completed_tasks'] = self.op_info.rewards_gained
+        circumstances['operation_time'] = str((datetime.now() - self.operation_start_time).total_seconds()) + "s"
+
+        try:
+            self.msg_store.insert_named("failure_circumstances", circumstances)
+        except rospy.ServiceException as e:
+            rospy.loginfo("service call failed: %s", e)
 
     def contingency_callback(self, msg):
         rospy.loginfo("saving contingency data in DB..")
         try:
             self.msg_store.insert_named("contingency", msg)
+            self.log_failure_circumstances()
         except rospy.ServiceException as e:
             rospy.loginfo("service call failed: %s", e)
 
@@ -29,6 +61,7 @@ class DataAccumulator:
         rospy.loginfo("saving catastrophe data in DB..")
         try:
             self.msg_store.insert_named("catastrophe", msg)
+            self.log_failure_circumstances()
         except rospy.ServiceException as e:
             rospy.loginfo("service call failed: %s", e)
 
