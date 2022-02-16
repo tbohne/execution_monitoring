@@ -24,6 +24,7 @@ class RepublishVelodyne:
         rospy.Subscriber("/toggle_simulated_scan_repetition", String, self.toggle_scan_repetition_callback, queue_size=1)
         rospy.Subscriber('/scan_action', String, self.action_callback, queue_size=1)
         self.scan_pub = rospy.Publisher("/RIEGL", LaserScan, queue_size=1)
+        self.sim_info_pub = rospy.Publisher('/sim_info', String, queue_size=1)
 
     def toggle_sensor_failure_callback(self, msg):
         self.simulate_sensor_failure = not self.simulate_sensor_failure
@@ -45,11 +46,13 @@ class RepublishVelodyne:
             # no total sensor failure
             if self.simulate_empty_ranges:
                 rospy.loginfo("SIMULATING EMPTY RANGES FAILURE")
+                self.sim_info_pub.publish("republish velodyne: sim empty ranges fail")
                 scan.ranges = []
                 self.simulate_empty_ranges = False
 
             if self.simulate_look_to_sky:
                 rospy.loginfo("SIMULATING LOOK TO SKY FAILURE")
+                self.sim_info_pub.publish("republish velodyne: sim 'look to sky' fail")
                 fake_ranges = [float('inf') for _ in range(len(scan.ranges))]
                 scan.ranges = fake_ranges
                 self.simulate_look_to_sky = False
@@ -57,6 +60,7 @@ class RepublishVelodyne:
             if self.simulate_scan_repetition:
                 if self.previous_scan:
                     rospy.loginfo("SIMULATING SCAN REPETITION FAILURE")
+                    self.sim_info_pub.publish("republish velodyne: sim scan repetition fail")
                     scan = self.previous_scan
                     self.simulate_scan_repetition = False
                 else:
@@ -66,6 +70,7 @@ class RepublishVelodyne:
         else:
             self.simulate_sensor_failure = False
             rospy.loginfo("SIMULATING TOTAL SENSOR FAILURE..")
+            self.sim_info_pub.publish("republish velodyne: sim total sensor fail")
 
         self.previous_scan = scan
 

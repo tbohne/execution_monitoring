@@ -12,6 +12,7 @@ class OperatorCommunication:
         rospy.Subscriber('/request_help_contingency', String, self.contingency_callback, queue_size=1)
         rospy.Subscriber('/request_help_catastrophe', String, self.catastrophe_callback, queue_size=1)
         rospy.Subscriber('/robot_info', String, self.robot_info_callback, queue_size=1)
+        self.op_comm_pub = rospy.Publisher('/operator_communication', String, queue_size=1)
 
     def contingency_callback(self, msg):
         """
@@ -19,6 +20,7 @@ class OperatorCommunication:
         """
         rospy.loginfo("############ CONTINGENCY CASE ############")
         rospy.loginfo("human intervention required, but robot still works in principle..")
+        self.op_comm_pub.publish("operator comm.: human intervention required, but robot still works in principle")
         rospy.loginfo("msg from robot: %s", msg.data)
 
     def catastrophe_callback(self, msg):
@@ -27,6 +29,7 @@ class OperatorCommunication:
         """
         rospy.loginfo("############ CATASTROPHE CASE ############")
         rospy.loginfo("human intervention required, robot down..")
+        self.op_comm_pub.publish("operator comm.: human intervention required, robot down")
         rospy.loginfo("msg from robot: %s", msg.data)
 
     def robot_info_callback(self, msg):
