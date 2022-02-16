@@ -29,6 +29,7 @@ class PhysicsController:
         self.unpause = rospy.ServiceProxy('/gazebo/unpause_physics', Empty)
         self.pause = rospy.ServiceProxy('/gazebo/pause_physics', Empty)
         self.cmd_vel_pub = rospy.Publisher("/cmd_vel", Twist, queue_size=1)
+        self.sim_info_pub = rospy.Publisher('/sim_info', String, queue_size=1)
 
         # INFO / DATA TOPICS
         rospy.Subscriber('/move_base_flex/exe_path/status', GoalStatusArray, self.mbf_status_callback, queue_size=1)
@@ -45,7 +46,6 @@ class PhysicsController:
 
         service_name = '/gazebo/set_physics_properties'
         rospy.wait_for_service(service_name)
-        rospy.loginfo("service found: %s", str(service_name))
 
         self.set_physics = rospy.ServiceProxy(service_name, SetPhysicsProperties)
         self.init_values()
@@ -80,7 +80,8 @@ class PhysicsController:
 
     def moving_although_standing_still_odom(self):
         rospy.sleep(config.STATUS_SWITCH_DELAY + 1)
-        rospy.loginfo("PHYS CON: sim movement without cause (cmd_vel)..")
+        rospy.loginfo("physics controller: sim unplanned movement via cmd_vel")
+        self.sim_info_pub.publish("physics controller: sim unplanned odometry movement via cmd_vel")
         self.sim_moving_although_standing_still_odom = False
         twist = Twist()
         twist.linear.x = 3.0
@@ -88,7 +89,8 @@ class PhysicsController:
 
     def moving_although_standing_still_imu(self):
         rospy.sleep(config.STATUS_SWITCH_DELAY + 1)
-        rospy.loginfo("PHYS CON: sim movement without cause (gravity)..")
+        rospy.loginfo("physics controller: sim unplanned IMU movement via gravity manipulation")
+        self.sim_info_pub.publish("physics controller: sim unplanned IMU movement via gravity manipulation")
         self.sim_moving_although_standing_still_imu = False
 
         z = -9.81
@@ -106,6 +108,7 @@ class PhysicsController:
 
     def yaw_divergence(self):
         rospy.loginfo("PHYS CON: yaw divergence sim..")
+        self.sim_info_pub.publish("physics controller: sim yaw divergence")
         self.sim_yaw_divergence = False
 
         if self.pose_list is not None:
@@ -135,7 +138,8 @@ class PhysicsController:
         rospy.loginfo("changing gravity back to normal..")
 
     def pos_change_without_wheel_movement(self):
-        rospy.loginfo("PHYS CON: sim pos change without wheel rotations..")
+        rospy.loginfo("physics controller: sim pos change without wheel rotations")
+        self.sim_info_pub.publish("physics controller: sim pos change without wheel rotations")
         z = -9.81
         x = 0.0
         # necessary to start movement
@@ -154,7 +158,8 @@ class PhysicsController:
         self.sim_pos_change_without_wheel_movement = False
 
     def wheel_movement_without_pos_change(self):
-        rospy.loginfo("PHYS CON: sim wheel rotations without pos change..")
+        rospy.loginfo("physics controller: sim wheel rotations without pos change")
+        self.sim_info_pub.publish("physics controller: sim wheel rotations without pos change")
         x = y = 0.0
 
         # let robot hover a bit
