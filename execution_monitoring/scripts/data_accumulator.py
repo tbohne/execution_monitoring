@@ -26,9 +26,17 @@ class DataAccumulator:
         rospy.Subscriber('/robot_info', String, self.info_callback, queue_size=1)
         rospy.Subscriber('/arox/ongoing_operation', arox_operational_param, self.operation_callback, queue_size=1)
         rospy.Subscriber('/sim_info', String, self.sim_info_callback, queue_size=1)
+        rospy.Subscriber('/action_info', String, self.action_info_callback, queue_size=1)
 
     def operation_callback(self, msg):
         self.op_info = msg
+
+    def action_info_callback(self, msg):
+        rospy.loginfo("saving action info data in DB..")
+        try:
+            self.msg_store.insert_named("action_info", msg)
+        except rospy.ServiceException as e:
+            rospy.loginfo("service call failed: %s", e)
 
     def sim_info_callback(self, msg):
         rospy.loginfo("saving sim info data in DB..")
