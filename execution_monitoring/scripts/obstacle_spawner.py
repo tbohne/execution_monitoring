@@ -69,8 +69,9 @@ class ObstacleSpawner:
         rospy.Subscriber('/fix', NavSatFix, self.gnss_update, queue_size=1)
         rospy.Subscriber('/move_base_flex/exe_path/status', GoalStatusArray, self.mbf_status_callback, queue_size=1)
         rospy.Subscriber('/clear_spawned_obstacles', String, self.delete_spawned_obstacles, queue_size=1)
-        self.robot_location = None
         self.insert_goal_pub = rospy.Publisher('introduce_intermediate_nav_goal', String, queue_size=1)
+        self.sim_info_pub = rospy.Publisher('/sim_info', String, queue_size=1)
+        self.robot_location = None
         self.mbf_status = None
         self.sim_prison_retarded = False
         self.spawned_obstacles = []
@@ -90,6 +91,7 @@ class ObstacleSpawner:
     def trigger_nav_fail(self, msg):
         # 0 -> base, 1 -> street, 2 -> field
         if self.robot_location is not None:
+            self.sim_info_pub.publish("obstacle spawner: sim nav fail through intermediate goal")
             dist_base = distance.distance((config.BASE_POSE[0], config.BASE_POSE[1]), self.robot_location).km
             dist_street = distance.distance((config.STREET[0], config.STREET[1]), self.robot_location).km
             dist_field = distance.distance((config.FIELD[0], config.FIELD[1]), self.robot_location).km
@@ -104,7 +106,8 @@ class ObstacleSpawner:
     def spawn_robot_prison(self, msg):
         if self.mbf_status == config.GOAL_STATUS_SUCCEEDED or self.mbf_status == config.GOAL_STATUS_ABORTED:
             rospy.wait_for_service("/gazebo/spawn_sdf_model")
-            rospy.loginfo("spawning scenario two obstacles..")
+            rospy.loginfo("spawning 'robot prison'")
+            self.sim_info_pub.publish("obstacle spawner: spawning 'robot prison'")
             # create a new subscription to the topic, receive one message, then unsubscribe
             robot_pose = rospy.wait_for_message('/pose_ground_truth', Odometry, timeout=config.SCAN_TIME_LIMIT)
             pos_x = robot_pose.pose.pose.position.x
@@ -160,23 +163,28 @@ class ObstacleSpawner:
 
         if msg.data == "scene_one":
             rospy.loginfo("spawning scenario one obstacles..")
+            self.sim_info_pub.publish("obstacle spawner: spawning scenario one obstacles")
             sign_poses = STOP_SIGN_POSES_SCENE_ONE
             barrier_poses = BARRIER_POSES_SCENE_ONE
         elif msg.data == "scene_two":
             rospy.loginfo("spawning scenario two obstacles..")
+            self.sim_info_pub.publish("obstacle spawner: spawning scenario two obstacles")
             sign_poses = STOP_SIGN_POSES_SCENE_TWO
             barrier_poses = BARRIER_POSES_SCENE_TWO
         elif msg.data == "scene_three":
             rospy.loginfo("spawning scenario three obstacles..")
+            self.sim_info_pub.publish("obstacle spawner: spawning scenario three obstacles")
             sign_poses = STOP_SIGN_POSES_SCENE_THREE
             barrier_poses = BARRIER_POSES_SCENE_THREE
         elif msg.data == "scene_four":
             rospy.loginfo("spawning scenario four obstacles..")
+            self.sim_info_pub.publish("obstacle spawner: spawning scenario four obstacles")
             sign_poses = STOP_SIGN_POSES_SCENE_FOUR
             barrier_poses = BARRIER_POSES_SCENE_FOUR
         else:
             rospy.loginfo("unknown scene: %s", msg.data)
             rospy.loginfo("using default scene (one)..")
+            self.sim_info_pub.publish("obstacle spawner: spawning scenario one obstacles")
 
         try:
             spawn_model_client = rospy.ServiceProxy('/gazebo/spawn_sdf_model', SpawnModel)
@@ -188,7 +196,6 @@ class ObstacleSpawner:
             # barriers
             for i in range(len(barrier_poses)):
                 self.spawn_object('barrier_' + msg.data + str(i), spawn_model_client, BARRIER_MODEL, *barrier_poses[i])
-                
 
         except rospy.ServiceException as e:
             print("Service call failed: ",e)
