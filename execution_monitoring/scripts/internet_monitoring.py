@@ -16,6 +16,8 @@ class InternetConnectionMonitor:
         rospy.Subscriber("/toggle_simulated_bad_download", String, self.toggle_bad_download_callback, queue_size=1)
         rospy.Subscriber("/toggle_simulated_bad_upload", String, self.toggle_bad_upload_callback, queue_size=1)
         self.internet_info_pub = rospy.Publisher('/internet_connectivity_info', Internet, queue_size=1)
+        self.sim_info_pub = rospy.Publisher('/sim_info', String, queue_size=1)
+        self.robot_info_pub = rospy.Publisher('/robot_info', String, queue_size=1)
         self.connect_to_speedtest()
 
     def connect_to_speedtest(self):
@@ -36,6 +38,7 @@ class InternetConnectionMonitor:
 
     def re_init(self, msg):
         rospy.loginfo("reinitializing internet monitoring node..%s", msg.data)
+        self.robot_info_pub.publish("reinitializing internet monitoring node")
         # wait for transition back to normal operation before trying to establish connection
         rospy.sleep(5)
         self.connect_to_speedtest()
@@ -45,9 +48,11 @@ class InternetConnectionMonitor:
         internet_msg.download = down
         internet_msg.upload = up
         if self.simulate_bad_download:
+            self.sim_info_pub.publish("internet monitoring: sim bad download")
             internet_msg.download = config.BAD_DOWNLOAD
             self.simulate_bad_download = False
         if self.simulate_bad_upload:
+            self.sim_info_pub.publish("internet monitoring: sim bad upload")
             internet_msg.upload = config.BAD_UPLOAD
             self.simulate_bad_upload = False
         return internet_msg
