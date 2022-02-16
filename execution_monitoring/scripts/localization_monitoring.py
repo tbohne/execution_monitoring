@@ -55,14 +55,17 @@ class LocalizationMonitoring:
 
     def deactivate(self, msg):
         rospy.loginfo("DEACTIVATING LOCALIZATION MONITORING..")
+        self.robot_info_pub.publish("deactivating localization monitoring")
         self.active_monitoring = False
 
     def activate(self, msg):
         rospy.loginfo("ACTIVATING LOCALIZATION MONITORING..")
+        self.robot_info_pub.publish("activating localization monitoring")
         self.active_monitoring = True
 
     def re_init(self, msg):
         rospy.loginfo("re-initialiizing the localiization monitoring..")
+        self.robot_info_pub.publish("re-initialiizing localiization monitoring")
         rospy.sleep(10)
         self.init()
 

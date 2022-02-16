@@ -10,11 +10,11 @@ class ChargingFailureMonitoring:
         rospy.Subscriber('/explicit_charging_failure', String, self.explicit_failure_callback, queue_size=1)
         rospy.Subscriber('/sim_undocking_failure', String, self.undocking_fail_callback, queue_size=1)
         rospy.Subscriber('/sim_docking_failure_raised_ramp', String, self.docking_fail_callback, queue_size=1)
-
         rospy.Subscriber('/charge_action', String, self.charge_monitoring, queue_size=1)
         rospy.Subscriber('/arox/battery_param', arox_battery_params, self.battery_callback, queue_size=1)
 
         self.contingency_pub = rospy.Publisher('/contingency_preemption', String, queue_size=1)
+        self.sim_info_pub = rospy.Publisher('/sim_info', String, queue_size=1)
         self.latest_charge_level = 0.0
         self.sim_undocking_fail = False
 
@@ -25,6 +25,7 @@ class ChargingFailureMonitoring:
 
         if self.sim_undocking_fail:
             rospy.loginfo("sim undocking fail..")
+            self.sim_info_pub.publish("charging failure monitoring: sim undocking failure")
             self.raise_container_ramp()
             self.sim_undocking_fail = False
 
@@ -36,6 +37,7 @@ class ChargingFailureMonitoring:
 
     def raise_container_ramp(self):
         rospy.loginfo("raising container ramp..")
+        self.sim_info_pub.publish("charging failure monitoring: sim failure -- raising container ramp")
         container_pub = rospy.Publisher('/container/rampB_position_controller/command', Float64, queue_size=1)
         for _ in range(3):
             container_pub.publish(0.0)
