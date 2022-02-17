@@ -30,6 +30,8 @@ class WeatherData:
         self.sunrise_time_sec = int(sunrise_time_sec)
         self.sunset_time_sec = int(sunset_time_sec)
 
+        self.robot_info_pub = rospy.Publisher('/robot_info', String, queue_size=1)
+
     def log_complete_info(self):
         rospy.loginfo("###############################################################################")
         # just for information
@@ -52,6 +54,11 @@ class WeatherData:
         rospy.loginfo("weather-related icon name: %s", self.weather_related_icon_name)
         rospy.loginfo("sunrise time: %s", self.sunrise_time)
         rospy.loginfo("sunset time: %s", self.sunset_time)
+
+        self.robot_info_pub.publish("weather_info: [time of observation: %s, status: %s, cloudiness percentage: %s, humidity percentage: %s," \
+            "atmospheric pressure: %s hPa, rain volume for the last 1 hour: %s mm, snow volume for the last 1 hour: %s mm, wind gust speed: %s m/s," \
+            "wind speed: %s m/s, wind direction: %s deg., min. temperature: %s [deg. C], temperature: %s [deg. C], max. temperature: %s [deg. C]" \
+            "OWM weather condition code: %s, sunrise time: %s, sunset time: %s")
         rospy.loginfo("###############################################################################")
 
 
@@ -61,6 +68,7 @@ class WeatherMonitoring:
         self.contingency_pub = rospy.Publisher('/contingency_preemption', String, queue_size=1)
         self.robot_info_pub = rospy.Publisher('/robot_info', String, queue_size=1)
         self.moderate_weather_pub = rospy.Publisher('/moderate_weather', String, queue_size=1)
+        self.sim_info_pub = rospy.Publisher('/sim_info', String, queue_size=1)
         rospy.Subscriber('/fix', NavSatFix, self.gnss_callback, queue_size=1)
         rospy.Subscriber('/resolve_weather_failure_success', Bool, self.resolve_callback, queue_size=1)
         rospy.Subscriber('/toggle_rain_sim', String, self.rain_callback, queue_size=1)
@@ -124,16 +132,22 @@ class WeatherMonitoring:
         sunset = data.get_sunset_time()
 
         if self.sim_rain:
+            self.sim_info_pub.publish("weather monitoring: sim rain")
             rain = {'1h': 8}
         if self.sim_snow:
+            self.sim_info_pub.publish("weather monitoring: sim snow")
             snow = {'1h': 4}
         if self.sim_wind:
+            self.sim_info_pub.publish("weather monitoring: sim wind")
             wind['gust'] = wind['speed'] = 27
         if self.sim_temp:
+            self.sim_info_pub.publish("weather monitoring: sim low temperature")
             temp = {'temp_min': -9, 'temp_max': -2, 'temp': -5}
         if self.code_sim:
+            self.sim_info_pub.publish("weather monitoring: sim weather code RAGGED_THUNDERSTORM")
             code = 221
         if self.sunset_sim:
+            self.sim_info_pub.publish("weather monitoring: sim sunset")
             sunset = int((datetime.now() - datetime(1970, 1, 1)).total_seconds())
 
         return WeatherData(time, status, clouds, humid, pressure, rain, snow, wind, temp, code, icon, sunrise, sunset, sunrise_iso, sunset_iso)
@@ -303,17 +317,15 @@ class WeatherMonitoring:
         return True
 
     def monitor_weather_data(self, weather_data):
-        # TODO: activate things again..
         rain_ok = self.monitor_rain_volume(weather_data.rain_vol)
-        snow_ok = True #self.monitor_snow_volume(weather_data.snow_vol)
+        snow_ok = self.monitor_snow_volume(weather_data.snow_vol)
         wind_ok = self.monitor_wind(weather_data.wind_gust_speed, weather_data.wind_speed)
-        # TODO: reactivate again
-        temp_ok = True# self.monitor_temperature(weather_data.min_temp, weather_data.max_temp, weather_data.temp)
-        code_ok = True#self.monitor_owm_weather_condition_code(weather_data.owm_weather_condition_code)
-        # TODO: activate again for real tests..
-        sun_ok = True #self.monitor_sunrise_and_sunset(weather_data.sunrise_time_sec, weather_data.sunset_time_sec)
+        temp_ok = self.monitor_temperature(weather_data.min_temp, weather_data.max_temp, weather_data.temp)
+        code_ok = self.monitor_owm_weather_condition_code(weather_data.owm_weather_condition_code)
+        sun_ok = self.monitor_sunrise_and_sunset(weather_data.sunrise_time_sec, weather_data.sunset_time_sec)
         if not self.active_monitoring and rain_ok and snow_ok and wind_ok and temp_ok and code_ok and sun_ok:
             self.moderate_weather_pub.publish("weather is moderate again..")
+            self.robot_info_pub.publish("weather is moderate again..")
 
     def launch_weather_monitoring(self):
 
@@ -322,9 +334,10 @@ class WeatherMonitoring:
         while not rospy.is_shutdown():
             if owm.is_API_online() and self.position is not None:
                 observation = owm.weather_at_coords(*self.position)
-                #print("monitoring weather for: " + observation.get_location().get_name())
+                rospy.loginfo("monitoring weather for: %s", observation.get_location().get_name())
+                self.robot_info_pub.publish("monitoring weather for: " + observation.get_location().get_name())
                 weather_data = self.parse_weather_data(observation.get_weather())
-                #weather_data.log_complete_info()
+                weather_data.log_complete_info()
                 self.monitor_weather_data(weather_data)
                 
                 # TODO: implement forecast monitoring -> seek shelter in time..
