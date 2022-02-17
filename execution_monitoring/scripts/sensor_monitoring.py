@@ -12,6 +12,8 @@ class SensorMonitoring:
         rospy.Subscriber('/scan_action', String, self.sensor_failure_monitoring, queue_size=1)
         self.contingency_pub = rospy.Publisher('/contingency_preemption', String, queue_size=1)
         self.catastrophe_pub = rospy.Publisher('/catastrophe_preemption', String, queue_size=1)
+        self.robot_info_pub = rospy.Publisher('/robot_info', String, queue_size=1)
+
         self.previous_scan = None
 
     def compute_scan_hash(self, scan):
@@ -30,6 +32,7 @@ class SensorMonitoring:
 
     def sensor_failure_monitoring(self, msg):
         rospy.loginfo("start sensor monitoring..")
+        self.robot_info_pub.publish("start sensor monitoring")
         scan = None
         try:
             # create a new subscription to the topic, receive one message, then unsubscribe
