@@ -20,12 +20,14 @@ from nav_msgs.msg import Odometry
 
 class Idle(smach.State):
     def __init__(self):
-        smach.State.__init__(self, outcomes=['waiting_for_plan', 'plan_received', 'end_of_episode_signal', 'external_problem'], 
+        smach.State.__init__(self, outcomes=['waiting_for_plan', 'plan_received', 'end_of_episode_signal', 'external_problem'],
                              input_keys=['input_plan'],
                              output_keys=['output_plan'])
         
         self.mission_name_pub = rospy.Publisher('/mission_name', String, queue_size=1)
         self.exception_pub = rospy.Publisher('/plan_retrieval_failure', UInt16, queue_size=1)
+        self.action_info_pub = rospy.Publisher('/action_info', String, queue_size=1)
+        self.robot_info_pub = rospy.Publisher('/robot_info', String, queue_size=1)
 
     def get_plan(self):
         try:
@@ -42,9 +44,11 @@ class Idle(smach.State):
 
     def execute(self, userdata):
         rospy.loginfo("executing IDLE state..")
+        self.action_info_pub.publish("executing IDLE state..")
 
         if self.preempt_requested():
             rospy.loginfo("external problem detected by monitoring procedures - preempting normal operation..")
+            self.robot_info_pub.publish("external problem detected by monitoring procedures - preempting normal operation..")
             self.service_preempt()
             return 'external_problem'
 
@@ -53,6 +57,7 @@ class Idle(smach.State):
         if len(userdata.input_plan) > 0:
             rospy.loginfo("input_plan: %s", userdata.input_plan)
             rospy.loginfo("continuing preempted plan..")
+            self.robot_info_pub.publish("continuing preempted plan: " + str(userdata.input_plan))
             userdata.output_plan = userdata.input_plan
             return "plan_received"
 
@@ -61,6 +66,7 @@ class Idle(smach.State):
 
         if plan is not None:
             rospy.loginfo("received plan..")
+            self.robot_info_pub.publish("received plan..")
 
             if len(plan) == 0:
                 rospy.loginfo("empty plan..")
@@ -92,7 +98,6 @@ class ExecutePlan(smach.State):
         rospy.Subscriber('/interrupt_active_goals', String, self.interrupt_active_goals, queue_size=1)
         rospy.Subscriber('/arox/battery_param', arox_battery_params, self.battery_callback, queue_size=1)
         rospy.Subscriber('introduce_intermediate_nav_goal', String, self.introduce_intermediate_nav_goal, queue_size=1)
-
         rospy.Subscriber('/sim_docking_failure_base_pose', String, self.sim_docking_fail_callback, queue_size=1)
         rospy.Subscriber('/sim_charging_failure', String, self.sim_charge_fail_callback, queue_size=1)
 
@@ -102,6 +107,9 @@ class ExecutePlan(smach.State):
         self.nav_fail_pub = rospy.Publisher('/explicit_nav_failure', String, queue_size=1)
         self.charge_fail_pub = rospy.Publisher('/explicit_charging_failure', String, queue_size=1)
         self.charge_action_pub = rospy.Publisher('/charge_action', String, queue_size=1)
+        self.action_info_pub = rospy.Publisher('/action_info', String, queue_size=1)
+        self.robot_info_pub = rospy.Publisher('/robot_info', String, queue_size=1)
+        self.sim_info_pub = rospy.Publisher('/sim_info', String, queue_size=1)
 
         self.robot_pose = None
         self.pose_in_front_of_container = None
@@ -165,9 +173,11 @@ class ExecutePlan(smach.State):
         if data.charge == 0.0:
             self.battery_discharged = True
             rospy.loginfo("battery completely discharged..")
+            self.robot_info_pub.publish("battery completely discharged..")
 
     def perform_action(self, action):
         rospy.loginfo("performing action %s..", action.name)
+        self.action_info_pub.publish("performing action: " + str(action.name))
 
         # moving actions
         if action.name == "drive_to" or action.name == "return_to_base":
@@ -177,6 +187,7 @@ class ExecutePlan(smach.State):
             if action.name == "return_to_base" and config.DOCKING:
                 if self.sim_docking_fail:
                     rospy.loginfo("simulating docking fail -- wrong container pos..")
+                    self.sim_info_pub.publish("simulating docking fail -- wrong container pos")
                     action.pose = config.DOCKING_BASE_POSE_FAIL
                     self.sim_docking_fail = False
                 else:
@@ -209,6 +220,7 @@ class ExecutePlan(smach.State):
             if action.name == "return_to_base" and config.DOCKING:
                 self.pose_in_front_of_container = self.robot_pose
                 rospy.loginfo("start docking procedure..")
+                self.robot_info_pub.publish("start docking procedure..")
                 if not self.dock_to_charging_station():
                     return False
 
@@ -237,6 +249,7 @@ class ExecutePlan(smach.State):
 
             if self.sim_charge_fail:
                 rospy.loginfo("simulating charging failure..")
+                self.sim_info_pub.publish("simulating charging failure")
                 self.sim_charge_fail = False
                 # just sleep for some time to trigger charge fail
                 rospy.sleep(config.CHARGING_FAILURE_TIME + 5)
@@ -252,6 +265,7 @@ class ExecutePlan(smach.State):
 
             if not charge_mode:
                 rospy.loginfo("battery charged..")
+                self.robot_info_pub.publish("battery charged..")
                 self.activate_localization_pub.publish("")
                 return self.undock_from_charging_station(self.pose_in_front_of_container)
         else:
@@ -264,6 +278,7 @@ class ExecutePlan(smach.State):
         goal.goal = "custom goal"
         docking_client.wait_for_server()
         rospy.loginfo("START DOCKING PROCEDURE..")
+        self.robot_info_pub.publish("start docking procedure")
         self.deactivate_localization_pub.publish("")
         docking_client.send_goal(goal)
         rospy.loginfo("goal sent, wait for accomplishment..")
@@ -277,6 +292,7 @@ class ExecutePlan(smach.State):
 
             if docking_client.get_result().result_state == "success":
                 rospy.loginfo("successfully docked to charging station..")
+                self.robot_info_pub.publish("successfully docked to charging station..")
                 return True
             else:
                 rospy.loginfo("docking failure..")
@@ -296,6 +312,7 @@ class ExecutePlan(smach.State):
         goal.ramp_alignment_pose = pose_in_front_of_container
         undocking_client.wait_for_server()
         rospy.loginfo("START UNDOCKING PROCEDURE..")
+        self.robot_info_pub.publish("start undocking procedure")
         undocking_client.send_goal(goal)
         rospy.loginfo("goal sent, wait for accomplishment")
         success = undocking_client.wait_for_result()
@@ -304,6 +321,8 @@ class ExecutePlan(smach.State):
             rospy.loginfo("UNDOCKING PROCEDURE FINISHED: %s", undocking_client.get_result().result_state)
 
             if undocking_client.get_result().result_state == "success":
+                rospy.loginfo("successfully undocked from charging station..")
+                self.robot_info_pub.publish("successfully undocked from charging station..")
                 # clear costmap due to ramp movement
                 self.clear_costmaps()
                 return True
@@ -325,12 +344,14 @@ class ExecutePlan(smach.State):
 
         # order matters -> first global, then local
         rospy.loginfo("clearing global costmap..")
+        self.robot_info_pub.publish("clearing global costmap..")
         try:
             clear_costmaps_service()
         except rospy.ServiceException as e:
             rospy.loginfo("error: %s", e)
 
         rospy.loginfo("clearing local costmap..")
+        self.robot_info_pub.publish("clearing local costmap..")
         # concurrency_slot 3
         clear_local_costmap_goal = RecoveryGoal('clear_costmap', 3)
         rec_client.send_goal(clear_local_costmap_goal)
@@ -345,19 +366,23 @@ class ExecutePlan(smach.State):
 
         if len(userdata.plan) == 0:
             rospy.loginfo("plan successfully executed..")
+            rospy.loginfo("plan successfully executed..")
             return "plan_completed"
         else:
             rospy.loginfo("executing plan - remaining actions: %s", len(userdata.plan))
+            self.robot_info_pub.publish("executing plan - remaining actions: " + str(len(userdata.plan)))
             a = userdata.plan.pop(0)
             self.latest_action = a
             if not self.battery_discharged:
                 action_successfully_performed = self.perform_action(a)
             else:
                 rospy.loginfo("hard failure..")
+                self.robot_info_pub.publish("hard failure -- battery discharged")
                 return "hard_failure"
 
             if self.preempt_requested():
                 rospy.loginfo("external problem detected by monitoring procedures - preempting normal operation..")
+                self.robot_info_pub.publish("external problem detected by monitoring procedures - preempting normal operation..")
                 # last action should be repeated
                 userdata.plan.insert(0, self.latest_action)
                 self.service_preempt()
@@ -365,9 +390,11 @@ class ExecutePlan(smach.State):
 
             if action_successfully_performed:
                 rospy.loginfo("action successfully completed - executing rest of plan..")
+                self.robot_info_pub.publish("action successfully completed - executing rest of plan..")
 
                 if self.introduce_nav_goal and self.intermediate_nav_goal_pose is not None:
                     rospy.loginfo("introducing intermediate nav goal..")
+                    self.robot_info_pub.publish("introducing intermediate nav goal..")
                     self.introduce_nav_goal = False
                     a = action()
                     a.name = "drive_to"
@@ -377,6 +404,7 @@ class ExecutePlan(smach.State):
                 return "action_completed"
             else:
                 rospy.loginfo("soft failure..")
+                self.robot_info_pub.publish("soft failure -- action not successfully performed")
                 return "soft_failure"
 
 
