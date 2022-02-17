@@ -24,11 +24,13 @@ class FallbackResolver:
         self.human_operator_contingency_pub = rospy.Publisher("/request_help_contingency", String, queue_size=1)
         self.human_operator_catastrophe_pub = rospy.Publisher("/request_help_catastrophe", String, queue_size=1)
         self.fallback_pub = rospy.Publisher("/fallback_success", Bool, queue_size=1)
+        self.resolution_pub = rospy.Publisher('/resolution', String, queue_size=1)
         self.problem_resolved = False
 
     def request_fallback(self, msg):
         rospy.loginfo("fallback requested.. communicating problem to human operator..")
         rospy.loginfo("problem: %s", msg.data)
+        self.resolution_pub.publish("fallback requested -- communicating problem to human operator -- problem: " + msg.data)
         self.problem_resolved = False
         self.human_operator_contingency_pub.publish(msg.data)
 
@@ -37,11 +39,12 @@ class FallbackResolver:
             rospy.loginfo("waiting for human operator to solve the problem..")
             rospy.sleep(5)
         
-        rospy.loginfo("sensor failure resolved..")
+        rospy.loginfo("failure resolved..")
         self.fallback_pub.publish(True)
 
     def solved_by_human_callback(self, msg):
         rospy.loginfo("solved by human operator: %s", msg.data)
+        self.resolution_pub.publish("solved by human operator: %" + msg.data)
         self.problem_resolved = True
 
 
@@ -50,14 +53,18 @@ class GeneralFailureResolver(object):
     def __init__(self):
         rospy.Subscriber("/fallback_success", Bool, self.fallback_callback, queue_size=1)
         self.fallback_pub = rospy.Publisher('/request_fallback', String, queue_size=1)
+        self.resolution_pub = rospy.Publisher('/resolution', String, queue_size=1)
+        self.robot_info_pub = rospy.Publisher('/robot_info', String, queue_size=1)
         self.problem_resolved = False
 
     def fallback_callback(self, msg):
         if msg.data:
             rospy.loginfo("solved by fallback resolver: %s", msg.data)
+            self.resolution_pub.publish("solved by fallback resolver: " + msg.data)
             self.problem_resolved = True
         else:
             rospy.loginfo("fallback solution was not successful..")
+            self.resolution_pub.publish("fallback solution was not successful..")
 
 class WeatherFailureResolver(GeneralFailureResolver):
 
@@ -72,6 +79,7 @@ class WeatherFailureResolver(GeneralFailureResolver):
     def resolve_callback(self, msg):
         rospy.loginfo("launch weather failure resolver..")
         rospy.loginfo("type of weather failure: %s", msg.data)
+        self.resolution_pub.publish("launch weather failure resolver -- type of weather failure: " + msg.data)
         self.problem_resolved = False
         self.moderate_weather = False
 
@@ -89,9 +97,11 @@ class WeatherFailureResolver(GeneralFailureResolver):
         self.moderate_weather = True
 
     def resolve_weather_failure(self, msg):
+        self.resolution_pub.publish("resolve drastic weather change -- seeking shelter -- driving back to base")
         rospy.loginfo("resolve drastic weather change..")
         rospy.loginfo("seeking shelter - driving back to base..")
 
+        # TODO: implement docking for config.DOCKING cases
         action_goal = util.create_dtg_goal(config.BASE_POSE, None)
         self.drive_to_goal_client.wait_for_server()
         self.drive_to_goal_client.send_goal(action_goal)
@@ -106,6 +116,9 @@ class WeatherFailureResolver(GeneralFailureResolver):
 
         rospy.loginfo("start docking procedure..")
         rospy.loginfo("waiting until weather is moderate again - charging battery in the meantime..")
+        self.robot_info_pub.publish("waiting until weather is moderate again -- charging battery in the meantime")
+        self.resolution_pub.publish("waiting until weather is moderate again -- charging battery in the meantime")
+
         rospy.set_param("charging_mode", True)
         charge_mode = rospy.get_param("charging_mode")
 
@@ -116,11 +129,13 @@ class WeatherFailureResolver(GeneralFailureResolver):
 
         if not charge_mode:
             rospy.loginfo("battery charged..")
+            self.robot_info_pub.publish("battery charged")
 
         rospy.loginfo("waiting until weather is moderate again")
         while not self.moderate_weather:
             rospy.sleep(5)
-
+        
+        self.resolution_pub.publish("weather moderate again -- problem solved")
         self.problem_resolved = True
 
 
@@ -133,6 +148,7 @@ class DataManagementFailureResolver(GeneralFailureResolver):
 
     def resolve_callback(self, msg):
         rospy.loginfo("launch data management failure resolver..")
+        self.resolution_pub.publish("launch data management failure resolver -- type of failure: " + msg.data)
         rospy.loginfo("type of data management failure: %s", msg.data)
         self.problem_resolved = False
 
@@ -143,16 +159,19 @@ class DataManagementFailureResolver(GeneralFailureResolver):
             self.resolve_type_two_failure(config.DATA_MANAGEMENT_FAILURE_TWO)
 
         if self.problem_resolved:
+            self.resolution_pub.publish("problem resolved")
             self.success_pub.publish(True)
 
     def resolve_type_one_failure(self, msg):
         rospy.loginfo("resolve type one failure..")
+        self.resolution_pub.publish("resolve type one failure")
         self.fallback_pub.publish(msg)
         while not self.problem_resolved:
             rospy.sleep(5)
 
     def resolve_type_two_failure(self, msg):
         rospy.loginfo("resolve type two failure..")
+        self.resolution_pub.publish("resolve type two failure")
         self.fallback_pub.publish(msg)
         while not self.problem_resolved:
             rospy.sleep(5)
@@ -171,6 +190,7 @@ class ConnectionResolver(GeneralFailureResolver):
     def resolve_callback(self, msg):
         rospy.loginfo("launch connection failure resolver..")
         rospy.loginfo("type of connection failure: %s", msg.data)
+        self.resolution_pub.publish("launch connection failure resolver -- type of connection failure: " + msg.data)
         self.problem_resolved = False
 
         # different types of resolution are required based on the type of issue
@@ -216,34 +236,40 @@ class ConnectionResolver(GeneralFailureResolver):
             self.resolve_type_twenty_failure(config.CONNECTION_FAILURE_TWENTY)
 
         if self.problem_resolved:
+            self.resolution_pub.publish("problem resolved")
             self.success_pub.publish(True)
 
     def resolve_type_one_failure(self, msg):
         rospy.loginfo("resolve type one failure..")
+        self.resolution_pub.publish("resolve type one failure")
         self.fallback_pub.publish(msg)
         while not self.problem_resolved:
             rospy.sleep(5)
 
     def resolve_type_two_failure(self, msg):
         rospy.loginfo("resolve type two failure..")
+        self.resolution_pub.publish("resolve type two failure")
         self.fallback_pub.publish(msg)
         while not self.problem_resolved:
             rospy.sleep(5)
 
     def resolve_type_three_failure(self, msg):
         rospy.loginfo("resolve type three failure..")
+        self.resolution_pub.publish("resolve type three failure")
         self.fallback_pub.publish(msg)
         while not self.problem_resolved:
             rospy.sleep(5)
 
     def resolve_type_four_failure(self, msg):
         rospy.loginfo("resolve type four failure..")
+        self.resolution_pub.publish("resolve type four failure")
         self.fallback_pub.publish(msg)
         while not self.problem_resolved:
             rospy.sleep(5)
 
     def resolve_type_five_failure(self, msg):
         rospy.loginfo("resolve type five failure..")
+        self.resolution_pub.publish("resolve type five failure")
         self.fallback_pub.publish(msg)
         while not self.problem_resolved:
             rospy.sleep(5)
@@ -252,90 +278,105 @@ class ConnectionResolver(GeneralFailureResolver):
 
     def resolve_type_six_failure(self, msg):
         rospy.loginfo("resolve type six failure..")
+        self.resolution_pub.publish("resolve type six failure")
         self.fallback_pub.publish(msg)
         while not self.problem_resolved:
             rospy.sleep(5)
 
     def resolve_type_seven_failure(self, msg):
         rospy.loginfo("resolve type seven failure..")
+        self.resolution_pub.publish("resolve type seven failure")
         self.fallback_pub.publish(msg)
         while not self.problem_resolved:
             rospy.sleep(5)
 
     def resolve_type_eight_failure(self, msg):
         rospy.loginfo("resolve type eight failure..")
+        self.resolution_pub.publish("resolve type eight failure")
         self.fallback_pub.publish(msg)
         while not self.problem_resolved:
             rospy.sleep(5)
 
     def resolve_type_nine_failure(self, msg):
         rospy.loginfo("resolve type nine failure..")
+        self.resolution_pub.publish("resolve type nine failure")
         self.fallback_pub.publish(msg)
         while not self.problem_resolved:
             rospy.sleep(5)
 
     def resolve_type_ten_failure(self, msg):
         rospy.loginfo("resolve type ten failure..")
+        self.resolution_pub.publish("resolve type ten failure")
         self.fallback_pub.publish(msg)
         while not self.problem_resolved:
             rospy.sleep(5)
 
     def resolve_type_eleven_failure(self, msg):
         rospy.loginfo("resolve type eleven failure..")
+        self.resolution_pub.publish("resolve type eleven failure")
         self.fallback_pub.publish(msg)
         while not self.problem_resolved:
             rospy.sleep(5)
 
     def resolve_type_twelve_failure(self, msg):
         rospy.loginfo("resolve type twelve failure..")
+        self.resolution_pub.publish("resolve type twelve failure")
         self.fallback_pub.publish(msg)
         while not self.problem_resolved:
             rospy.sleep(5)
 
     def resolve_type_thirteen_failure(self, msg):
         rospy.loginfo("resolve type thirteen failure..")
+        self.resolution_pub.publish("resolve type thirteen failure")
         self.fallback_pub.publish(msg)
         while not self.problem_resolved:
             rospy.sleep(5)
 
     def resolve_type_fourteen_failure(self, msg):
         rospy.loginfo("resolve type fourteen failure..")
+        self.resolution_pub.publish("resolve type fourteen failure")
         self.fallback_pub.publish(msg)
         while not self.problem_resolved:
             rospy.sleep(5)
         
     def resolve_type_fifteen_failure(self, msg):
         rospy.loginfo("resolve type fifteen failure..")
+        self.resolution_pub.publish("resolve type fifteen failure")
         self.fallback_pub.publish(msg)
         while not self.problem_resolved:
             rospy.sleep(5)
 
     def resolve_type_sixteen_failure(self, msg):
         rospy.loginfo("resolve type sixteen failure..")
+        self.resolution_pub.publish("resolve type sixteen failure")
         self.fallback_pub.publish(msg)
         while not self.problem_resolved:
             rospy.sleep(5)
 
     def resolve_type_seventeen_failure(self, msg):
         rospy.loginfo("resolve type seventeen failure..")
+        self.resolution_pub.publish("resolve type seventeen failure")
         self.fallback_pub.publish(msg)
         while not self.problem_resolved:
             rospy.sleep(5)
 
     def resolve_type_eighteen_failure(self, msg):
         rospy.loginfo("resolve type eighteen failure..")
+        self.resolution_pub.publish("resolve type eighteen failure")
         self.fallback_pub.publish(msg)
         while not self.problem_resolved:
             rospy.sleep(5)
 
     def resolve_type_nineteen_failure(self, msg):
         rospy.loginfo("resolve type nineteen failure..")
+        self.resolution_pub.publish("resolve type nineteen failure")
         self.fallback_pub.publish(msg)
         while not self.problem_resolved:
             rospy.sleep(5)
 
     def resolve_type_twenty_failure(self, msg):
         rospy.loginfo("resolve type twenty failure..")
+        self.resolution_pub.publish("resolve type twenty failure")
         self.fallback_pub.publish(msg)
         while not self.problem_resolved:
             rospy.sleep(5)
@@ -350,6 +391,7 @@ class SensorFailureResolver(GeneralFailureResolver):
     def resolve_callback(self, msg):
         rospy.loginfo("launch sensor failure resolver..")
         rospy.loginfo("type of sensor failure: %s", msg.data)
+        self.resolution_pub.publish("launch sensor failure resolver -- type of sensor failure: " + msg.data)
         self.problem_resolved = False
 
         # different types of resolution are required based on the type of issue
@@ -363,28 +405,33 @@ class SensorFailureResolver(GeneralFailureResolver):
             self.resolve_type_four_failure(config.SENSOR_FAILURE_FOUR)
 
         if self.problem_resolved:
+            self.resolution_pub.publish("problem resolved")
             self.success_pub.publish(True)
 
     def resolve_type_one_failure(self, msg):
         rospy.loginfo("resolve type one failure..")
+        self.resolution_pub.publish("resolve type one failure")
         self.fallback_pub.publish(msg)
         while not self.problem_resolved:
             rospy.sleep(5)
 
     def resolve_type_two_failure(self, msg):
         rospy.loginfo("resolve type two failure..")
+        self.resolution_pub.publish("resolve type two failure")
         self.fallback_pub.publish(msg)
         while not self.problem_resolved:
             rospy.sleep(5)
 
     def resolve_type_three_failure(self, msg):
         rospy.loginfo("resolve type three failure..")
+        self.resolution_pub.publish("resolve type three failure")
         self.fallback_pub.publish(msg)
         while not self.problem_resolved:
             rospy.sleep(5)
 
     def resolve_type_four_failure(self, msg):
         rospy.loginfo("resolve type four failure..")
+        self.resolution_pub.publish("resolve type four failure")
         self.fallback_pub.publish(msg)
         while not self.problem_resolved:
             rospy.sleep(5)
@@ -401,6 +448,7 @@ class LocalizationFailureResolver(GeneralFailureResolver):
     def resolve_callback(self, msg):
         rospy.loginfo("launch localization failure resolver..")
         rospy.loginfo("type of localization failure: %s", msg.data)
+        self.resolution_pub.publish("launch localization failure resolver -- type of localization failure: " + msg.data)
         self.problem_resolved = False
 
         # different types of resolution are required based on the type of issue
@@ -412,6 +460,7 @@ class LocalizationFailureResolver(GeneralFailureResolver):
             self.resolve_localization_failure()
 
         if self.problem_resolved:
+            self.resolution_pub.publish("problem resolved")
             self.success_pub.publish(True)
 
     def resolve_localization_failure(self):
@@ -420,6 +469,7 @@ class LocalizationFailureResolver(GeneralFailureResolver):
         rospy.sleep(5)
         # TODO: should pay attention to obstacles etc.
         rospy.loginfo("driving the robot a few meters back and forth to recalibrate the localization using different GNSS positions..")
+        self.resolution_pub.publish("driving the robot a few meters back and forth to recalibrate the localization using different GNSS positions")
         twist = Twist()
         twist.linear.x = -3.0
         rate = rospy.Rate(4)
@@ -430,6 +480,7 @@ class LocalizationFailureResolver(GeneralFailureResolver):
             twist.linear.x = 3.0
 
         rospy.loginfo("clearing local costmap..")
+        self.resolution_pub.publish("clearing local costmap")
         rec_client = actionlib.SimpleActionClient("move_base_flex/recovery", RecoveryAction)
         rec_client.wait_for_server()
 
@@ -462,6 +513,7 @@ class PlanDeploymentFailureResolver(GeneralFailureResolver):
     def resolve_callback(self, msg):
         rospy.loginfo("launch plan deployment failure resolver..")
         rospy.loginfo("type of plan deployment failure: %s", msg.data)
+        self.resolution_pub.publish("launch plan deployment failure resolver -- type of plan deployment failure: " + msg.data)
         self.problem_resolved = False
 
         # different types of resolution are required based on the type of issue
@@ -477,16 +529,19 @@ class PlanDeploymentFailureResolver(GeneralFailureResolver):
             self.resolve_type_five_failure(config.PLAN_DEPLOYMENT_FAILURE_FIVE)
 
         if self.problem_resolved:
+            self.resolution_pub.publish("problem resolved")
             self.success_pub.publish(True)
 
     def resolve_type_one_failure(self, msg):
         rospy.loginfo("resolve type one failure..")
+        self.resolution_pub.publish("resolve type one failure")
         self.fallback_pub.publish(msg)
         while not self.problem_resolved:
             rospy.sleep(5)
 
     def resolve_type_two_failure(self, msg):
         rospy.loginfo("resolve type two failure..")
+        self.resolution_pub.publish("resolve type two failure -- resolve by trying to bring up the service")
         if self.unavailable_service_cnt == 0:
             rospy.loginfo("resolve by trying to bring up the service..")
             self.activate_plan_service_pub.publish("bring up service")
@@ -494,6 +549,7 @@ class PlanDeploymentFailureResolver(GeneralFailureResolver):
             self.problem_resolved = True
         else:
             rospy.loginfo("plan generation service repeatedly unavailable..")
+            self.resolution_pub.publish("plan generation service repeatedly unavailable")
             self.unavailable_service_cnt = 0
             self.fallback_pub.publish(msg)
             while not self.problem_resolved:
@@ -501,12 +557,14 @@ class PlanDeploymentFailureResolver(GeneralFailureResolver):
 
     def resolve_type_three_failure(self, msg):
         rospy.loginfo("resolve type three failure..")
+        self.resolution_pub.publish("resolve type three failure -- resolve by trying again")
         if self.empty_plan_cnt == 0:
             rospy.loginfo("resolve by trying again..")
             self.empty_plan_cnt += 1
             self.problem_resolved = True
         else:
             rospy.loginfo("plan retrieval failed repeatedly..")
+            self.resolution_pub.publish("plan retrieval failed repeatedly")
             self.empty_plan_cnt = 0
             self.fallback_pub.publish(msg)
             while not self.problem_resolved:
@@ -514,12 +572,14 @@ class PlanDeploymentFailureResolver(GeneralFailureResolver):
 
     def resolve_type_four_failure(self, msg):
         rospy.loginfo("resolve type four failure..")
+        self.resolution_pub.publish("resolve type four failure -- resolve by trying again")
         if self.infeasible_plan_cnt == 0:
             rospy.loginfo("resolve by trying again..")
             self.infeasible_plan_cnt += 1
             self.problem_resolved = True
         else:
             rospy.loginfo("plan retrieval failed repeatedly..")
+            self.resolution_pub.publish("plan retrieval failed repeatedly")
             self.infeasible_plan_cnt = 0
             self.fallback_pub.publish(msg)
             while not self.problem_resolved:
@@ -527,6 +587,7 @@ class PlanDeploymentFailureResolver(GeneralFailureResolver):
 
     def resolve_type_five_failure(self, msg):
         rospy.loginfo("resolve type five failure..")
+        self.resolution_pub.publish("resolve type five failure")
         self.fallback_pub.publish(msg)
         while not self.problem_resolved:
             rospy.sleep(5)
@@ -543,6 +604,7 @@ class NavigationFailureResolver(GeneralFailureResolver):
 
     def resolution_failure_callback(self, msg):
         rospy.loginfo("nav fail resolution failed.. cancelling resolution attempt..")
+        self.resolution_pub.publish("nav fail resolution failed.. cancelling resolution attempt..")
         self.drive_to_goal_client.cancel_all_goals()
         self.fallback_pub.publish(msg)
         while not self.problem_resolved:
@@ -556,14 +618,17 @@ class NavigationFailureResolver(GeneralFailureResolver):
     def resolve_callback(self, msg):
         rospy.loginfo("launch navigation failure resolver..")
         rospy.loginfo("type of navigation failure: %s", msg.data)
+        self.resolution_pub.publish("launch navigation failure resolver -- type of navigation failure: " + msg.data)
         self.problem_resolved = False
 
         if msg.data == config.NAV_FAILURE_ONE or msg.data == config.NAV_FAILURE_THREE:
             self.resolve_nav_failure(config.NAV_FAILURE_ONE)
         else:
             rospy.loginfo("cannot resolve unknown nav failure: %s", msg.data)
+            self.resolution_pub.publish("cannot resolve unknown nav failure: " + msg.data)
 
         if self.problem_resolved:
+            self.resolution_pub.publish("problem resolved")
             self.success_pub.publish(True)
 
     def clear_costmaps(self):
@@ -574,12 +639,14 @@ class NavigationFailureResolver(GeneralFailureResolver):
 
         # order matters -> first global, then local
         rospy.loginfo("clearing global costmap..")
+        self.resolution_pub.publish("clearing global costmap")
         try:
             clear_costmaps_service()
         except rospy.ServiceException as e:
             rospy.loginfo("error: %s", e)
 
         rospy.loginfo("clearing local costmap..")
+        self.resolution_pub.publish("clearing local costmap")
         # concurrency_slot 3
         clear_local_costmap_goal = RecoveryGoal('clear_costmap', 3)
         rec_client.send_goal(clear_local_costmap_goal)
@@ -590,7 +657,7 @@ class NavigationFailureResolver(GeneralFailureResolver):
 
     def resolve_nav_failure(self, msg):
         rospy.loginfo("resolve navigation failure.. driving to recovery point..")
-
+        self.resolution_pub.publish("resolve navigation failure -- driving to recovery point")
         self.clear_costmaps()
 
         # TODO: implement and try more potential recovery points
@@ -599,12 +666,12 @@ class NavigationFailureResolver(GeneralFailureResolver):
         self.drive_to_goal_client.send_goal(action_goal)
         rospy.loginfo("goal sent, wait for accomplishment..")
         self.drive_to_goal_client.wait_for_result()
-
         out = self.drive_to_goal_client.get_result()
 
         # navigation failure during resolution -- goal not reached
         if self.drive_to_goal_client.get_state() == config.GOAL_STATUS_ABORTED:
             rospy.loginfo("nav failure during resolution -- notifying operator..")
+            self.resolution_pub.publish("nav failure during resolution -- notifying operator")
 
             self.fallback_pub.publish(msg)
             while not self.problem_resolved:
@@ -650,6 +717,7 @@ class ChargingFailureResolver(GeneralFailureResolver):
     def resolve_callback(self, msg):
         rospy.loginfo("launch charging failure resolver..")
         rospy.loginfo("type of charging failure: %s", msg.data)
+        self.resolution_pub.publish("launch charging failure resolver -- type of charging failure: " + msg.data)
         self.problem_resolved = False
 
         if msg.data == config.CHARGING_FAILURE_ONE:
@@ -662,16 +730,18 @@ class ChargingFailureResolver(GeneralFailureResolver):
             rospy.loginfo("cannot resolve unknown nav failure: %s", msg.data)
 
         if self.problem_resolved:
+            self.resolution_pub.publish("problem resolved")
             self.success_pub.publish(True)
 
     def resolve_docking_failure(self):
         rospy.loginfo("resolving docking failure..")
-
+        self.resolution_pub.publish("resolving docking failure")
         self.charge_level_at_resolution = self.latest_charge_level
 
         # already tried resolution before - call human
         if self.docking_fail_cnt == 1:
             rospy.loginfo("already tried autonomous resolution before -- calling human operator for help..")
+            self.resolution_pub.publish("already tried autonomous resolution before -- calling human operator for help")
             self.fallback_pub.publish(config.CHARGING_FAILURE_ONE)
             while not self.problem_resolved:
                 rospy.sleep(5)
@@ -687,6 +757,7 @@ class ChargingFailureResolver(GeneralFailureResolver):
 
         else:
             rospy.loginfo("just trying again..")
+            self.resolution_pub.publish("just trying again")
             self.problem_resolved = True
             self.docking_fail_cnt += 1
 
@@ -698,12 +769,14 @@ class ChargingFailureResolver(GeneralFailureResolver):
 
         # order matters -> first global, then local
         rospy.loginfo("clearing global costmap..")
+        self.resolution_pub.publish("clearing global costmap")
         try:
             clear_costmaps_service()
         except rospy.ServiceException as e:
             rospy.loginfo("error: %s", e)
 
         rospy.loginfo("clearing local costmap..")
+        self.resolution_pub.publish("clearing local costmap")
         # concurrency_slot 3
         clear_local_costmap_goal = RecoveryGoal('clear_costmap', 3)
         rec_client.send_goal(clear_local_costmap_goal)
@@ -715,6 +788,7 @@ class ChargingFailureResolver(GeneralFailureResolver):
          # already tried resolution before - call human
         if self.undocking_fail_cnt == 1:
             rospy.loginfo("already tried autonomous resolution before -- calling human operator for help..")
+            self.resolution_pub.publish("already tried autonomous resolution before -- calling human operator for help")
             self.fallback_pub.publish(config.CHARGING_FAILURE_TWO)
             while not self.problem_resolved:
                 rospy.sleep(5)
@@ -728,7 +802,7 @@ class ChargingFailureResolver(GeneralFailureResolver):
             rospy.sleep(5)
             self.clear_costmaps()
         else:
-            # TODO: drive back and forth..
+            self.resolution_pub.publish("driving robot back and forth -- minor relocation")
             twist = Twist()
             twist.linear.x = 3.0
             rate = rospy.Rate(2)
@@ -743,14 +817,17 @@ class ChargingFailureResolver(GeneralFailureResolver):
 
     def resolve_charging_failure(self):
         rospy.loginfo("resolving charging failure..")
+        self.resolution_pub.publish("resolving charging failure")
         self.charge_level_at_resolution =  self.latest_charge_level
 
         if self.charge_fail_cnt == 1:
             rospy.loginfo("already tried autonomous resolution before -- calling human operator for help..")
+            self.resolution_pub.publish("already tried autonomous resolution before -- calling human operator for help")
             self.fallback_pub.publish(config.CHARGING_FAILURE_THREE)
             while not self.problem_resolved:
                 rospy.sleep(5)
         else:
+            self.resolution_pub.publish("driving robot back and forth -- minor relocation")
             twist = Twist()
             twist.linear.x = 3.0
             rate = rospy.Rate(2)
