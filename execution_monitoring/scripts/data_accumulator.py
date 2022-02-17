@@ -23,14 +23,22 @@ class DataAccumulator:
         rospy.Subscriber('/show_db_entries', String, self.show_db_entries, queue_size=1)
         rospy.Subscriber('/contingency_preemption', String, self.contingency_callback, queue_size=1)
         rospy.Subscriber('/catastrophe_preemption', String, self.catastrophe_callback, queue_size=1)
-        rospy.Subscriber('/robot_info', String, self.info_callback, queue_size=1)
         rospy.Subscriber('/arox/ongoing_operation', arox_operational_param, self.operation_callback, queue_size=1)
+        rospy.Subscriber('/robot_info', String, self.info_callback, queue_size=1)
         rospy.Subscriber('/sim_info', String, self.sim_info_callback, queue_size=1)
         rospy.Subscriber('/action_info', String, self.action_info_callback, queue_size=1)
         rospy.Subscriber('/operator_communication', String, self.operator_communication_callback, queue_size=1)
+        rospy.Subscriber('/resolution', String, self.resolution_callback, queue_size=1)
 
     def operation_callback(self, msg):
         self.op_info = msg
+
+    def resolution_callback(self, msg):
+        rospy.loginfo("saving resolution data in DB..")
+        try:
+            self.msg_store.insert_named("resolution", msg)
+        except rospy.ServiceException as e:
+            rospy.loginfo("service call failed: %s", e)
 
     def operator_communication_callback(self, msg):
         rospy.loginfo("saving operator communication data in DB..")
