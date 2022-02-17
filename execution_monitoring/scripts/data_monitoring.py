@@ -31,7 +31,6 @@ class DataMonitoring:
             self.contingency_pub.publish(config.DATA_MANAGEMENT_FAILURE_TWO)
         else:
             rospy.loginfo("data management OK - scan successfully logged..")
-            self.robot_info_pub.publish("data management OK - scan successfully logged")
     
     def count_scan_entries(self):
         scan_cnt = 0
@@ -65,7 +64,6 @@ class DataMonitoring:
 
     def data_management_failure_monitoring(self, msg):
         rospy.loginfo("start data management monitoring..")
-        self.robot_info_pub.publish("start data management monitoring")
         self.drive_capacity_check()
         if config.ENABLE_SPECIFIC_LASER_SCAN_CHECK:
             self.specific_scan_check()

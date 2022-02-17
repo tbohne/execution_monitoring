@@ -24,6 +24,9 @@ class GNSSSimulator:
         self.sim_high_dev = False
         self.sim_teleport = False
 
+        self.gps_publisher = rospy.Publisher('/fix', NavSatFix, queue_size=1)
+        self.sim_info_pub = rospy.Publisher('/sim_info', String, queue_size=1)
+
         # subscribe to topic of quadrotor_gps_sim (libhector_gazebo_ros_gps.so)
         #    -> gazebo plugin that simulates GPS data
         self.gnss_sub = rospy.Subscriber('/fix_plugin', NavSatFix, self.sim_gps_callback, queue_size=1)
@@ -40,9 +43,6 @@ class GNSSSimulator:
         rospy.Subscriber("/toggle_simulated_variance_history_failure", String, self.toggle_var_history_failure_callback, queue_size=1)
         rospy.Subscriber("/toggle_simulated_high_deviation", String, self.toggle_high_dev_callback, queue_size=1)
         rospy.Subscriber("/toggle_simulated_teleport", String, self.toggle_sim_teleport_callback, queue_size=1)
-
-        self.gps_publisher = rospy.Publisher('/fix', NavSatFix, queue_size=1)
-        self.sim_info_pub = rospy.Publisher('/sim_info', String, queue_size=1)
 
     def toggle_sim_teleport_callback(self, msg):
         self.sim_teleport = not self.sim_teleport
@@ -99,7 +99,7 @@ class GNSSSimulator:
 
         # quality sim
         if self.sim_good_quality:
-            self.sim_info_pub.publish("GNSS simulator: sim good GNSS quality")
+            # default -- no need to log -- self.sim_info_pub.publish("GNSS simulator: sim good GNSS quality")
             nav_sat_fix.status.status = config.GNSS_STATUS_GBAS_FIX
             nav_sat_fix.position_covariance_type = config.GNSS_COVARIANCE_TYPE_DIAGONAL_KNOWN
             nav_sat_fix.position_covariance = [6, 0.0, 0.0, 0.0, 6, 0.0, 0.0, 0.0, 6]
