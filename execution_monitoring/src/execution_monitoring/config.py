@@ -174,7 +174,7 @@ WEATHER_FAILURE_SIXTEEN = "before sunrise - interrupting work until then"
 WEATHER_FAILURE_SEVENTEEN = "after sunset - interrupting work until sunrise"
 WEATHER_FAILURE_EIGHTEEN = "sunset in a few minutes - interrupting work and driving back to base"
 
-WEATHER_MONITORING_FREQUENCY = 5
+WEATHER_MONITORING_FREQUENCY = 300  # seconds
 
 # WEATHER CONDITION CODES
 # Group 2xx: Thunderstorm
