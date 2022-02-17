@@ -67,6 +67,7 @@ class Idle(smach.State):
         if plan is not None:
             rospy.loginfo("received plan..")
             self.robot_info_pub.publish("received plan..")
+            rospy.sleep(1)
 
             if len(plan) == 0:
                 rospy.loginfo("empty plan..")
@@ -211,6 +212,9 @@ class ExecutePlan(smach.State):
                 self.nav_fail_pub.publish("")
                 rospy.sleep(5)
                 return False
+            elif self.drive_to_goal_client.get_state() == config.GOAL_STATUS_PREEMPTED:
+                # wait for external contingency to be executed
+                rospy.sleep(10)
 
             if out.progress > 0:
                 rospy.loginfo("driving goal progress: %s", out.progress)
@@ -370,7 +374,6 @@ class ExecutePlan(smach.State):
             return "plan_completed"
         else:
             rospy.loginfo("executing plan - remaining actions: %s", len(userdata.plan))
-            self.robot_info_pub.publish("executing plan - remaining actions: " + str(len(userdata.plan)))
             a = userdata.plan.pop(0)
             self.latest_action = a
             if not self.battery_discharged:
@@ -391,6 +394,7 @@ class ExecutePlan(smach.State):
             if action_successfully_performed:
                 rospy.loginfo("action successfully completed - executing rest of plan..")
                 self.robot_info_pub.publish("action successfully completed - executing rest of plan..")
+                rospy.sleep(2)
 
                 if self.introduce_nav_goal and self.intermediate_nav_goal_pose is not None:
                     rospy.loginfo("introducing intermediate nav goal..")
