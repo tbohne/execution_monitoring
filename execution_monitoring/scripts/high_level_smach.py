@@ -33,6 +33,7 @@ class Contingency(smach.State):
         self.plan_deployment_failure_resolver_pub = rospy.Publisher('/resolve_plan_deployment_failure', String, queue_size=1)
         self.navigation_failure_resolver_pub = rospy.Publisher('/resolve_navigation_failure', String, queue_size=1)
         self.charging_failure_resolver_pub = rospy.Publisher('/resolve_charging_failure', String, queue_size=1)
+        self.robot_info_pub = rospy.Publisher('/robot_info', String, queue_size=1)
 
     def interrupt_reason_callback(self, reason):
         self.interrupt_reason = reason.data
@@ -43,6 +44,7 @@ class Contingency(smach.State):
     def execute(self, userdata):
         rospy.loginfo("executing CONTINGENCY state..")
         rospy.loginfo("reason for contingency: %s", self.interrupt_reason)
+        self.robot_info_pub.publish("executing CONTINGENCY state -- reason for contingency: " + self.interrupt_reason)
         self.successfully_resolved = False
 
         if self.interrupt_reason == config.SENSOR_FAILURE_ONE:
@@ -171,6 +173,7 @@ class Contingency(smach.State):
             self.charging_failure_resolver_pub.publish(config.CHARGING_FAILURE_THREE)
         else:
             rospy.loginfo("unkonwn interrupt reason: %s", self.interrupt_reason)
+            self.robot_info_pub.publish("unkonwn interrupt reason: " + self.interrupt_reason)
 
         # TODO: implement time limit -> if exceeded, transition to catastrophe
         while not self.successfully_resolved:
@@ -183,6 +186,7 @@ class Contingency(smach.State):
         #   - if minor issue couldn't be handled / something went wrong: return "aggravated"
 
         rospy.loginfo("contingency solved, continuing normal operation..")
+        self.robot_info_pub.publish("contingency solved, continuing normal operation")
         return "solved"
 
 
@@ -192,6 +196,7 @@ class Catastrophe(smach.State):
         smach.State.__init__(self, outcomes=['damage_control_performed'])
         self.interrupt_reason = ""
         rospy.Subscriber('/interrupt_reason', String, self.interrupt_reason_callback, queue_size=1)
+        self.robot_info_pub = rospy.Publisher('/robot_info', String, queue_size=1)
 
     def interrupt_reason_callback(self, reason):
         self.interrupt_reason = reason.data
@@ -199,6 +204,7 @@ class Catastrophe(smach.State):
     def execute(self, userdata):
         rospy.loginfo("executing CATASTROPHE state..")
         rospy.loginfo("reason for catastrophe: %s", self.interrupt_reason)
+        self.robot_info_pub.publish("executing CATASTROPHE state -- reason for catastrophe: " + self.interrupt_reason)
 
         # do everything that is still possible:
         #   - communicate problem
@@ -208,6 +214,7 @@ class Catastrophe(smach.State):
             rospy.loginfo("#####################################################")
             rospy.sleep(2)
         rospy.loginfo("catastrophe processed, shutting down..")
+        self.robot_info_pub.publish("catastrophe processed, shutting down")
         return "damage_control_performed"
 
 
@@ -215,10 +222,12 @@ class Shutdown(smach.State):
     def __init__(self):
         smach.State.__init__(self, outcomes=['data_management_completed'])
         self.pub = rospy.Publisher('/arox/shutdown_trigger', String, queue_size=1)
+        self.robot_info_pub = rospy.Publisher('/robot_info', String, queue_size=1)
 
     def execute(self, userdata):
         rospy.loginfo("executing SHUTDOWN state..")
         rospy.loginfo("system shuts down..")
+        self.robot_info_pub.publish("executing SHUTDOWN state -- system shuts down")
         self.pub.publish("shutdown")
         return "data_management_completed"
 
