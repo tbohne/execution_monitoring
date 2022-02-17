@@ -20,6 +20,7 @@ DOCKING = True
 RECOVERY_LIMIT = 10
 
 GOAL_STATUS_ACTIVE = 1
+GOAL_STATUS_PREEMPTED = 2
 GOAL_STATUS_SUCCEEDED = 3
 GOAL_STATUS_ABORTED = 4
 
@@ -53,7 +54,7 @@ CHARGING_FAILURE_THREE = "battery not charging although docked"
 ######################## PLAN DEPLOYMENT MONITORING #########################
 #############################################################################
 MON_FREQ = 10
-IDLE_THRESH = 30
+IDLE_THRESH = 300
 
 PLAN_DEPLOYMENT_FAILURE_ONE = "robot idle for an extended period of time"
 PLAN_DEPLOYMENT_FAILURE_TWO = "plan retrieval service unavailable"
