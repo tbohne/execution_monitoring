@@ -20,6 +20,11 @@ class LocalizationMonitoring:
     """
 
     def __init__(self):
+        self.init_vars()
+        self.contingency_pub = rospy.Publisher('/contingency_preemption', String, queue_size=1)
+        self.catastrophe_pub = rospy.Publisher('/catastrophe_preemption', String, queue_size=1)
+        self.robot_info_pub = rospy.Publisher('/robot_info', String, queue_size=1)
+
         rospy.Subscriber('/imu_data', Imu, self.imu_callback, queue_size=1)
         rospy.Subscriber('/odom', Odometry, self.odom_callback, queue_size=1)
         rospy.Subscriber('/odometry/filtered_odom', Odometry, self.filtered_odom_callback, queue_size=1)
@@ -29,13 +34,9 @@ class LocalizationMonitoring:
 
         rospy.Subscriber('/deactivate_localization_monitoring', String, self.deactivate, queue_size=1)
         rospy.Subscriber('/activate_localization_monitoring', String, self.activate, queue_size=1)
-
-        self.contingency_pub = rospy.Publisher('/contingency_preemption', String, queue_size=1)
-        self.catastrophe_pub = rospy.Publisher('/catastrophe_preemption', String, queue_size=1)
-        self.robot_info_pub = rospy.Publisher('/robot_info', String, queue_size=1)
         self.init()
 
-    def init(self):
+    def init_vars(self):
         self.active_monitoring = True
         self.status_before = None
         self.status_switch_time = None
@@ -51,6 +52,9 @@ class LocalizationMonitoring:
         self.mbf_status = None
         self.lin_acc_active_history = collections.deque([], config.LIN_ACC_HISTORY_LEN)
         self.lin_acc_passive_history = collections.deque([], config.LIN_ACC_HISTORY_LEN)
+
+    def init(self):
+        self.init_vars()
         self.localization_monitoring()
 
     def deactivate(self, msg):
