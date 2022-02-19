@@ -28,6 +28,15 @@ class Idle(smach.State):
         self.exception_pub = rospy.Publisher('/plan_retrieval_failure', UInt16, queue_size=1)
         self.action_info_pub = rospy.Publisher('/action_info', String, queue_size=1)
         self.robot_info_pub = rospy.Publisher('/robot_info', String, queue_size=1)
+        self.operation_pub = rospy.Publisher('arox/ongoing_operation', arox_operational_param, queue_size=1)
+
+    def publish_state_of_ongoing_operation(self, mode):
+        msg = arox_operational_param()
+        msg.operation_mode = mode
+        msg.total_tasks = 0
+        msg.ongoing_task = 0
+        msg.rewards_gained = 0
+        self.operation_pub.publish(msg)
 
     def get_plan(self):
         try:
@@ -46,9 +55,12 @@ class Idle(smach.State):
         rospy.loginfo("executing IDLE state..")
         self.action_info_pub.publish("executing IDLE state..")
 
+        self.publish_state_of_ongoing_operation("waiting")
+
         if self.preempt_requested():
             rospy.loginfo("external problem detected by monitoring procedures - preempting normal operation..")
             self.robot_info_pub.publish("external problem detected by monitoring procedures - preempting normal operation..")
+            self.publish_state_of_ongoing_operation("contingency")
             self.service_preempt()
             return 'external_problem'
 
@@ -174,6 +186,7 @@ class ExecutePlan(smach.State):
         if data.charge == 0.0:
             self.battery_discharged = True
             rospy.loginfo("battery completely discharged..")
+            self.publish_state_of_ongoing_operation("dead")
             self.robot_info_pub.publish("battery completely discharged..")
 
     def perform_action(self, action):
@@ -183,7 +196,7 @@ class ExecutePlan(smach.State):
         # moving actions
         if action.name == "drive_to" or action.name == "return_to_base":
 
-            self.publish_state_of_ongoing_operation("moving")
+            self.publish_state_of_ongoing_operation("traversing")
 
             if action.name == "return_to_base" and config.DOCKING:
                 if self.sim_docking_fail:
@@ -278,6 +291,7 @@ class ExecutePlan(smach.State):
 
     def dock_to_charging_station(self):
         docking_client = actionlib.SimpleActionClient('dock_to_charging_station', DockAction)
+        self.publish_state_of_ongoing_operation("docking")
         goal = DockGoal()
         goal.goal = "custom goal"
         docking_client.wait_for_server()
@@ -312,6 +326,7 @@ class ExecutePlan(smach.State):
 
     def undock_from_charging_station(self, pose_in_front_of_container):
         undocking_client = actionlib.SimpleActionClient('undock_from_charging_station', UndockAction)
+        self.publish_state_of_ongoing_operation("undocking")
         goal = UndockGoal()
         goal.ramp_alignment_pose = pose_in_front_of_container
         undocking_client.wait_for_server()
@@ -365,6 +380,7 @@ class ExecutePlan(smach.State):
 
     def execute(self, userdata):
         rospy.loginfo("executing EXECUTE_PLAN state..")
+        self.publish_state_of_ongoing_operation("processing")
 
         self.remaining_tasks = len(userdata.plan)
 
@@ -381,6 +397,7 @@ class ExecutePlan(smach.State):
             else:
                 rospy.loginfo("hard failure..")
                 self.robot_info_pub.publish("hard failure -- battery discharged")
+                self.publish_state_of_ongoing_operation("catastrophe")
                 return "hard_failure"
 
             if self.preempt_requested():
@@ -388,6 +405,7 @@ class ExecutePlan(smach.State):
                 self.robot_info_pub.publish("external problem detected by monitoring procedures - preempting normal operation..")
                 # last action should be repeated
                 userdata.plan.insert(0, self.latest_action)
+                self.publish_state_of_ongoing_operation("contingency")
                 self.service_preempt()
                 return 'external_problem'
 
@@ -409,6 +427,7 @@ class ExecutePlan(smach.State):
             else:
                 rospy.loginfo("soft failure..")
                 self.robot_info_pub.publish("soft failure -- action not successfully performed")
+                self.publish_state_of_ongoing_operation("contingency")
                 return "soft_failure"
 
 
