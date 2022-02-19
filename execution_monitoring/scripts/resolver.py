@@ -384,6 +384,47 @@ class ConnectionResolver(GeneralFailureResolver):
         while not self.problem_resolved:
             rospy.sleep(5)
 
+class PowerManagementFailureResolver(GeneralFailureResolver):
+
+    def __init__(self):
+        super(PowerManagementFailureResolver, self).__init__()
+        rospy.Subscriber('/resolve_power_management_failure', String, self.resolve_callback, queue_size=1)
+        self.success_pub = rospy.Publisher('/resolve_power_management_failure_success', Bool, queue_size=1)
+
+    def resolve_callback(self, msg):
+        rospy.loginfo("launch power management failure resolver..")
+        rospy.loginfo("type of power management failure: %s", msg.data)
+        rospy.sleep(2)
+        self.resolution_pub.publish("launch power management failure resolver -- type of power management failure: " + msg.data)
+        self.problem_resolved = False
+
+        # different types of resolution are required based on the type of issue
+        if msg.data == config.POWER_MANAGEMENT_FAILURE_ONE:
+            self.resolve_type_one_failure(config.POWER_MANAGEMENT_FAILURE_ONE)
+        elif msg.data == config.POWER_MANAGEMENT_FAILURE_TWO:
+            self.resolve_type_two_failure(config.POWER_MANAGEMENT_FAILURE_TWO)
+
+        if self.problem_resolved:
+            self.resolution_pub.publish("problem resolved")
+            self.success_pub.publish(True)
+
+    def resolve_type_one_failure(self, msg):
+        rospy.loginfo("resolve type one failure..")
+        self.resolution_pub.publish("resolve type one failure")
+
+        # TODO: drive back to base + recharge
+
+        self.fallback_pub.publish(msg)
+        while not self.problem_resolved:
+            rospy.sleep(5)
+
+    def resolve_type_two_failure(self, msg):
+        rospy.loginfo("resolve type two failure..")
+        self.resolution_pub.publish("resolve type two failure")
+        self.fallback_pub.publish(msg)
+        while not self.problem_resolved:
+            rospy.sleep(5)
+
 class SensorFailureResolver(GeneralFailureResolver):
 
     def __init__(self):
@@ -859,6 +900,7 @@ def node():
     PlanDeploymentFailureResolver()
     NavigationFailureResolver()
     ChargingFailureResolver()
+    PowerManagementFailureResolver()
     rospy.spin()
 
 if __name__ == '__main__':
