@@ -183,6 +183,7 @@ catkin_install_python(PROGRAMS
   scripts/charging_failure_monitoring.py
   scripts/data_accumulator.py
   scripts/power_management_monitoring.py
+  scripts/battery_failure_simulator.py
   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
 
