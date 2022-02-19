@@ -32,5 +32,11 @@
     <node pkg="execution_monitoring" type="navigation_monitoring.py" name="navigation_monitoring" output="screen" />
     <node pkg="execution_monitoring" type="charging_failure_monitoring.py" name="charging_failure_monitoring" output="screen" />
     <node pkg="execution_monitoring" type="data_accumulator.py" name="data_accumulator" output="screen" />
+
+    <!-- battery related includes -->
     <node pkg="arox_engine" type="arox_battery.py" name="arox_battery" output="screen" />
+    <node pkg="arox_performance_parameters" type="battery_dynamics.py" name="battery_dynamics" output="screen"/>
+    <node pkg="arox_performance_parameters" type="arox_params.py" name="arox_parameters" output="screen"/>
+    <node pkg="arox_performance_parameters" type="arox_safety_thresholds.py" name="arox_watchdog" output="screen"/>
+
 </launch>
