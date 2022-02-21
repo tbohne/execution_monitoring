@@ -111,6 +111,7 @@ class ExecutePlan(smach.State):
         rospy.Subscriber('/interrupt_active_goals', String, self.interrupt_active_goals, queue_size=1)
         rospy.Subscriber('/arox/battery_param', arox_battery_params, self.battery_callback, queue_size=1)
         rospy.Subscriber('introduce_intermediate_nav_goal', String, self.introduce_intermediate_nav_goal, queue_size=1)
+        rospy.Subscriber('introduce_intermediate_recharge_goal', String, self.introduce_intermediate_recharge_goal, queue_size=1)
         rospy.Subscriber('/sim_docking_failure_base_pose', String, self.sim_docking_fail_callback, queue_size=1)
         rospy.Subscriber('/sim_charging_failure', String, self.sim_charge_fail_callback, queue_size=1)
 
@@ -138,6 +139,7 @@ class ExecutePlan(smach.State):
         self.remaining_tasks = 0
         self.completed_tasks = 0
         self.introduce_nav_goal = False
+        self.introduce_recharge_goal = False
         self.intermediate_nav_goal_pose = None
         self.latest_action = None
 
@@ -169,6 +171,10 @@ class ExecutePlan(smach.State):
             self.intermediate_nav_goal_pose = config.STREET
         elif msg.data == "2":
             self.intermediate_nav_goal_pose = config.FIELD
+
+    def introduce_intermediate_recharge_goal(self, msg):
+        rospy.loginfo("preparing introduction of intermediate recharge goal..")
+        self.introduce_recharge_goal = True
 
     def interrupt_active_goals(self, msg):
         self.drive_to_goal_client.cancel_all_goals()
@@ -390,6 +396,19 @@ class ExecutePlan(smach.State):
             return "plan_completed"
         else:
             rospy.loginfo("executing plan - remaining actions: %s", len(userdata.plan))
+
+            if self.introduce_recharge_goal:
+                rospy.loginfo("introducing intermediate recharge goal [return_to_base, charge]")
+                self.robot_info_pub.publish("introducing intermediate recharge goal [return_to_base, charge]")
+                self.introduce_recharge_goal = False
+                # first return to base, then charge
+                a = action()
+                a.name = "charge"
+                userdata.plan.insert(0, a)
+                a = action()
+                a.name = "return_to_base"
+                userdata.plan.insert(0, a)
+
             a = userdata.plan.pop(0)
             self.latest_action = a
             if not self.battery_discharged:
