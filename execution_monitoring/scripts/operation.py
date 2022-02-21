@@ -124,6 +124,7 @@ class ExecutePlan(smach.State):
         self.action_info_pub = rospy.Publisher('/action_info', String, queue_size=1)
         self.robot_info_pub = rospy.Publisher('/robot_info', String, queue_size=1)
         self.sim_info_pub = rospy.Publisher('/sim_info', String, queue_size=1)
+        self.fully_charged_pub = rospy.Publisher('/fully_charged', String, queue_size=1)
 
         self.robot_pose = None
         self.pose_in_front_of_container = None
@@ -290,6 +291,7 @@ class ExecutePlan(smach.State):
 
             if not charge_mode:
                 rospy.loginfo("battery charged..")
+                self.fully_charged_pub.publish("")
                 self.robot_info_pub.publish("battery charged..")
                 self.activate_localization_pub.publish("")
                 return self.undock_from_charging_station(self.pose_in_front_of_container)
