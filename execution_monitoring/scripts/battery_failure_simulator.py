@@ -10,8 +10,12 @@ class BatteryFailureSimulator:
     def __init__(self):
         rospy.Subscriber('/sim_power_management_contingency', String, self.sim_contingency_callback, queue_size=1)
         rospy.Subscriber('/sim_power_management_catastrophe', String, self.sim_catastrophe_callback, queue_size=1)
-
+        rospy.Subscriber('/reset_discharge_rate', String, self.reset_discharge_rate_callback, queue_size=1)
         self.client = dynamic_reconfigure.client.Client("arox_battery", timeout=30)
+
+    def reset_discharge_rate_callback(self, msg):
+        rospy.loginfo("resetting discharge rate (back to normal)..")
+        self.client.update_configuration({"discharge_rate": config.NORMAL_DISCHARGE_RATE})
 
     def sim_contingency_callback(self, msg):
         rospy.loginfo("sim PM contingency..")
