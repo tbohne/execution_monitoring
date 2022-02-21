@@ -20,6 +20,7 @@ class FallbackResolver:
 
     def __init__(self):
         rospy.Subscriber('/request_fallback', String, self.request_fallback, queue_size=1)
+        rospy.Subscriber('/request_help_cata', String, self.request_help_cata, queue_size=1)
         rospy.Subscriber('/problem_solved', String, self.solved_by_human_callback, queue_size=1)
         self.human_operator_contingency_pub = rospy.Publisher("/request_help_contingency", String, queue_size=1)
         self.human_operator_catastrophe_pub = rospy.Publisher("/request_help_catastrophe", String, queue_size=1)
@@ -42,6 +43,15 @@ class FallbackResolver:
         rospy.loginfo("failure resolved..")
         self.fallback_pub.publish(True)
 
+    def request_help_cata(self, msg):
+        rospy.loginfo("catastrophe fallback requested.. communicating problem to human operator..")
+        rospy.loginfo("problem: %s", msg.data)
+        self.resolution_pub.publish("catastrophe fallback requested -- communicating problem to human operator -- problem: " + msg.data)
+        self.problem_resolved = True
+        self.human_operator_catastrophe_pub.publish(msg.data)
+        rospy.loginfo("failure communicated..")
+        self.fallback_pub.publish(True)
+
     def solved_by_human_callback(self, msg):
         rospy.loginfo("solved by human operator: %s", msg.data)
         self.resolution_pub.publish("solved by human operator: %" + msg.data)
@@ -53,6 +63,7 @@ class GeneralFailureResolver(object):
     def __init__(self):
         rospy.Subscriber("/fallback_success", Bool, self.fallback_callback, queue_size=1)
         self.fallback_pub = rospy.Publisher('/request_fallback', String, queue_size=1)
+        self.fallback_cata_pub = rospy.Publisher('/request_help_cata', String, queue_size=1)
         self.resolution_pub = rospy.Publisher('/resolution', String, queue_size=1)
         self.robot_info_pub = rospy.Publisher('/robot_info', String, queue_size=1)
         self.problem_resolved = False
@@ -396,7 +407,7 @@ class PowerManagementFailureResolver(GeneralFailureResolver):
     def resolve_callback(self, msg):
         rospy.loginfo("launch power management failure resolver..")
         rospy.loginfo("type of power management failure: %s", msg.data)
-        self.reset_discharge_rate_pub.publish("")
+        self.reset_discharge_rate_pub.publish(msg.data)
         rospy.sleep(2)
         self.resolution_pub.publish("launch power management failure resolver -- type of power management failure: " + msg.data)
         self.problem_resolved = False
@@ -421,7 +432,7 @@ class PowerManagementFailureResolver(GeneralFailureResolver):
     def resolve_type_two_failure(self, msg):
         rospy.loginfo("resolve type two failure..")
         self.resolution_pub.publish("resolve type two failure")
-        self.fallback_pub.publish(msg)
+        self.fallback_cata_pub.publish(msg)
         while not self.problem_resolved:
             rospy.sleep(5)
 
