@@ -16,11 +16,11 @@ class BatteryFailureSimulator:
         self.sim_catastrophe = False
 
     def reset_discharge_rate_callback(self, msg):
-        if msg == config.POWER_MANAGEMENT_FAILURE_ONE and self.sim_contingency:
+        if msg.data == config.POWER_MANAGEMENT_FAILURE_ONE and self.sim_contingency:
             rospy.loginfo("resetting discharge rate (back to normal)..")
             self.sim_contingency = False
             self.client.update_configuration({"discharge_rate": config.NORMAL_DISCHARGE_RATE})
-        elif msg == config.POWER_MANAGEMENT_FAILURE_TWO and self.sim_catastrophe:
+        elif msg.data == config.POWER_MANAGEMENT_FAILURE_TWO and self.sim_catastrophe:
             rospy.loginfo("resetting discharge rate (back to normal)..")
             self.sim_catastrophe = False
             self.client.update_configuration({"discharge_rate": config.NORMAL_DISCHARGE_RATE})

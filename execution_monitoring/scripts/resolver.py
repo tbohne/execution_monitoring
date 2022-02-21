@@ -408,7 +408,7 @@ class PowerManagementFailureResolver(GeneralFailureResolver):
     def resolve_callback(self, msg):
         rospy.loginfo("launch power management failure resolver..")
         rospy.loginfo("type of power management failure: %s", msg.data)
-        self.reset_discharge_rate_pub.publish(msg.data)
+        self.reset_discharge_rate_pub.publish(msg)
         rospy.sleep(2)
         self.resolution_pub.publish("launch power management failure resolver -- type of power management failure: " + msg.data)
         self.problem_resolved = False
