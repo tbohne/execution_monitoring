@@ -403,6 +403,7 @@ class PowerManagementFailureResolver(GeneralFailureResolver):
         self.success_pub = rospy.Publisher('/resolve_power_management_failure_success', Bool, queue_size=1)
         self.insert_goal_pub = rospy.Publisher('introduce_intermediate_recharge_goal', String, queue_size=1)
         self.reset_discharge_rate_pub = rospy.Publisher('/reset_discharge_rate', String, queue_size=1)
+        self.cata_launched_pub = rospy.Publisher('/catastrophe_launched', String, queue_size=1)
 
     def resolve_callback(self, msg):
         rospy.loginfo("launch power management failure resolver..")
@@ -433,6 +434,7 @@ class PowerManagementFailureResolver(GeneralFailureResolver):
         rospy.loginfo("resolve type two failure..")
         self.resolution_pub.publish("resolve type two failure")
         self.fallback_cata_pub.publish(msg)
+        self.cata_launched_pub.publish("")
         while not self.problem_resolved:
             rospy.sleep(5)
 

@@ -12,9 +12,13 @@ class PowerManagementMonitoring:
         self.contingency_pub = rospy.Publisher('/contingency_preemption', String, queue_size=1)
         self.catastrophe_pub = rospy.Publisher('/catastrophe_preemption', String, queue_size=1)
         rospy.Subscriber('/watchdog', String, self.watchdog_callback, queue_size=1)
-        rospy.Subscriber('/resolve_power_management_failure_success', Bool, self.resolve_callback, queue_size=1)
+        rospy.Subscriber('/fully_charged', String, self.fully_charged_callback, queue_size=1)
+        rospy.Subscriber('/catastrophe_launched', String, self.catastrophe_callback, queue_size=1)
 
-    def resolve_callback(self, res):
+    def catastrophe_callback(self, msg):
+        self.active_catastrophe_monitoring = False
+
+    def fully_charged_callback(self, msg):
         self.active_catastrophe_monitoring = True
         self.active_contingency_monitoring = True
 
@@ -28,7 +32,6 @@ class PowerManagementMonitoring:
             rospy.loginfo("battery watchdog module signals catastrophe -- initiate catastrophe")
             rospy.loginfo(config.POWER_MANAGEMENT_FAILURE_TWO)
             self.catastrophe_pub.publish(config.POWER_MANAGEMENT_FAILURE_TWO)
-            self.active_catastrophe_monitoring = False
 
 def node():
     rospy.init_node('power_management_monitoring')
