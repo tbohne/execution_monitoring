@@ -390,10 +390,13 @@ class PowerManagementFailureResolver(GeneralFailureResolver):
         super(PowerManagementFailureResolver, self).__init__()
         rospy.Subscriber('/resolve_power_management_failure', String, self.resolve_callback, queue_size=1)
         self.success_pub = rospy.Publisher('/resolve_power_management_failure_success', Bool, queue_size=1)
+        self.insert_goal_pub = rospy.Publisher('introduce_intermediate_recharge_goal', String, queue_size=1)
+        self.reset_discharge_rate_pub = rospy.Publisher('/reset_discharge_rate', String, queue_size=1)
 
     def resolve_callback(self, msg):
         rospy.loginfo("launch power management failure resolver..")
         rospy.loginfo("type of power management failure: %s", msg.data)
+        self.reset_discharge_rate_pub.publish("")
         rospy.sleep(2)
         self.resolution_pub.publish("launch power management failure resolver -- type of power management failure: " + msg.data)
         self.problem_resolved = False
@@ -409,14 +412,11 @@ class PowerManagementFailureResolver(GeneralFailureResolver):
             self.success_pub.publish(True)
 
     def resolve_type_one_failure(self, msg):
-        rospy.loginfo("resolve type one failure..")
-        self.resolution_pub.publish("resolve type one failure")
-
-        # TODO: drive back to base + recharge
-
-        self.fallback_pub.publish(msg)
-        while not self.problem_resolved:
-            rospy.sleep(5)
+        rospy.loginfo("resolve power management contingency -- introduce intermediate goals in plan - [return_to_base, charge]")
+        self.resolution_pub.publish("resolve power management contingency -- introduce intermediate goals in plan - [return_to_base, charge]")
+        # insert intermediate recharge goals [return_to_base, charge]
+        self.insert_goal_pub.publish("")
+        self.problem_resolved = True
 
     def resolve_type_two_failure(self, msg):
         rospy.loginfo("resolve type two failure..")
@@ -700,7 +700,6 @@ class NavigationFailureResolver(GeneralFailureResolver):
         res = rec_client.wait_for_result()
         if res:
             rospy.loginfo("cleared costmap..")
-
 
     def resolve_nav_failure(self, msg):
         rospy.loginfo("resolve navigation failure.. driving to recovery point..")
