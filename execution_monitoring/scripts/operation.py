@@ -232,8 +232,10 @@ class ExecutePlan(smach.State):
                 rospy.sleep(5)
                 return False
             elif self.drive_to_goal_client.get_state() == config.GOAL_STATUS_PREEMPTED:
+                rospy.loginfo("DRIVE TO GOAL PREEMPTED..")
                 # wait for external contingency to be executed
                 rospy.sleep(10)
+                return False
 
             if out.progress > 0:
                 rospy.loginfo("driving goal progress: %s", out.progress)
