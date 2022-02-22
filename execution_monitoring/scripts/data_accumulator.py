@@ -32,6 +32,22 @@ class DataAccumulator:
 
     def operation_callback(self, msg):
         self.op_info = msg
+        mission_info = {}
+        mission_info['operation_mode'] = msg.operation_mode
+        mission_info['remaining_tasks'] = msg.total_tasks
+        mission_info['ongoing_task'] = msg.ongoing_task
+        mission_info['completed_tasks'] = msg.rewards_gained
+        mission_info['operation_time'] = str((datetime.now() - self.operation_start_time).total_seconds()) + "s"
+
+        try:
+            self.msg_store.insert_named("mission_info", String(json.dumps(mission_info)))
+        except rospy.ServiceException as e:
+            rospy.loginfo("------------------------------")
+            rospy.loginfo("------------------------------")
+            rospy.loginfo("log mission info -- service call failed: %s", e)
+            rospy.loginfo("------------------------------")
+            rospy.loginfo("------------------------------")
+            rospy.sleep(100)
 
     def resolution_callback(self, msg):
         rospy.loginfo("saving resolution data in DB..")
