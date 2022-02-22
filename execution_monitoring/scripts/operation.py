@@ -436,7 +436,7 @@ class ExecutePlan(smach.State):
 
             if action_successfully_performed:
                 rospy.loginfo("%s action successfully completed - executing rest of plan..", a.name)
-                self.robot_info_pub.publish("%s action successfully completed - executing rest of plan..", a.name)
+                self.robot_info_pub.publish("action " + a.name + " successfully completed - executing rest of plan..")
                 rospy.sleep(2)
 
                 if self.introduce_nav_goal and self.intermediate_nav_goal_pose is not None:

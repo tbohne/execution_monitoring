@@ -77,7 +77,9 @@ class ConnectionMonitoring:
             self.gnss_info_time = datetime.now()
             # GOOD QUALITY
             if nav_sat_fix.status.status == config.GNSS_STATUS_GBAS_FIX and nav_sat_fix.position_covariance_type >= config.GNSS_COVARIANCE_TYPE_DIAGONAL_KNOWN and self.feasible_standard_deviations(nav_sat_fix):
-                self.robot_info_pub.publish(estimation_str + "good")
+                # not logging this as it's the default
+                # self.robot_info_pub.publish(estimation_str + "good")
+                pass
             # MEDIUM QUALITY
             elif nav_sat_fix.status.status >= config.GNSS_STATUS_FIX and nav_sat_fix.position_covariance_type >= config.GNSS_COVARIANCE_TYPE_APPROXIMATED and self.feasible_standard_deviations(nav_sat_fix):
                 self.robot_info_pub.publish(estimation_str + "medium")
