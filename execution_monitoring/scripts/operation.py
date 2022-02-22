@@ -197,8 +197,6 @@ class ExecutePlan(smach.State):
             self.robot_info_pub.publish("battery completely discharged..")
 
     def perform_action(self, action):
-        rospy.loginfo("performing action %s..", action.name)
-        self.action_info_pub.publish("performing action: " + str(action.name))
 
         # moving actions
         if action.name == "drive_to" or action.name == "return_to_base":
@@ -216,6 +214,9 @@ class ExecutePlan(smach.State):
 
             elif action.name == "return_to_base":
                 action.pose = config.BASE_POSE
+
+            rospy.loginfo("performing action %s with target pose: %s", action.name, str(action.pose))
+            self.action_info_pub.publish("performing action " + str(action.name) + " with target pose: " + str(action.pose))
 
             action_goal = util.create_dtg_goal(action.pose, None)
 
@@ -245,8 +246,6 @@ class ExecutePlan(smach.State):
             # in container scenarios "return_to_base" includes docking
             if action.name == "return_to_base" and config.DOCKING:
                 self.pose_in_front_of_container = self.robot_pose
-                rospy.loginfo("start docking procedure..")
-                self.robot_info_pub.publish("start docking procedure..")
                 if not self.dock_to_charging_station():
                     return False
 
@@ -254,6 +253,8 @@ class ExecutePlan(smach.State):
             return success
 
         elif action.name == "scan":
+            rospy.loginfo("performing action %s at pose: %s", action.name, str(self.robot_pose))
+            self.action_info_pub.publish("performing action " + str(action.name) + " at pose: " + str(self.robot_pose))
             self.publish_state_of_ongoing_operation("scanning")
             rospy.loginfo("start scanning procedure..")
             action_goal = ScanGoal()
@@ -266,6 +267,8 @@ class ExecutePlan(smach.State):
             return success
 
         elif action.name == "charge":
+            rospy.loginfo("performing action %s", action.name)
+            self.action_info_pub.publish("performing action " + str(action.name))
             self.publish_state_of_ongoing_operation("charging")
 
             # notify charge failure monitoring that charging starts
@@ -396,7 +399,6 @@ class ExecutePlan(smach.State):
 
         if len(userdata.plan) == 0:
             rospy.loginfo("plan successfully executed..")
-            rospy.loginfo("plan successfully executed..")
             return "plan_completed"
         else:
             rospy.loginfo("executing plan - remaining actions: %s", len(userdata.plan))
@@ -433,8 +435,8 @@ class ExecutePlan(smach.State):
                 return 'external_problem'
 
             if action_successfully_performed:
-                rospy.loginfo("action successfully completed - executing rest of plan..")
-                self.robot_info_pub.publish("action successfully completed - executing rest of plan..")
+                rospy.loginfo("%s action successfully completed - executing rest of plan..", a.name)
+                self.robot_info_pub.publish("%s action successfully completed - executing rest of plan..", a.name)
                 rospy.sleep(2)
 
                 if self.introduce_nav_goal and self.intermediate_nav_goal_pose is not None:
