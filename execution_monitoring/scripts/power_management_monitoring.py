@@ -1,8 +1,7 @@
 #!/usr/bin/env python
 import rospy
-from std_msgs.msg import String, Float64, Bool
+from std_msgs.msg import String
 from execution_monitoring import config
-from arox_performance_parameters.msg import arox_battery_params
 
 class PowerManagementMonitoring:
 
