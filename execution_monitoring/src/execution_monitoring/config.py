@@ -121,7 +121,7 @@ SCAN_VALUES_LB_PERCENTAGE = 5
 ########################## LOCALIZATION MONITORING ##########################
 #############################################################################
 
-STATUS_SWITCH_DELAY = 2
+STATUS_SWITCH_DELAY = 4
 
 # TODO: should be checked - arbitrarily selected
 NOT_MOVING_ANG_VELO_UB = 0.05

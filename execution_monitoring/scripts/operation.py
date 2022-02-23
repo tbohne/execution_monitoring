@@ -296,7 +296,6 @@ class ExecutePlan(smach.State):
                 rospy.loginfo("battery charged..")
                 self.fully_charged_pub.publish("")
                 self.robot_info_pub.publish("battery charged..")
-                self.activate_localization_pub.publish("")
                 return self.undock_from_charging_station(self.pose_in_front_of_container)
         else:
             rospy.loginfo("error - unknown action: %s", action.name)
@@ -355,6 +354,8 @@ class ExecutePlan(smach.State):
             if undocking_client.get_result().result_state == "success":
                 rospy.loginfo("successfully undocked from charging station..")
                 self.robot_info_pub.publish("successfully undocked from charging station..")
+                # after docking-undocking done - reactivate localization monitoring
+                self.activate_localization_pub.publish("")
                 # clear costmap due to ramp movement
                 self.clear_costmaps()
                 return True

@@ -260,7 +260,7 @@ class ConnectionMonitoring:
             rospy.loginfo("detected critically bad download speed: %s Mb/s", download)
             self.contingency_pub.publish(config.CONNECTION_FAILURE_SIX)
             self.active_monitoring = False
-        elif download < 40:
+        elif download < 10:
             rospy.loginfo("detected rather low download speed: %s Mb/s", download)
             self.robot_info_pub.publish("detected rather low download speed of " + str(download) + " Mb/s")
 
