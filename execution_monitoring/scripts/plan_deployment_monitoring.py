@@ -29,7 +29,7 @@ class PlanDeploymentMonitor:
 
     def operation_callback(self, operation_state):
         # rospy.loginfo("state of operation: %s", operation_state)
-        self.time_since_last_op = datetime.now()
+        self.last_op_time = datetime.now()
     
     def plan_fail_callback(self, msg):
         if msg.data == 0:
