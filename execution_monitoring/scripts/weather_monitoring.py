@@ -58,7 +58,9 @@ class WeatherData:
         self.robot_info_pub.publish("weather_info: [time of observation: %s, status: %s, cloudiness percentage: %s, humidity percentage: %s," \
             "atmospheric pressure: %s hPa, rain volume for the last 1 hour: %s mm, snow volume for the last 1 hour: %s mm, wind gust speed: %s m/s," \
             "wind speed: %s m/s, wind direction: %s deg., min. temperature: %s [deg. C], temperature: %s [deg. C], max. temperature: %s [deg. C]" \
-            "OWM weather condition code: %s, sunrise time: %s, sunset time: %s")
+            "OWM weather condition code: %s, sunrise time: %s, sunset time: %s", self.observation_time, self.status, self.cloudiness_percentage, self.humidity_percentage,
+            self.atmospheric_pressure, self.rain_vol, self.snow_vol, self.wind_gust_speed, self.wind_speed, self.wind_direction, self.min_temp, self.temp, self.max_temp,
+            self.owm_weather_condition_code, self.sunrise_time, self.sunset_time)
         rospy.loginfo("###############################################################################")
 
 
