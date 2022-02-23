@@ -78,8 +78,6 @@ class Idle(smach.State):
 
         if plan is not None:
             rospy.loginfo("received plan..")
-            self.robot_info_pub.publish("received plan..")
-            rospy.sleep(1)
 
             if len(plan) == 0:
                 rospy.loginfo("empty plan..")

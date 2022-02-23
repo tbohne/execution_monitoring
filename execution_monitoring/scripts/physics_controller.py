@@ -25,6 +25,7 @@ class PhysicsController:
         self.sim_moving_although_standing_still_odom = False
         self.sim_yaw_divergence = False
         self.pose_list = None
+        self.imu_data = None
 
         self.unpause = rospy.ServiceProxy('/gazebo/unpause_physics', Empty)
         self.pause = rospy.ServiceProxy('/gazebo/pause_physics', Empty)
