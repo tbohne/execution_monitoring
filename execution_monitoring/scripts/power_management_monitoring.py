@@ -34,6 +34,8 @@ class PowerManagementMonitoring:
 
 def node():
     rospy.init_node('power_management_monitoring')
+    # sleep for some time -- initially the watchdog module is not really reliable
+    rospy.sleep(30)
     rospy.loginfo("launch power management monitoring..")
     PowerManagementMonitoring()
     rospy.spin()

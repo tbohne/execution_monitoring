@@ -150,7 +150,7 @@ class DataAccumulator:
             rospy.sleep(100)
 
     def info_callback(self, msg):
-        rospy.loginfo("saving robot info data in DB..")
+        rospy.loginfo("saving robot info data in DB..: %s", msg)
         try:
             self.msg_store.insert_named("robot_info", msg)
         except rospy.ServiceException as e:

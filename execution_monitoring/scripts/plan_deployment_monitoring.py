@@ -28,10 +28,7 @@ class PlanDeploymentMonitor:
             rospy.sleep(config.MON_FREQ)
 
     def operation_callback(self, operation_state):
-        rospy.loginfo("state of operation: %s", operation_state)
-        # to not interfere with DB updates of new action
-        rospy.sleep(2)
-        self.robot_info_pub.publish("state of operation: " + str(operation_state))
+        # rospy.loginfo("state of operation: %s", operation_state)
         self.time_since_last_op = datetime.now()
     
     def plan_fail_callback(self, msg):

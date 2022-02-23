@@ -253,8 +253,8 @@ class ExecutePlan(smach.State):
             return success
 
         elif action.name == "scan":
-            rospy.loginfo("performing action %s at pose: %s", action.name, str(self.robot_pose))
-            self.action_info_pub.publish("performing action " + str(action.name) + " at pose: " + str(self.robot_pose))
+            rospy.loginfo("performing action %s at pose: %s", action.name, str(self.robot_pose.pose))
+            self.action_info_pub.publish("performing action " + str(action.name) + " at pose: " + str(self.robot_pose.pose))
             self.publish_state_of_ongoing_operation("scanning")
             rospy.loginfo("start scanning procedure..")
             action_goal = ScanGoal()

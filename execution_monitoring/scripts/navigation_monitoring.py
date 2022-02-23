@@ -72,7 +72,7 @@ class NavigationMonitoring:
             self.mbf_status = mbf_status.status_list[-1].status
             if self.mbf_status != self.status_before:
 
-                rospy.loginfo("STATUS: %s", mbf_status.status_list[-1])
+                #rospy.loginfo("STATUS: %s", mbf_status.status_list[-1])
 
                 if self.status_before == config.GOAL_STATUS_ACTIVE and self.mbf_status == config.GOAL_STATUS_ABORTED:
                     # transition from ACTIVE to ABORTED -> recovery
