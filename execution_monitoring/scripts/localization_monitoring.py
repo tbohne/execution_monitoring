@@ -31,7 +31,6 @@ class LocalizationMonitoring:
         rospy.Subscriber('/odometry/gps', Odometry, self.gps_as_odom_callback, queue_size=1)
         rospy.Subscriber('/move_base_flex/exe_path/status', GoalStatusArray, self.mbf_status_callback, queue_size=1)
         rospy.Subscriber('/resolve_localization_failure_success', Bool, self.re_init, queue_size=1)
-
         rospy.Subscriber('/deactivate_localization_monitoring', String, self.deactivate, queue_size=1)
         rospy.Subscriber('/activate_localization_monitoring', String, self.activate, queue_size=1)
         self.init()
