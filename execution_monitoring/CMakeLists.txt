@@ -184,6 +184,7 @@ catkin_install_python(PROGRAMS
   scripts/data_accumulator.py
   scripts/power_management_monitoring.py
   scripts/battery_failure_simulator.py
+  scripts/mission_monitoring.py
   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
 
