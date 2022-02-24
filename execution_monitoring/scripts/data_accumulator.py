@@ -2,21 +2,20 @@
 import time
 from datetime import datetime
 import rospy
-import mongodb_store_msgs.srv as dc_srv
-import mongodb_store.util as dc_util
 from mongodb_store.message_store import MessageStoreProxy
-from geometry_msgs.msg import Pose, Point, Quaternion
 from arox_performance_parameters.msg import arox_operational_param
 from sensor_msgs.msg import NavSatFix
 from std_msgs.msg import String
 import json
-
+import errno
 
 class DataAccumulator:
 
     def __init__(self):
-        self.msg_store = MessageStoreProxy()
+        self.init()
 
+    def init(self):
+        self.msg_store = MessageStoreProxy()
         self.operation_start_time = datetime.now()
         self.op_info = None
 
@@ -42,60 +41,44 @@ class DataAccumulator:
         try:
             self.msg_store.insert_named("mission_info", String(json.dumps(mission_info)))
         except rospy.ServiceException as e:
-            rospy.loginfo("------------------------------")
-            rospy.loginfo("------------------------------")
-            rospy.loginfo("log mission info -- service call failed: %s", e)
-            rospy.loginfo("------------------------------")
-            rospy.loginfo("------------------------------")
-            rospy.sleep(100)
+            rospy.loginfo("log mission info -- DB entry failed - trying again: %s", e)
+            self.operation_callback(msg)
 
     def resolution_callback(self, msg):
         rospy.loginfo("saving resolution data in DB..")
         try:
             self.msg_store.insert_named("resolution", msg)
         except rospy.ServiceException as e:
-            rospy.loginfo("------------------------------")
-            rospy.loginfo("------------------------------")
-            rospy.loginfo("resolution callback -- service call failed: %s, msg: %s", e, msg)
-            rospy.loginfo("------------------------------")
-            rospy.loginfo("------------------------------")
-            rospy.sleep(100)
+            rospy.loginfo("resolution callback -- DB entry failed - trying again: %s, msg: %s", e, msg)
+            self.resolution_callback(msg)
 
     def operator_communication_callback(self, msg):
         rospy.loginfo("saving operator communication data in DB..")
         try:
             self.msg_store.insert_named("operator_communication", msg)
         except rospy.ServiceException as e:
-            rospy.loginfo("------------------------------")
-            rospy.loginfo("------------------------------")
-            rospy.loginfo("operator communication callbacck -- service call failed: %s, msg: %s", e, msg)
-            rospy.loginfo("------------------------------")
-            rospy.loginfo("------------------------------")
-            rospy.sleep(100)
+            rospy.loginfo("operator communication callback -- DB entry failed - trying again: %s, msg: %s", e, msg)
+            self.operator_communication_callback(msg)
 
     def action_info_callback(self, msg):
         rospy.loginfo("saving action info data in DB..")
         try:
             self.msg_store.insert_named("action_info", msg)
         except rospy.ServiceException as e:
-            rospy.loginfo("------------------------------")
-            rospy.loginfo("------------------------------")
-            rospy.loginfo("action info callback -- service call failed: %s, msg: %s", e, msg)
-            rospy.loginfo("------------------------------")
-            rospy.loginfo("------------------------------")
-            rospy.sleep(100)
+            rospy.loginfo("action info callback -- DB entry failed - trying again: %s, msg: %s", e, msg)
+            self.action_info_callback(msg)
+        except IOError as e:
+            if e.errno == errno.EPIPE:
+                rospy.loginfo("DB entry error -- re-initializing data accumulator")
+                self.init()
 
     def sim_info_callback(self, msg):
         rospy.loginfo("saving sim info data in DB..")
         try:
             self.msg_store.insert_named("sim_info", msg)
         except rospy.ServiceException as e:
-            rospy.loginfo("------------------------------")
-            rospy.loginfo("------------------------------")
-            rospy.loginfo("sim info callback -- service call failed: %s, msg: %s", e, msg)
-            rospy.loginfo("------------------------------")
-            rospy.loginfo("------------------------------")
-            rospy.sleep(100)
+            rospy.loginfo("sim info callback -- DB entry failed - trying again: %s, msg: %s", e, msg)
+            self.sim_info_callback(msg)
 
     def log_failure_circumstances(self):
         rospy.loginfo("saving failure circumstances in DB..")
@@ -116,12 +99,8 @@ class DataAccumulator:
         try:
             self.msg_store.insert_named("failure_circumstances", String(json.dumps(circumstances)))
         except rospy.ServiceException as e:
-            rospy.loginfo("------------------------------")
-            rospy.loginfo("------------------------------")
-            rospy.loginfo("log failure circumstances -- service call failed: %s", e)
-            rospy.loginfo("------------------------------")
-            rospy.loginfo("------------------------------")
-            rospy.sleep(100)
+            rospy.loginfo("log failure circumstances -- DB entry failed - trying again: %s", e)
+            self.log_failure_circumstances()
 
     def contingency_callback(self, msg):
         rospy.loginfo("saving contingency data in DB..")
@@ -129,12 +108,8 @@ class DataAccumulator:
             self.msg_store.insert_named("contingency", msg)
             self.log_failure_circumstances()
         except rospy.ServiceException as e:
-            rospy.loginfo("------------------------------")
-            rospy.loginfo("------------------------------")
-            rospy.loginfo("contingency callback -- service call failed: %s, msg: %s", e, msg)
-            rospy.loginfo("------------------------------")
-            rospy.loginfo("------------------------------")
-            rospy.sleep(100)
+            rospy.loginfo("contingency callback -- DB entry failed - trying again: %s, msg: %s", e, msg)
+            self.contingency_callback(msg)
 
     def catastrophe_callback(self, msg):
         rospy.loginfo("saving catastrophe data in DB..")
@@ -142,24 +117,20 @@ class DataAccumulator:
             self.msg_store.insert_named("catastrophe", msg)
             self.log_failure_circumstances()
         except rospy.ServiceException as e:
-            rospy.loginfo("------------------------------")
-            rospy.loginfo("------------------------------")
-            rospy.loginfo("catastrophe callback -- service call failed: %s, msg: %s", e, msg)
-            rospy.loginfo("------------------------------")
-            rospy.loginfo("------------------------------")
-            rospy.sleep(100)
+            rospy.loginfo("catastrophe callback -- DB entry failed - trying again: %s, msg: %s", e, msg)
+            self.catastrophe_callback(msg)
 
     def info_callback(self, msg):
         rospy.loginfo("saving robot info data in DB..: %s", msg)
         try:
             self.msg_store.insert_named("robot_info", msg)
         except rospy.ServiceException as e:
-            rospy.loginfo("------------------------------")
-            rospy.loginfo("------------------------------")
-            rospy.loginfo("info callback -- service call failed: %s, msg: %s", e, msg)
-            rospy.loginfo("------------------------------")
-            rospy.loginfo("------------------------------")
-            rospy.sleep(100)
+            rospy.loginfo("info callback -- DB entry failed - trying again: %s, msg: %s", e, msg)
+            self.info_callback(msg)
+        except IOError as e:
+            if e.errno == errno.EPIPE:
+                rospy.loginfo("DB entry error -- re-initializing data accumulator")
+                self.init()
 
     def show_db_entries(self, msg):
         rospy.loginfo("all DB entries of type String:")
