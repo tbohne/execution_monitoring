@@ -43,6 +43,10 @@ class DataAccumulator:
         except rospy.ServiceException as e:
             rospy.loginfo("log mission info -- DB entry failed - trying again: %s", e)
             self.operation_callback(msg)
+        except IOError as e:
+            if e.errno == errno.EPIPE:
+                rospy.loginfo("DB entry error -- re-initializing data accumulator")
+                self.init()
 
     def resolution_callback(self, msg):
         rospy.loginfo("saving resolution data in DB..")
@@ -51,6 +55,10 @@ class DataAccumulator:
         except rospy.ServiceException as e:
             rospy.loginfo("resolution callback -- DB entry failed - trying again: %s, msg: %s", e, msg)
             self.resolution_callback(msg)
+        except IOError as e:
+            if e.errno == errno.EPIPE:
+                rospy.loginfo("DB entry error -- re-initializing data accumulator")
+                self.init()
 
     def operator_communication_callback(self, msg):
         rospy.loginfo("saving operator communication data in DB..")
@@ -59,6 +67,10 @@ class DataAccumulator:
         except rospy.ServiceException as e:
             rospy.loginfo("operator communication callback -- DB entry failed - trying again: %s, msg: %s", e, msg)
             self.operator_communication_callback(msg)
+        except IOError as e:
+            if e.errno == errno.EPIPE:
+                rospy.loginfo("DB entry error -- re-initializing data accumulator")
+                self.init()
 
     def action_info_callback(self, msg):
         rospy.loginfo("saving action info data in DB..")
@@ -79,6 +91,10 @@ class DataAccumulator:
         except rospy.ServiceException as e:
             rospy.loginfo("sim info callback -- DB entry failed - trying again: %s, msg: %s", e, msg)
             self.sim_info_callback(msg)
+        except IOError as e:
+            if e.errno == errno.EPIPE:
+                rospy.loginfo("DB entry error -- re-initializing data accumulator")
+                self.init()
 
     def log_failure_circumstances(self):
         rospy.loginfo("saving failure circumstances in DB..")
@@ -88,6 +104,10 @@ class DataAccumulator:
             nav_sat_fix = rospy.wait_for_message('/fix', NavSatFix, timeout=10)
         except rospy.ROSException as e:
             rospy.loginfo("problem retrieving GNSS fix: %s", e)
+        except IOError as e:
+            if e.errno == errno.EPIPE:
+                rospy.loginfo("DB entry error -- re-initializing data accumulator")
+                self.init()
 
         # only meta information that are not already published by the monitoring procedures
         # TODO: can be arbitrarily extended
@@ -101,6 +121,10 @@ class DataAccumulator:
         except rospy.ServiceException as e:
             rospy.loginfo("log failure circumstances -- DB entry failed - trying again: %s", e)
             self.log_failure_circumstances()
+        except IOError as e:
+            if e.errno == errno.EPIPE:
+                rospy.loginfo("DB entry error -- re-initializing data accumulator")
+                self.init()
 
     def contingency_callback(self, msg):
         rospy.loginfo("saving contingency data in DB..")
@@ -110,6 +134,10 @@ class DataAccumulator:
         except rospy.ServiceException as e:
             rospy.loginfo("contingency callback -- DB entry failed - trying again: %s, msg: %s", e, msg)
             self.contingency_callback(msg)
+        except IOError as e:
+            if e.errno == errno.EPIPE:
+                rospy.loginfo("DB entry error -- re-initializing data accumulator")
+                self.init()
 
     def catastrophe_callback(self, msg):
         rospy.loginfo("saving catastrophe data in DB..")
@@ -119,6 +147,10 @@ class DataAccumulator:
         except rospy.ServiceException as e:
             rospy.loginfo("catastrophe callback -- DB entry failed - trying again: %s, msg: %s", e, msg)
             self.catastrophe_callback(msg)
+        except IOError as e:
+            if e.errno == errno.EPIPE:
+                rospy.loginfo("DB entry error -- re-initializing data accumulator")
+                self.init()
 
     def info_callback(self, msg):
         rospy.loginfo("saving robot info data in DB..: %s", msg)
