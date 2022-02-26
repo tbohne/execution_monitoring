@@ -2,30 +2,37 @@
 
 <launch>
     <!-- <param name="/use_sim_time" value="true" /> -->
+
+    <!-- generates and provides handcrafted plan as service -->
     <include file="$(find plan_generation)/launch/plan_generation.launch" />
+
+    <!-- control software to navigate autonomously to an inductive charging station inside a mobile container -->
     <include file="$(find arox_docking)/launch/docking.launch" />
 
-
+    <!-- mongodb instance + logging -->
     <arg name="default_path" default="/home/docker/ROS_db"/>
     <arg name="default_port" default="62345"/>
-
     <include file="$(find mongodb_store)/launch/mongodb_store.launch" >
         <arg name="db_path" value="$(arg default_path)" />
         <arg name="port" value="$(arg default_port)" />
     </include>
+    <node pkg="execution_monitoring" type="data_accumulator.py" name="data_accumulator" output="screen" />
 
+    <!-- state machine providing plan execution and monitoring for LTA plant observation with a mobile robot -->
     <node pkg="execution_monitoring" type="high_level_smach.py" name="high_level_smach" output="screen" />
-    <node pkg="execution_monitoring" type="dummy_scanner.py" name="dummy_scanner" output="screen" />
-    <node pkg="execution_monitoring" type="gnss_simulator.py" name="gnss_simulator" output="screen" />
-    <node pkg="execution_monitoring" type="resolver.py" name="failure_resolver" output="screen" />
+
+    <!-- fake RIEGL publisher (republishes Velodyne scans) + dummy scanner -->
     <node pkg="execution_monitoring" type="republish_velodyne.py" name="republish_velodyne" output="screen" />
+    <node pkg="execution_monitoring" type="dummy_scanner.py" name="dummy_scanner" output="screen" />
+
+    <!-- failure simulation -->
     <node pkg="execution_monitoring" type="physics_controller.py" name="physics_controller" output="screen" />
     <node pkg="execution_monitoring" type="obstacle_spawner.py" name="obstacle_spawner" output="screen" />
-    <node pkg="execution_monitoring" type="data_accumulator.py" name="data_accumulator" output="screen" />
+    <node pkg="execution_monitoring" type="gnss_simulator.py" name="gnss_simulator" output="screen" />
     <node pkg="execution_monitoring" type="battery_failure_simulator.py" name="battery_failure_simulator" output="screen" />
     <node pkg="execution_monitoring" type="charging_failure_simulator.py" name="charging_failure_simulator" output="screen" />
 
-    <!-- monitoring nodes -->
+    <!-- monitoring -->
     <node pkg="execution_monitoring" type="plan_deployment_monitoring.py" name="plan_deployment_monitoring" output="screen" />
     <node pkg="execution_monitoring" type="sensor_monitoring.py" name="sensor_monitoring" output="screen" />
     <node pkg="execution_monitoring" type="connection_monitoring.py" name="connection_monitoring" output="screen" />
@@ -38,7 +45,10 @@
     <node pkg="execution_monitoring" type="charging_failure_monitoring.py" name="charging_failure_monitoring" output="screen" />
     <node pkg="execution_monitoring" type="power_management_monitoring.py" name="power_management_monitoring" output="screen" />
 
-    <!-- battery related includes -->
+    <!-- LTA failure resolution -->
+    <node pkg="execution_monitoring" type="resolver.py" name="failure_resolver" output="screen" />
+
+    <!-- battery related includes (battery model - energy consumption) -->
     <node pkg="arox_engine" type="arox_battery.py" name="arox_battery" output="screen" />
     <node pkg="arox_performance_parameters" type="battery_dynamics.py" name="battery_dynamics" output="screen"/>
     <node pkg="arox_performance_parameters" type="arox_params.py" name="arox_parameters" output="screen"/>
