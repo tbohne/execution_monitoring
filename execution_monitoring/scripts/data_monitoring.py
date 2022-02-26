@@ -8,11 +8,17 @@ from execution_monitoring import util, config
 class DataMonitoring:
 
     def __init__(self):
+        self.sim_full_disk = False
         rospy.Subscriber('/scan_action', String, self.data_management_failure_monitoring, queue_size=1)
         rospy.Subscriber('/mission_name', String, self.mission_name_callback, queue_size=1)
+        rospy.Subscriber('/sim_full_disk_failure', String, self.sim_full_disk_callback, queue_size=1)
         self.contingency_pub = rospy.Publisher('/contingency_preemption', String, queue_size=1)
         self.catastrophe_pub = rospy.Publisher('/catastrophe_preemption', String, queue_size=1)
         self.robot_info_pub = rospy.Publisher('/robot_info', String, queue_size=1)
+
+    def sim_full_disk_callback(self, msg):
+        rospy.loginfo("sim full disk failure..")
+        self.sim_full_disk = True
 
     def specific_scan_check(self):
         log_file = Path(config.SCAN_PATH + self.mission_name + config.SCAN_FILE_EXTENSION)
@@ -46,7 +52,11 @@ class DataMonitoring:
         return scan_cnt
 
     def drive_capacity_check(self):
-        disk_use = psutil.disk_usage(config.MONITOR_DRIVE)
+        if self.sim_full_disk:
+            self.sim_full_disk = False
+            disk_use = psutil.disk_usage(config.FULL_DRIVE)
+        else:
+            disk_use = psutil.disk_usage(config.MONITOR_DRIVE)
         if disk_use.percent > 99.0:
             rospy.loginfo("full memory - cannot save further scans")
             self.contingency_pub.publish(config.DATA_MANAGEMENT_FAILURE_ONE)

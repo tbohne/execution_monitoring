@@ -99,6 +99,7 @@ DATA_MANAGEMENT_FAILURE_TWO = "scan not logged correctly"
 
 # DATA MANAGEMENT SETTINGS
 MONITOR_DRIVE = "/"
+FULL_DRIVE = "/mnt/usb"
 ENABLE_SPECIFIC_LASER_SCAN_CHECK = True
 #############################################################################
 #############################################################################
