@@ -94,7 +94,6 @@ class GNSSSimulator:
             self.gnss_sub.unregister()
             self.sim_info_pub.publish("GNSS simulator: sim GNSS timeout")
             rospy.sleep(config.GPS_TIMEOUT)
-            self.sim_timeout = False
             self.gnss_sub = rospy.Subscriber('/fix_plugin', NavSatFix, self.sim_gps_callback, queue_size=1)
 
         # quality sim
@@ -134,14 +133,12 @@ class GNSSSimulator:
         if self.sim_unknown_service:
             self.sim_info_pub.publish("GNSS simulator: sim unknown service")
             nav_sat_fix.status.service = 3
-            self.sim_unknown_service = False
 
         # lat / lng belief state sim
         if self.sim_infeasible_lat_lng:
             self.sim_info_pub.publish("GNSS simulator: sim infeasible lat / lng")
             nav_sat_fix.latitude = -120
             nav_sat_fix.longitude = 200
-            self.sim_infeasible_lat_lng = False
 
         # covariance sim
         if self.sim_variance_history_failure:
@@ -154,12 +151,10 @@ class GNSSSimulator:
                 east += 10.0
                 self.gps_publisher.publish(nav_sat_fix)
                 rospy.sleep(1)
-            self.sim_variance_history_failure = False
         if self.sim_high_dev:
             self.sim_info_pub.publish("GNSS simulator: sim high standard deviation")
             nav_sat_fix.position_covariance_type = config.GNSS_COVARIANCE_TYPE_DIAGONAL_KNOWN
             nav_sat_fix.position_covariance[0] = 101
-            self.sim_high_dev = False
 
         if self.sim_teleport:
             # simulate GNSS jump
