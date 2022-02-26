@@ -15,6 +15,7 @@ class InternetConnectionMonitor:
         rospy.Subscriber('/re_init_internet_monitoring', String, self.re_init, queue_size=1)
         rospy.Subscriber("/toggle_simulated_bad_download", String, self.toggle_bad_download_callback, queue_size=1)
         rospy.Subscriber("/toggle_simulated_bad_upload", String, self.toggle_bad_upload_callback, queue_size=1)
+        rospy.Subscriber("/sim_internet_connection_failure", String, self.connection_fail_callback, queue_size=1)
         self.internet_info_pub = rospy.Publisher('/internet_connectivity_info', Internet, queue_size=1)
         self.sim_info_pub = rospy.Publisher('/sim_info', String, queue_size=1)
         self.robot_info_pub = rospy.Publisher('/robot_info', String, queue_size=1)
@@ -29,6 +30,9 @@ class InternetConnectionMonitor:
             # necessary to wait for publishers / subscribers to be ready
             rospy.sleep(3)
             self.disconnect()
+
+    def connection_fail_callback(self, msg):
+        self.disconnect()
 
     def toggle_bad_download_callback(self, msg):
         self.simulate_bad_download = not self.simulate_bad_download
@@ -62,7 +66,6 @@ class InternetConnectionMonitor:
         self.internet_info_pub.publish(self.generate_msg(0, 0))
 
     def monitor_internet_connection(self):
-        
         while not rospy.is_shutdown():
             time_now = datetime.datetime.now().strftime("%H:%M:%S")
             download = round((round(self.test.download()) / 2 ** 20), 2)
