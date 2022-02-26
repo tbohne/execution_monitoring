@@ -61,11 +61,14 @@
     - **thunderstorm:** `rostopic pub -1 /toggle_thuderstorm_sim std_msgs/String fail`
     - **sunset:** `rostopic pub -1 /toggle_sunset_sim std_msgs/String fail`
 - **data management failures**
-    - **full memory:** prepare full USB flash drive and configure `MONITOR_DRIVE` (path to monitor) accordingly
+    - **full memory:** prepare full USB flash drive
         - find out device: `fdisk -l`, e.g. `/dev/sdd1`
+            - if necessary: `lsblk -f`
+            - `umount /dev/sdd1 MOUNTPOINT`
         - create directory for flash drive: `mkdir /mnt/usb`
         - mount flash drive: `mount /dev/sdd1 /mnt/usb`
         - set `MONITOR_DRIVE` to `/mnt/usb`
+        - then `rostopic pub -1 /sim_full_disk_failure std_msgs/String fail`
     - **scan logging failure:** `rostopic pub -1 /toggle_simulated_scan_logging_failure std_msgs/String fail`
 - **localization failures**
     - **odometry-GNSS distance divergence (type 1):** `rostopic pub -1 /wheel_movement_without_pos_change std_msgs/String fail`
