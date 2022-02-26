@@ -88,6 +88,9 @@
     - **docking failure (raised ramp):** `rostopic pub -1 /sim_docking_failure_raised_ramp std_msgs/String fail`
     - **docking failure (wrong base pose):** `rostopic pub -1 /sim_docking_failure_base_pose std_msgs/String fail`
     - **charging failure:** `rostopic pub -1 /sim_charging_failure std_msgs/String fail`
+- **power management failures**
+    - **contingency:** `rostopic pub -1 /sim_power_management_contingency std_msgs/String fail`
+    - **catastrophe:** `rostopic pub -1 /sim_power_management_catastrophe std_msgs/String fail`
 
 ## Communication with Human Operator
 
