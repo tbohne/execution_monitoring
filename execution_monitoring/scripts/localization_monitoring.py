@@ -67,10 +67,13 @@ class LocalizationMonitoring:
         self.active_monitoring = True
 
     def re_init(self, msg):
-        rospy.loginfo("re-initialiizing the localiization monitoring..")
-        self.robot_info_pub.publish("re-initialiizing localiization monitoring")
-        rospy.sleep(10)
-        self.init()
+        if msg.data:
+            rospy.loginfo("re-initialiizing the localiization monitoring..")
+            self.robot_info_pub.publish("re-initialiizing localiization monitoring")
+            rospy.sleep(10)
+            self.init()
+        else:
+            self.catastrophe_pub.publish(config.LOCALIZATION_CATA)
 
     def mbf_status_callback(self, mbf_status):
         if self.active_monitoring and len(mbf_status.status_list) > 0:

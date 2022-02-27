@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 import rospy
 from execution_monitoring import config
-from std_msgs.msg import String, UInt16
+from std_msgs.msg import String, UInt16, Bool
 from arox_performance_parameters.msg import arox_operational_param
 from datetime import datetime
 
@@ -11,12 +11,18 @@ class PlanDeploymentMonitor:
     def __init__(self):
         rospy.Subscriber('arox/ongoing_operation', arox_operational_param, self.operation_callback, queue_size=1)
         rospy.Subscriber('/plan_retrieval_failure', UInt16, self.plan_fail_callback, queue_size=1)
+        rospy.Subscriber('resolve_plan_deployment_failure_success', Bool, self.resolve_callback, queue_size=1)
 
         self.contingency_pub = rospy.Publisher('/contingency_preemption', String, queue_size=1)
+        self.catastrophe_pub = rospy.Publisher('/catastrophe_preemption', String, queue_size=1)
         self.robot_info_pub = rospy.Publisher('/robot_info', String, queue_size=1)
 
         self.last_op_time = datetime.now()
         self.start_monitoring()
+
+    def resolve_callback(self, msg):
+        if not msg.data:
+            self.catastrophe_pub.publish(config.PLAN_DEPLOYMENT_CATA)
 
     def start_monitoring(self):
         while not rospy.is_shutdown():

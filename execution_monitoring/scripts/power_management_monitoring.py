@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 import rospy
-from std_msgs.msg import String
+from std_msgs.msg import String, Bool
 from execution_monitoring import config
 
 class PowerManagementMonitoring:
@@ -13,6 +13,11 @@ class PowerManagementMonitoring:
         rospy.Subscriber('/watchdog', String, self.watchdog_callback, queue_size=1)
         rospy.Subscriber('/fully_charged', String, self.fully_charged_callback, queue_size=1)
         rospy.Subscriber('/catastrophe_launched', String, self.catastrophe_callback, queue_size=1)
+        rospy.Subscriber('/resolve_power_management_failure_success', Bool, self.resolution_callback, queue_size=1)
+
+    def resolution_callback(self, msg):
+        if not msg.data:
+            self.catastrophe_pub.publish(config.POWER_MANAGEMENT_CATA)
 
     def catastrophe_callback(self, msg):
         self.active_catastrophe_monitoring = False

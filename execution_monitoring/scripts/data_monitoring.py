@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 import rospy
 import psutil
-from std_msgs.msg import String
+from std_msgs.msg import String, Bool
 from pathlib import Path
 from execution_monitoring import util, config
 
@@ -12,9 +12,16 @@ class DataMonitoring:
         rospy.Subscriber('/scan_action', String, self.data_management_failure_monitoring, queue_size=1)
         rospy.Subscriber('/mission_name', String, self.mission_name_callback, queue_size=1)
         rospy.Subscriber('/sim_full_disk_failure', String, self.sim_full_disk_callback, queue_size=1)
+        rospy.Subscriber('/resolve_data_management_failure_success', Bool, self.resolution_callback, queue_size=1)
+
         self.contingency_pub = rospy.Publisher('/contingency_preemption', String, queue_size=1)
         self.catastrophe_pub = rospy.Publisher('/catastrophe_preemption', String, queue_size=1)
         self.robot_info_pub = rospy.Publisher('/robot_info', String, queue_size=1)
+        self.logging_pub = rospy.Publisher('/scan_successfully_logged', String, queue_size=1)
+
+    def resolution_callback(self, msg):
+        if not msg.data:
+            self.catastrophe_pub.publish(config.DATA_MANAGEMENT_CATA)
 
     def sim_full_disk_callback(self, msg):
         rospy.loginfo("sim full disk failure..")
@@ -37,6 +44,7 @@ class DataMonitoring:
             self.contingency_pub.publish(config.DATA_MANAGEMENT_FAILURE_TWO)
         else:
             rospy.loginfo("data management OK - scan successfully logged..")
+            self.logging_pub.publish("")
     
     def count_scan_entries(self):
         scan_cnt = 0

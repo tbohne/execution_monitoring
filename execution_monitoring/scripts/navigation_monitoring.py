@@ -23,6 +23,7 @@ class NavigationMonitoring:
         rospy.Subscriber('/explicit_nav_failure', String, self.explicit_fail_callback, queue_size=1)
 
         self.contingency_pub = rospy.Publisher('/contingency_preemption', String, queue_size=1)
+        self.catastrophe_pub = rospy.Publisher('/catastrophe_preemption', String, queue_size=1)
         self.robot_info_pub = rospy.Publisher('/robot_info', String, queue_size=1)
         self.resolution_failure_pub = rospy.Publisher('/resolution_failure', String, queue_size=1)
         self.navigation_monitoring()
@@ -35,6 +36,8 @@ class NavigationMonitoring:
     def resolved_callback(self, msg):
         self.active_monitoring = True
         self.recovery_attempts  = 0
+        if not msg.data:
+            self.catastrophe_pub.publish(config.NAV_CATA)
 
     def gnss_update(self, nav_sat_fix):
         self.robot_pos = (nav_sat_fix.latitude, nav_sat_fix.longitude)
@@ -45,7 +48,6 @@ class NavigationMonitoring:
             if self.active_monitoring:
                 if self.recovery_cnt == 1:
                     self.robot_pos_when_started_recovery = self.robot_pos
-
                 if self.recovery_cnt >= config.RECOVERY_LIMIT:
                     # reached limit of recovery attempts without making progress -> < 1m
                     if distance.distance(self.robot_pos, self.robot_pos_when_started_recovery).km <= 0.001:

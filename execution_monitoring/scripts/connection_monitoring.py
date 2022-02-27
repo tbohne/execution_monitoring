@@ -194,7 +194,10 @@ class ConnectionMonitoring:
         return True
 
     def resolve_callback(self, msg):
-        self.active_monitoring = True
+        if msg.data:
+            self.active_monitoring = True
+        else:
+            self.catastrophe_pub.publish(config.CONNECTION_CATA)
 
     def check_wifi_disconnect(self, wifi_info):
         if wifi_info.link_quality == wifi_info.signal_level == wifi_info.bit_rate == 0:

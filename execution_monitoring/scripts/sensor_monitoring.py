@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 import rospy
 from sensor_msgs.msg import LaserScan
-from std_msgs.msg import String
+from std_msgs.msg import String, Bool
 from execution_monitoring import config, util
 import hashlib
 
@@ -10,10 +10,15 @@ class SensorMonitoring:
 
     def __init__(self):
         rospy.Subscriber('/scan_action', String, self.sensor_failure_monitoring, queue_size=1)
+        rospy.Subscriber('/resolve_sensor_failure_success', Bool, self.resolution_callback, queue_size=1)
         self.contingency_pub = rospy.Publisher('/contingency_preemption', String, queue_size=1)
         self.catastrophe_pub = rospy.Publisher('/catastrophe_preemption', String, queue_size=1)
 
         self.previous_scan = None
+
+    def resolution_callback(self, msg):
+        if not msg.data:
+            self.catastrophe_pub.publish(config.SENSOR_CATA)
 
     def compute_scan_hash(self, scan):
         scan_str = str(scan.header.stamp.secs) + str(scan.header.stamp.nsecs) + scan.header.frame_id + str(scan.angle_min) \
