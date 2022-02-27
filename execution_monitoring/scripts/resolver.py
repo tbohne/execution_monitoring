@@ -2,6 +2,7 @@
 import rospy
 from std_msgs.msg import String, Bool, Float64
 import actionlib
+from datetime import datetime
 from arox_navigation_flex.msg import drive_to_goalAction
 from execution_monitoring import config, util
 from geometry_msgs.msg import Twist
@@ -53,6 +54,7 @@ class GeneralFailureResolver(object):
             rospy.loginfo("fallback solution was not successful..")
             self.resolution_pub.publish("fallback solution was not successful..")
 
+
 class WeatherFailureResolver(GeneralFailureResolver):
 
     def __init__(self):
@@ -78,11 +80,21 @@ class WeatherFailureResolver(GeneralFailureResolver):
 
             self.resolve_weather_failure(msg.data)
 
+        elif msg.data == config.WEATHER_CATA:
+            self.resolve_catastrophe(config.WEATHER_CATA)
+
         if self.problem_resolved:
             self.success_pub.publish(True)
 
     def moderate_weather_callback(self, msg):
         self.moderate_weather = True
+
+    def resolve_catastrophe(self, msg):
+        rospy.loginfo("resolve weather change catastrophe -- requesting help from human operator")
+        self.resolution_pub.publish("resolve weather change catastrophe -- requesting help from human operator")
+        self.fallback_pub.publish(msg)
+        while not self.problem_resolved:
+            rospy.sleep(5)
 
     def resolve_weather_failure(self, msg):
         self.resolution_pub.publish("resolve drastic weather change -- seeking shelter -- driving back to base")
@@ -98,41 +110,43 @@ class WeatherFailureResolver(GeneralFailureResolver):
 
         out = self.drive_to_goal_client.get_result()
         if out.progress > 0:
-            self.fallback_pub.publish(msg)
-            while not self.problem_resolved:
-                rospy.sleep(5)
-
-        rospy.loginfo("start docking procedure..")
-        rospy.loginfo("waiting until weather is moderate again - charging battery in the meantime..")
-        self.robot_info_pub.publish("waiting until weather is moderate again -- charging battery in the meantime")
-        self.resolution_pub.publish("waiting until weather is moderate again -- charging battery in the meantime")
-
-        rospy.set_param("charging_mode", True)
-        charge_mode = rospy.get_param("charging_mode")
-
-        while charge_mode:
+            # initiate catastrophe
+            self.success_pub.publish(False)
+        else:
+            rospy.loginfo("start docking procedure..")
+            rospy.loginfo("waiting until weather is moderate again - charging battery in the meantime..")
+            self.robot_info_pub.publish("waiting until weather is moderate again -- charging battery in the meantime")
+            rospy.set_param("charging_mode", True)
             charge_mode = rospy.get_param("charging_mode")
-            rospy.loginfo("charging battery..")
-            rospy.sleep(2)
 
-        if not charge_mode:
-            rospy.loginfo("battery charged..")
-            self.robot_info_pub.publish("battery charged")
+            while charge_mode:
+                charge_mode = rospy.get_param("charging_mode")
+                rospy.loginfo("charging battery..")
+                rospy.sleep(2)
 
-        rospy.loginfo("waiting until weather is moderate again")
-        while not self.moderate_weather:
-            rospy.sleep(5)
-        
-        self.resolution_pub.publish("weather moderate again -- problem solved")
-        self.problem_resolved = True
+            if not charge_mode:
+                rospy.loginfo("battery charged..")
+                self.robot_info_pub.publish("battery charged")
+
+            rospy.loginfo("waiting until weather is moderate again")
+            while not self.moderate_weather:
+                rospy.sleep(5)
+            
+            self.resolution_pub.publish("weather moderate again -- problem solved")
+            self.problem_resolved = True
 
 
 class DataManagementFailureResolver(GeneralFailureResolver):
 
     def __init__(self):
         super(DataManagementFailureResolver, self).__init__()
+        self.fail_cnt = 0
         rospy.Subscriber('/resolve_data_management_failure', String, self.resolve_callback, queue_size=1)
+        rospy.Subscriber('/scan_successfully_logged', String, self.logging_success_callback, queue_size=1)
         self.success_pub = rospy.Publisher('/resolve_data_management_failure_success', Bool, queue_size=1)
+
+    def logging_success_callback(self, msg):
+        self.fail_cnt = 0
 
     def resolve_callback(self, msg):
         rospy.loginfo("launch data management failure resolver..")
@@ -146,30 +160,52 @@ class DataManagementFailureResolver(GeneralFailureResolver):
             self.resolve_type_one_failure(config.DATA_MANAGEMENT_FAILURE_ONE)
         elif msg.data == config.DATA_MANAGEMENT_FAILURE_TWO:
             self.resolve_type_two_failure(config.DATA_MANAGEMENT_FAILURE_TWO)
+        elif msg.data == config.DATA_MANAGEMENT_CATA:
+            self.resolve_catastrophe(config.DATA_MANAGEMENT_CATA)
 
         if self.problem_resolved:
             self.resolution_pub.publish("problem resolved")
             self.success_pub.publish(True)
 
-    def resolve_type_one_failure(self, msg):
-        rospy.loginfo("resolve type one failure..")
-        self.resolution_pub.publish("resolve type one failure")
+    def resolve_catastrophe(self, msg):
+        rospy.loginfo("resolve data management catastrophe -- requesting help from human operator")
+        self.resolution_pub.publish("resolve data management catastrophe -- requesting help from human operator")
         self.fallback_pub.publish(msg)
         while not self.problem_resolved:
             rospy.sleep(5)
 
+    def resolve_type_one_failure(self, msg):
+        rospy.loginfo("resolve type one failure.. a full memory can't be dealt with by the robot, but it can drive back to the base..")
+        self.resolution_pub.publish("resolve type one failure")
+        # return to base + launch catastrohe
+        # TODO: implement docking for config.DOCKING cases
+        action_goal = util.create_dtg_goal(config.BASE_POSE, None)
+        self.drive_to_goal_client.wait_for_server()
+        self.drive_to_goal_client.send_goal(action_goal)
+        rospy.loginfo("goal sent, wait for accomplishment..")
+        self.drive_to_goal_client.wait_for_result()
+        # initiate catastrophe
+        self.success_pub.publish(False)
+
     def resolve_type_two_failure(self, msg):
         rospy.loginfo("resolve type two failure..")
-        self.resolution_pub.publish("resolve type two failure")
-        self.fallback_pub.publish(msg)
-        while not self.problem_resolved:
-            rospy.sleep(5)
+        if self.fail_cnt == 0:
+            # fail count 0 -> just try again
+            rospy.loginfo("just trying again..")
+            self.resolution_pub.publish("resolve type two failure - trying again..")
+            self.problem_resolved = True
+        else:
+            # initiate catastrophe
+            self.success_pub.publish(False)
+        self.fail_cnt += 1
 
 
 class ConnectionResolver(GeneralFailureResolver):
 
     def __init__(self):
         super(ConnectionResolver, self).__init__()
+        self.fail_cnt = 0
+        self.fail_cnt_update = None
         rospy.Subscriber('/resolve_wifi_failure', String, self.resolve_callback, queue_size=1)
         rospy.Subscriber('/resolve_internet_failure', String, self.resolve_callback, queue_size=1)
         rospy.Subscriber('/resolve_gnss_failure', String, self.resolve_callback, queue_size=1)
@@ -183,193 +219,85 @@ class ConnectionResolver(GeneralFailureResolver):
         self.resolution_pub.publish("launch connection failure resolver -- type of connection failure: " + msg.data)
         self.problem_resolved = False
 
-        # different types of resolution are required based on the type of issue
-        if msg.data == config.CONNECTION_FAILURE_ONE:
-            self.resolve_type_one_failure(config.CONNECTION_FAILURE_ONE)
-        elif msg.data == config.CONNECTION_FAILURE_TWO:
-            self.resolve_type_two_failure(config.CONNECTION_FAILURE_TWO)
-        elif msg.data == config.CONNECTION_FAILURE_THREE:
-            self.resolve_type_three_failure(config.CONNECTION_FAILURE_THREE)
-        elif msg.data == config.CONNECTION_FAILURE_FOUR:
-            self.resolve_type_four_failure(config.CONNECTION_FAILURE_FOUR)
-        elif msg.data == config.CONNECTION_FAILURE_FIVE:
-            self.resolve_type_five_failure(config.CONNECTION_FAILURE_FIVE)
-        elif msg.data == config.CONNECTION_FAILURE_SIX:
-            self.resolve_type_six_failure(config.CONNECTION_FAILURE_SIX)
-        elif msg.data == config.CONNECTION_FAILURE_SEVEN:
-            self.resolve_type_seven_failure(config.CONNECTION_FAILURE_SEVEN)
-        elif msg.data == config.CONNECTION_FAILURE_EIGHT:
-            self.resolve_type_eight_failure(config.CONNECTION_FAILURE_EIGHT)
-        elif msg.data == config.CONNECTION_FAILURE_NINE:
-            self.resolve_type_ninie_failure(config.CONNECTION_FAILURE_NINE)
-        elif msg.data == config.CONNECTION_FAILURE_TEN:
-            self.resolve_type_ten_failure(config.CONNECTION_FAILURE_TEN)
-        elif msg.data == config.CONNECTION_FAILURE_ELEVEN:
-            self.resolve_type_eleven_failure(config.CONNECTION_FAILURE_ELEVEN)
-        elif msg.data == config.CONNECTION_FAILURE_TWELVE:
-            self.resolve_type_twelve_failure(config.CONNECTION_FAILURE_TWELVE)
-        elif msg.data == config.CONNECTION_FAILURE_THIRTEEN:
-            self.resolve_type_thirteen_failure(config.CONNECTION_FAILURE_THIRTEEN)
-        elif msg.data == config.CONNECTION_FAILURE_FOURTEEN:
-            self.resolve_type_fourteen_failure(config.CONNECTION_FAILURE_FOURTEEN)
-        elif msg.data == config.CONNECTION_FAILURE_FIFTEEN:
-            self.resolve_type_fifteen_failure(config.CONNECTION_FAILURE_FIFTEEN)
-        elif msg.data == config.CONNECTION_FAILURE_SIXTEEN:
-            self.resolve_type_sixteen_failure(config.CONNECTION_FAILURE_SIXTEEN)
-        elif msg.data == config.CONNECTION_FAILURE_SEVENTEEN:
-            self.resolve_type_seventeen_failure(config.CONNECTION_FAILURE_SEVENTEEN)
-        elif msg.data == config.CONNECTION_FAILURE_EIGHTEEN:
-            self.resolve_type_eighteen_failure(config.CONNECTION_FAILURE_EIGHTEEN)
-        elif msg.data == config.CONNECTION_FAILURE_NINETEEN:
-            self.resolve_type_nineteen_failure(config.CONNECTION_FAILURE_NINETEEN)
-        elif msg.data == config.CONNECTION_FAILURE_TWENTY:
-            self.resolve_type_twenty_failure(config.CONNECTION_FAILURE_TWENTY)
+        # fail count outdated -> reset
+        if (datetime.now() - self.fail_cnt_update).total_seconds() > 500:
+            self.fail_cnt = 0
+
+        # wifi failures
+        if msg.data in [config.CONNECTION_FAILURE_ONE, config.CONNECTION_FAILURE_TWO, config.CONNECTION_FAILURE_THREE, config.CONNECTION_FAILURE_FOUR, config.CONNECTION_FAILURE_NINE]:
+            self.resolve_wifi_failure(msg.data)
+
+        # internet failures
+        elif msg.data in [config.CONNECTION_FAILURE_FIVE, config.CONNECTION_FAILURE_SIX, config.CONNECTION_FAILURE_SEVEN, config.CONNECTION_FAILURE_TEN]:
+            self.resolve_internet_failure(msg.data)
+
+        # gnss failures
+        elif msg.data in [config.CONNECTION_FAILURE_EIGHT, config.CONNECTION_FAILURE_ELEVEN, config.CONNECTION_FAILURE_TWELVE, config.CONNECTION_FAILURE_THIRTEEN,
+            config.CONNECTION_FAILURE_FOURTEEN, config.CONNECTION_FAILURE_FIFTEEN, config.CONNECTION_FAILURE_SIXTEEN, config.CONNECTION_FAILURE_SEVENTEEN,
+            config.CONNECTION_FAILURE_EIGHTEEN, config.CONNECTION_FAILURE_NINETEEN, config.CONNECTION_FAILURE_TWENTY]:
+
+            self.resolve_gnss_failure(msg.data)
+
+        elif msg.data == config.CONNECTION_CATA:
+            self.resolve_catastrophe(config.CONNECTION_CATA)
 
         if self.problem_resolved:
             self.resolution_pub.publish("problem resolved")
             self.success_pub.publish(True)
 
-    def resolve_type_one_failure(self, msg):
-        rospy.loginfo("resolve type one failure..")
-        self.resolution_pub.publish("resolve type one failure")
+    def resolve_catastrophe(self, msg):
+        rospy.loginfo("resolve connection catastrophe -- requesting help from human operator")
+        self.resolution_pub.publish("resolve connection catastrophe -- requesting help from human operator")
         self.fallback_pub.publish(msg)
         while not self.problem_resolved:
             rospy.sleep(5)
 
-    def resolve_type_two_failure(self, msg):
-        rospy.loginfo("resolve type two failure..")
-        self.resolution_pub.publish("resolve type two failure")
-        self.fallback_pub.publish(msg)
-        while not self.problem_resolved:
-            rospy.sleep(5)
-
-    def resolve_type_three_failure(self, msg):
-        rospy.loginfo("resolve type three failure..")
-        self.resolution_pub.publish("resolve type three failure")
-        self.fallback_pub.publish(msg)
-        while not self.problem_resolved:
-            rospy.sleep(5)
-
-    def resolve_type_four_failure(self, msg):
-        rospy.loginfo("resolve type four failure..")
-        self.resolution_pub.publish("resolve type four failure")
-        self.fallback_pub.publish(msg)
-        while not self.problem_resolved:
-            rospy.sleep(5)
-
-    def resolve_type_five_failure(self, msg):
-        rospy.loginfo("resolve type five failure..")
-        self.resolution_pub.publish("resolve type five failure")
-        self.fallback_pub.publish(msg)
-        while not self.problem_resolved:
-            rospy.sleep(5)
-        # try to re-initialize the internet monitor (requires connection)
-        self.re_init_pub.publish("")
-
-    def resolve_type_six_failure(self, msg):
-        rospy.loginfo("resolve type six failure..")
-        self.resolution_pub.publish("resolve type six failure")
-        self.fallback_pub.publish(msg)
-        while not self.problem_resolved:
-            rospy.sleep(5)
-
-    def resolve_type_seven_failure(self, msg):
-        rospy.loginfo("resolve type seven failure..")
-        self.resolution_pub.publish("resolve type seven failure")
-        self.fallback_pub.publish(msg)
-        while not self.problem_resolved:
-            rospy.sleep(5)
-
-    def resolve_type_eight_failure(self, msg):
-        rospy.loginfo("resolve type eight failure..")
-        self.resolution_pub.publish("resolve type eight failure")
-        self.fallback_pub.publish(msg)
-        while not self.problem_resolved:
-            rospy.sleep(5)
-
-    def resolve_type_nine_failure(self, msg):
-        rospy.loginfo("resolve type nine failure..")
-        self.resolution_pub.publish("resolve type nine failure")
-        self.fallback_pub.publish(msg)
-        while not self.problem_resolved:
-            rospy.sleep(5)
-
-    def resolve_type_ten_failure(self, msg):
-        rospy.loginfo("resolve type ten failure..")
-        self.resolution_pub.publish("resolve type ten failure")
-        self.fallback_pub.publish(msg)
-        while not self.problem_resolved:
-            rospy.sleep(5)
-
-    def resolve_type_eleven_failure(self, msg):
-        rospy.loginfo("resolve type eleven failure..")
-        self.resolution_pub.publish("resolve type eleven failure")
-        self.fallback_pub.publish(msg)
-        while not self.problem_resolved:
-            rospy.sleep(5)
-
-    def resolve_type_twelve_failure(self, msg):
-        rospy.loginfo("resolve type twelve failure..")
-        self.resolution_pub.publish("resolve type twelve failure")
-        self.fallback_pub.publish(msg)
-        while not self.problem_resolved:
-            rospy.sleep(5)
-
-    def resolve_type_thirteen_failure(self, msg):
-        rospy.loginfo("resolve type thirteen failure..")
-        self.resolution_pub.publish("resolve type thirteen failure")
-        self.fallback_pub.publish(msg)
-        while not self.problem_resolved:
-            rospy.sleep(5)
-
-    def resolve_type_fourteen_failure(self, msg):
-        rospy.loginfo("resolve type fourteen failure..")
-        self.resolution_pub.publish("resolve type fourteen failure")
-        self.fallback_pub.publish(msg)
-        while not self.problem_resolved:
-            rospy.sleep(5)
+    def resolve_wifi_failure(self, msg):
+        rospy.loginfo("resolve wifi failure: %s", msg)
+        self.resolution_pub.publish("resolve wifi failure: " + str(msg))
         
-    def resolve_type_fifteen_failure(self, msg):
-        rospy.loginfo("resolve type fifteen failure..")
-        self.resolution_pub.publish("resolve type fifteen failure")
-        self.fallback_pub.publish(msg)
-        while not self.problem_resolved:
-            rospy.sleep(5)
+        if self.fail_cnt == 0:
+            # simply repeat it
+            rospy.loginfo("just trying again..")
+            self.resolution_pub.publish("just trying again..")
+            self.problem_resolved = True
+        else:
+            # initiate catastrophe
+            self.success_pub.publish(False)
+        self.fail_cnt += 1
+        self.fail_cnt_update = datetime.now()
 
-    def resolve_type_sixteen_failure(self, msg):
-        rospy.loginfo("resolve type sixteen failure..")
-        self.resolution_pub.publish("resolve type sixteen failure")
-        self.fallback_pub.publish(msg)
-        while not self.problem_resolved:
-            rospy.sleep(5)
+    def resolve_internet_failure(self, msg):
+        rospy.loginfo("resolve internet failure: %s", msg)
+        self.resolution_pub.publish("resolve internet failure: " + str(msg))
 
-    def resolve_type_seventeen_failure(self, msg):
-        rospy.loginfo("resolve type seventeen failure..")
-        self.resolution_pub.publish("resolve type seventeen failure")
-        self.fallback_pub.publish(msg)
-        while not self.problem_resolved:
-            rospy.sleep(5)
+        if self.fail_cnt == 0:
+            # try to re-initialize the internet monitor (requires connection)
+            rospy.loginfo("reinitializing internet connection..")
+            self.resolution_pub.publish("reinitializing internet connection..")
+            self.re_init_pub.publish("")
+            self.problem_resolved = True
+        else:
+            # initiate catastrophe
+            self.success_pub.publish(False)
+        self.fail_cnt += 1
+        self.fail_cnt_update = datetime.now()
 
-    def resolve_type_eighteen_failure(self, msg):
-        rospy.loginfo("resolve type eighteen failure..")
-        self.resolution_pub.publish("resolve type eighteen failure")
-        self.fallback_pub.publish(msg)
-        while not self.problem_resolved:
-            rospy.sleep(5)
+    def resolve_gnss_failure(self, msg):
+        rospy.loginfo("resolve GNSS failure: %s", msg)
+        self.resolution_pub.publish("resolve GNSS failure: " + str(msg))
 
-    def resolve_type_nineteen_failure(self, msg):
-        rospy.loginfo("resolve type nineteen failure..")
-        self.resolution_pub.publish("resolve type nineteen failure")
-        self.fallback_pub.publish(msg)
-        while not self.problem_resolved:
-            rospy.sleep(5)
+        if self.fail_cnt == 0:
+            # simply repeat it
+            rospy.loginfo("just trying again..")
+            self.resolution_pub.publish("just trying again..")
+            self.problem_resolved = True
+        else:
+            # initiate catastrophe
+            self.success_pub.publish(False)
+        self.fail_cnt += 1
+        self.fail_cnt_update = datetime.now()
 
-    def resolve_type_twenty_failure(self, msg):
-        rospy.loginfo("resolve type twenty failure..")
-        self.resolution_pub.publish("resolve type twenty failure")
-        self.fallback_pub.publish(msg)
-        while not self.problem_resolved:
-            rospy.sleep(5)
 
 class PowerManagementFailureResolver(GeneralFailureResolver):
 
@@ -391,33 +319,36 @@ class PowerManagementFailureResolver(GeneralFailureResolver):
 
         # different types of resolution are required based on the type of issue
         if msg.data == config.POWER_MANAGEMENT_FAILURE_ONE:
-            self.resolve_type_one_failure(config.POWER_MANAGEMENT_FAILURE_ONE)
-        elif msg.data == config.POWER_MANAGEMENT_FAILURE_TWO:
-            self.resolve_type_two_failure(config.POWER_MANAGEMENT_FAILURE_TWO)
+            self.resolve_contingency(config.POWER_MANAGEMENT_FAILURE_ONE)
+        elif msg.data == config.POWER_MANAGEMENT_CATA:
+            self.resolve_catastrophe(config.POWER_MANAGEMENT_CATA)
 
         if self.problem_resolved:
             self.resolution_pub.publish("problem resolved")
             self.success_pub.publish(True)
 
-    def resolve_type_one_failure(self, msg):
+    def resolve_contingency(self, msg):
         rospy.loginfo("resolve power management contingency -- introduce intermediate goals in plan - [return_to_base, charge]")
         self.resolution_pub.publish("resolve power management contingency -- introduce intermediate goals in plan - [return_to_base, charge]")
         # insert intermediate recharge goals [return_to_base, charge]
         self.insert_goal_pub.publish("")
         self.problem_resolved = True
 
-    def resolve_type_two_failure(self, msg):
-        rospy.loginfo("resolve type two failure..")
-        self.resolution_pub.publish("resolve type two failure")
+    def resolve_catastrophe(self, msg):
+        rospy.loginfo("resolve power management catastrophe -- requesting help from human operator")
+        self.resolution_pub.publish("resolve power management catastrophe -- requesting help from human operator")
         self.fallback_pub.publish(msg)
         self.cata_launched_pub.publish("")
         while not self.problem_resolved:
             rospy.sleep(5)
 
+
 class SensorFailureResolver(GeneralFailureResolver):
 
     def __init__(self):
         super(SensorFailureResolver, self).__init__()
+        self.fail_cnt = 0
+        self.fail_cnt_update = None
         rospy.Subscriber('/resolve_sensor_failure', String, self.resolve_callback, queue_size=1)
         self.success_pub = rospy.Publisher('/resolve_sensor_failure_success', Bool, queue_size=1)
 
@@ -428,47 +359,38 @@ class SensorFailureResolver(GeneralFailureResolver):
         self.resolution_pub.publish("launch sensor failure resolver -- type of sensor failure: " + msg.data)
         self.problem_resolved = False
 
-        # different types of resolution are required based on the type of issue
-        if msg.data == config.SENSOR_FAILURE_ONE:
-            self.resolve_type_one_failure(config.SENSOR_FAILURE_ONE)
-        elif msg.data == config.SENSOR_FAILURE_TWO:
-            self.resolve_type_two_failure(config.SENSOR_FAILURE_TWO)
-        elif msg.data == config.SENSOR_FAILURE_THREE:
-            self.resolve_type_three_failure(config.SENSOR_FAILURE_THREE)
-        elif msg.data == config.SENSOR_FAILURE_FOUR:
-            self.resolve_type_four_failure(config.SENSOR_FAILURE_FOUR)
+        # reset outdated fail count
+        if (datetime.now() - self.fail_cnt_update).total_seconds() > 500:
+            self.fail_cnt = 0
+
+        if msg.data in [config.SENSOR_FAILURE_ONE, config.SENSOR_FAILURE_TWO, config.SENSOR_FAILURE_THREE, config.SENSOR_FAILURE_FOUR]:
+            self.resolve_sensor_failure(msg.data)
+        elif msg.data == config.SENSOR_CATA:
+            self.resolve_catastrophe(config.SENSOR_CATA)
 
         if self.problem_resolved:
             self.resolution_pub.publish("problem resolved")
             self.success_pub.publish(True)
 
-    def resolve_type_one_failure(self, msg):
-        rospy.loginfo("resolve type one failure..")
-        self.resolution_pub.publish("resolve type one failure")
+    def resolve_catastrophe(self, msg):
+        rospy.loginfo("resolve sensor catastrophe -- requesting help from human operator")
+        self.resolution_pub.publish("resolve sensor catastrophe -- requesting help from human operator")
         self.fallback_pub.publish(msg)
         while not self.problem_resolved:
             rospy.sleep(5)
 
-    def resolve_type_two_failure(self, msg):
-        rospy.loginfo("resolve type two failure..")
-        self.resolution_pub.publish("resolve type two failure")
-        self.fallback_pub.publish(msg)
-        while not self.problem_resolved:
-            rospy.sleep(5)
-
-    def resolve_type_three_failure(self, msg):
-        rospy.loginfo("resolve type three failure..")
-        self.resolution_pub.publish("resolve type three failure")
-        self.fallback_pub.publish(msg)
-        while not self.problem_resolved:
-            rospy.sleep(5)
-
-    def resolve_type_four_failure(self, msg):
-        rospy.loginfo("resolve type four failure..")
-        self.resolution_pub.publish("resolve type four failure")
-        self.fallback_pub.publish(msg)
-        while not self.problem_resolved:
-            rospy.sleep(5)
+    def resolve_sensor_failure(self, msg):
+        if self.fail_cnt == 0:
+            rospy.loginfo("resolve sensor failure..")
+            self.resolution_pub.publish("resolve sensor failure")
+            self.fallback_pub.publish(msg)
+            while not self.problem_resolved:
+                rospy.sleep(5)
+        else:
+            # initiate catastrophe
+            self.success_pub.publish(False)
+        self.fail_cnt += 1
+        self.fail_cnt_update = datetime.now()
 
 
 class LocalizationFailureResolver(GeneralFailureResolver):
@@ -527,6 +449,7 @@ class LocalizationFailureResolver(GeneralFailureResolver):
 
         self.problem_resolved = True
 
+
 class PlanDeploymentFailureResolver(GeneralFailureResolver):
 
     def __init__(self):
@@ -552,24 +475,22 @@ class PlanDeploymentFailureResolver(GeneralFailureResolver):
         self.problem_resolved = False
 
         # different types of resolution are required based on the type of issue
-        if msg.data == config.PLAN_DEPLOYMENT_FAILURE_ONE:
-            self.resolve_type_one_failure(config.PLAN_DEPLOYMENT_FAILURE_ONE)
-        elif msg.data == config.PLAN_DEPLOYMENT_FAILURE_TWO:
+        if msg.data == config.PLAN_DEPLOYMENT_FAILURE_TWO:
             self.resolve_type_two_failure(config.PLAN_DEPLOYMENT_FAILURE_TWO)
-        elif msg.data == config.PLAN_DEPLOYMENT_FAILURE_THREE:
+        elif msg.data in [config.PLAN_DEPLOYMENT_FAILURE_THREE, config.PLAN_DEPLOYMENT_FAILURE_FIVE]:
             self.resolve_type_three_failure(config.PLAN_DEPLOYMENT_FAILURE_THREE)
         elif msg.data == config.PLAN_DEPLOYMENT_FAILURE_FOUR:
             self.resolve_type_four_failure(config.PLAN_DEPLOYMENT_FAILURE_FOUR)
-        elif msg.data == config.PLAN_DEPLOYMENT_FAILURE_FIVE:
-            self.resolve_type_five_failure(config.PLAN_DEPLOYMENT_FAILURE_FIVE)
+        elif msg.data == config.PLAN_DEPLOYMENT_CATA:
+            self.resolve_catastrophe(config.PLAN_DEPLOYMENT_CATA)
 
         if self.problem_resolved:
             self.resolution_pub.publish("problem resolved")
             self.success_pub.publish(True)
 
-    def resolve_type_one_failure(self, msg):
-        rospy.loginfo("resolve type one failure..")
-        self.resolution_pub.publish("resolve type one failure")
+    def resolve_catastrophe(self, msg):
+        rospy.loginfo("resolve plan deployment catastrophe -- requesting help from human operator")
+        self.resolution_pub.publish("resolve plan deployment catastrophe -- requesting help from human operator")
         self.fallback_pub.publish(msg)
         while not self.problem_resolved:
             rospy.sleep(5)
@@ -585,10 +506,8 @@ class PlanDeploymentFailureResolver(GeneralFailureResolver):
         else:
             rospy.loginfo("plan generation service repeatedly unavailable..")
             self.resolution_pub.publish("plan generation service repeatedly unavailable")
-            self.unavailable_service_cnt = 0
-            self.fallback_pub.publish(msg)
-            while not self.problem_resolved:
-                rospy.sleep(5)
+            # initiate catastrophe
+            self.success_pub.publish(False)
 
     def resolve_type_three_failure(self, msg):
         rospy.loginfo("resolve type three failure..")
@@ -600,10 +519,8 @@ class PlanDeploymentFailureResolver(GeneralFailureResolver):
         else:
             rospy.loginfo("plan retrieval failed repeatedly..")
             self.resolution_pub.publish("plan retrieval failed repeatedly")
-            self.empty_plan_cnt = 0
-            self.fallback_pub.publish(msg)
-            while not self.problem_resolved:
-                rospy.sleep(5)
+            # initiate catastrophe
+            self.success_pub.publish(False)
 
     def resolve_type_four_failure(self, msg):
         rospy.loginfo("resolve type four failure..")
@@ -615,17 +532,9 @@ class PlanDeploymentFailureResolver(GeneralFailureResolver):
         else:
             rospy.loginfo("plan retrieval failed repeatedly..")
             self.resolution_pub.publish("plan retrieval failed repeatedly")
-            self.infeasible_plan_cnt = 0
-            self.fallback_pub.publish(msg)
-            while not self.problem_resolved:
-                rospy.sleep(5)
+            # initiate catastrophe
+            self.success_pub.publish(False)
 
-    def resolve_type_five_failure(self, msg):
-        rospy.loginfo("resolve type five failure..")
-        self.resolution_pub.publish("resolve type five failure")
-        self.fallback_pub.publish(msg)
-        while not self.problem_resolved:
-            rospy.sleep(5)
 
 class NavigationFailureResolver(GeneralFailureResolver):
 
@@ -641,9 +550,8 @@ class NavigationFailureResolver(GeneralFailureResolver):
         rospy.loginfo("nav fail resolution failed.. cancelling resolution attempt..")
         self.resolution_pub.publish("nav fail resolution failed.. cancelling resolution attempt..")
         self.drive_to_goal_client.cancel_all_goals()
-        self.fallback_pub.publish(msg)
-        while not self.problem_resolved:
-            rospy.sleep(5)
+        # initiate catastrophe
+        self.success_pub.publish(False)
         # solved -- obstacles removed
         self.remove_obstacles_pub.publish("")
         # wait for obstacle removal before costmap clearance
@@ -659,6 +567,8 @@ class NavigationFailureResolver(GeneralFailureResolver):
 
         if msg.data == config.NAV_FAILURE_ONE or msg.data == config.NAV_FAILURE_THREE:
             self.resolve_nav_failure(config.NAV_FAILURE_ONE)
+        elif msg.data == config.NAV_CATA:
+            self.resolve_catastrophe(config.NAV_CATA)
         else:
             rospy.loginfo("cannot resolve unknown nav failure: %s", msg.data)
             self.resolution_pub.publish("cannot resolve unknown nav failure: " + msg.data)
@@ -666,6 +576,13 @@ class NavigationFailureResolver(GeneralFailureResolver):
         if self.problem_resolved:
             self.resolution_pub.publish("problem resolved")
             self.success_pub.publish(True)
+
+    def resolve_catastrophe(self, msg):
+        rospy.loginfo("resolve nav catastrophe -- requesting help from human operator")
+        self.resolution_pub.publish("resolve nav catastrophe -- requesting help from human operator")
+        self.fallback_pub.publish(msg)
+        while not self.problem_resolved:
+            rospy.sleep(5)
 
     def clear_costmaps(self):
         rospy.wait_for_service('/move_base_flex/clear_costmaps')
@@ -707,17 +624,17 @@ class NavigationFailureResolver(GeneralFailureResolver):
         if self.drive_to_goal_client.get_state() == config.GOAL_STATUS_ABORTED:
             rospy.loginfo("nav failure during resolution -- notifying operator..")
             self.resolution_pub.publish("nav failure during resolution -- notifying operator")
-
-            self.fallback_pub.publish(msg)
-            while not self.problem_resolved:
-                rospy.sleep(5)
+            # initiate catastrophe
+            self.success_pub.publish(False)
             # solved -- obstacles removed
             self.remove_obstacles_pub.publish("")
             # wait for obstacle removal before costmap clearance
             rospy.sleep(3)
             self.clear_costmaps()
+
         elif self.drive_to_goal_client.get_state() == config.GOAL_STATUS_SUCCEEDED:
             self.problem_resolved = True
+
 
 class ChargingFailureResolver(GeneralFailureResolver):
 
@@ -762,12 +679,21 @@ class ChargingFailureResolver(GeneralFailureResolver):
             self.resolve_undocking_failure()
         elif msg.data == config.CHARGING_FAILURE_THREE:
             self.resolve_charging_failure()
+        elif msg.data == config.CHARGING_CATA:
+            self.resolve_catastrophe(config.CHARGING_CATA)
         else:
             rospy.loginfo("cannot resolve unknown nav failure: %s", msg.data)
 
         if self.problem_resolved:
             self.resolution_pub.publish("problem resolved")
             self.success_pub.publish(True)
+    
+    def resolve_catastrophe(self, msg):
+        rospy.loginfo("resolve charging catastrophe -- requesting help from human operator")
+        self.resolution_pub.publish("resolve charging catastrophe -- requesting help from human operator")
+        self.fallback_pub.publish(msg)
+        while not self.problem_resolved:
+            rospy.sleep(5)
 
     def resolve_docking_failure(self):
         rospy.loginfo("resolving docking failure..")
@@ -778,9 +704,8 @@ class ChargingFailureResolver(GeneralFailureResolver):
         if self.docking_fail_cnt == 1:
             rospy.loginfo("already tried autonomous resolution before -- calling human operator for help..")
             self.resolution_pub.publish("already tried autonomous resolution before -- calling human operator for help")
-            self.fallback_pub.publish(config.CHARGING_FAILURE_ONE)
-            while not self.problem_resolved:
-                rospy.sleep(5)
+            # initiate catastrophe
+            self.success_pub.publish(False)
             # human would have opened the container -- in case it was closed
             rospy.loginfo("sending command to open container front..")
             container_pub = rospy.Publisher('/container/rampB_position_controller/command', Float64, queue_size=1)
@@ -790,7 +715,6 @@ class ChargingFailureResolver(GeneralFailureResolver):
             # clear costmap to perceive that the door is open now
             rospy.sleep(5)
             self.clear_costmaps()
-
         else:
             rospy.loginfo("just trying again..")
             self.resolution_pub.publish("just trying again")
@@ -825,9 +749,10 @@ class ChargingFailureResolver(GeneralFailureResolver):
         if self.undocking_fail_cnt == 1:
             rospy.loginfo("already tried autonomous resolution before -- calling human operator for help..")
             self.resolution_pub.publish("already tried autonomous resolution before -- calling human operator for help")
-            self.fallback_pub.publish(config.CHARGING_FAILURE_TWO)
-            while not self.problem_resolved:
-                rospy.sleep(5)
+
+            # initiate catastrophe
+            self.success_pub.publish(False)
+
             # human would have opened the container -- in case it was closed
             rospy.loginfo("sending command to open container front..")
             container_pub = rospy.Publisher('/container/rampB_position_controller/command', Float64, queue_size=1)
@@ -859,9 +784,8 @@ class ChargingFailureResolver(GeneralFailureResolver):
         if self.charge_fail_cnt == 1:
             rospy.loginfo("already tried autonomous resolution before -- calling human operator for help..")
             self.resolution_pub.publish("already tried autonomous resolution before -- calling human operator for help")
-            self.fallback_pub.publish(config.CHARGING_FAILURE_THREE)
-            while not self.problem_resolved:
-                rospy.sleep(5)
+            # initiate catastrophe
+            self.success_pub.publish(False)
         else:
             self.resolution_pub.publish("driving robot back and forth -- minor relocation")
             twist = Twist()
