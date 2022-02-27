@@ -40,61 +40,61 @@ class DataAccumulator:
 
         try:
             self.msg_store.insert_named("mission_info", String(json.dumps(mission_info)))
-        except rospy.ServiceException as e:
-            rospy.loginfo("log mission info -- DB entry failed - trying again: %s", e)
-            self.operation_callback(msg)
         except IOError as e:
             if e.errno == errno.EPIPE:
                 rospy.loginfo("DB entry error -- re-initializing data accumulator")
                 self.init()
+        except rospy.ServiceException as e:
+            rospy.loginfo("log mission info -- DB entry failed - trying again: %s", e)
+            self.operation_callback(msg)
 
     def resolution_callback(self, msg):
         rospy.loginfo("saving resolution data in DB..")
         try:
             self.msg_store.insert_named("resolution", msg)
-        except rospy.ServiceException as e:
-            rospy.loginfo("resolution callback -- DB entry failed - trying again: %s, msg: %s", e, msg)
-            self.resolution_callback(msg)
         except IOError as e:
             if e.errno == errno.EPIPE:
                 rospy.loginfo("DB entry error -- re-initializing data accumulator")
                 self.init()
+        except rospy.ServiceException as e:
+            rospy.loginfo("resolution callback -- DB entry failed - trying again: %s, msg: %s", e, msg)
+            self.resolution_callback(msg)
 
     def operator_communication_callback(self, msg):
         rospy.loginfo("saving operator communication data in DB..")
         try:
             self.msg_store.insert_named("operator_communication", msg)
-        except rospy.ServiceException as e:
-            rospy.loginfo("operator communication callback -- DB entry failed - trying again: %s, msg: %s", e, msg)
-            self.operator_communication_callback(msg)
         except IOError as e:
             if e.errno == errno.EPIPE:
                 rospy.loginfo("DB entry error -- re-initializing data accumulator")
                 self.init()
+        except rospy.ServiceException as e:
+            rospy.loginfo("operator communication callback -- DB entry failed - trying again: %s, msg: %s", e, msg)
+            self.operator_communication_callback(msg)
 
     def action_info_callback(self, msg):
         rospy.loginfo("saving action info data in DB..")
         try:
             self.msg_store.insert_named("action_info", msg)
-        except rospy.ServiceException as e:
-            rospy.loginfo("action info callback -- DB entry failed - trying again: %s, msg: %s", e, msg)
-            self.action_info_callback(msg)
         except IOError as e:
             if e.errno == errno.EPIPE:
                 rospy.loginfo("DB entry error -- re-initializing data accumulator")
                 self.init()
+        except rospy.ServiceException as e:
+            rospy.loginfo("action info callback -- DB entry failed - trying again: %s, msg: %s", e, msg)
+            self.action_info_callback(msg)
 
     def sim_info_callback(self, msg):
         rospy.loginfo("saving sim info data in DB..")
         try:
             self.msg_store.insert_named("sim_info", msg)
-        except rospy.ServiceException as e:
-            rospy.loginfo("sim info callback -- DB entry failed - trying again: %s, msg: %s", e, msg)
-            self.sim_info_callback(msg)
         except IOError as e:
             if e.errno == errno.EPIPE:
                 rospy.loginfo("DB entry error -- re-initializing data accumulator")
                 self.init()
+        except rospy.ServiceException as e:
+            rospy.loginfo("sim info callback -- DB entry failed - trying again: %s, msg: %s", e, msg)
+            self.sim_info_callback(msg)
 
     def log_failure_circumstances(self):
         rospy.loginfo("saving failure circumstances in DB..")
@@ -102,12 +102,12 @@ class DataAccumulator:
         nav_sat_fix = None
         try:
             nav_sat_fix = rospy.wait_for_message('/fix', NavSatFix, timeout=10)
-        except rospy.ROSException as e:
-            rospy.loginfo("problem retrieving GNSS fix: %s", e)
         except IOError as e:
             if e.errno == errno.EPIPE:
                 rospy.loginfo("DB entry error -- re-initializing data accumulator")
                 self.init()
+        except rospy.ROSException as e:
+            rospy.loginfo("problem retrieving GNSS fix: %s", e)
 
         # only meta information that are not already published by the monitoring procedures
         # TODO: can be arbitrarily extended
@@ -118,51 +118,51 @@ class DataAccumulator:
 
         try:
             self.msg_store.insert_named("failure_circumstances", String(json.dumps(circumstances)))
-        except rospy.ServiceException as e:
-            rospy.loginfo("log failure circumstances -- DB entry failed - trying again: %s", e)
-            self.log_failure_circumstances()
         except IOError as e:
             if e.errno == errno.EPIPE:
                 rospy.loginfo("DB entry error -- re-initializing data accumulator")
                 self.init()
+        except rospy.ServiceException as e:
+            rospy.loginfo("log failure circumstances -- DB entry failed - trying again: %s", e)
+            self.log_failure_circumstances()
 
     def contingency_callback(self, msg):
         rospy.loginfo("saving contingency data in DB..")
         try:
             self.msg_store.insert_named("contingency", msg)
             self.log_failure_circumstances()
-        except rospy.ServiceException as e:
-            rospy.loginfo("contingency callback -- DB entry failed - trying again: %s, msg: %s", e, msg)
-            self.contingency_callback(msg)
         except IOError as e:
             if e.errno == errno.EPIPE:
                 rospy.loginfo("DB entry error -- re-initializing data accumulator")
                 self.init()
+        except rospy.ServiceException as e:
+            rospy.loginfo("contingency callback -- DB entry failed - trying again: %s, msg: %s", e, msg)
+            self.contingency_callback(msg)
 
     def catastrophe_callback(self, msg):
         rospy.loginfo("saving catastrophe data in DB..")
         try:
             self.msg_store.insert_named("catastrophe", msg)
             self.log_failure_circumstances()
-        except rospy.ServiceException as e:
-            rospy.loginfo("catastrophe callback -- DB entry failed - trying again: %s, msg: %s", e, msg)
-            self.catastrophe_callback(msg)
         except IOError as e:
             if e.errno == errno.EPIPE:
                 rospy.loginfo("DB entry error -- re-initializing data accumulator")
                 self.init()
+        except rospy.ServiceException as e:
+            rospy.loginfo("catastrophe callback -- DB entry failed - trying again: %s, msg: %s", e, msg)
+            self.catastrophe_callback(msg)
 
     def info_callback(self, msg):
         rospy.loginfo("saving robot info data in DB..: %s", msg)
         try:
             self.msg_store.insert_named("robot_info", msg)
-        except rospy.ServiceException as e:
-            rospy.loginfo("info callback -- DB entry failed - trying again: %s, msg: %s", e, msg)
-            self.info_callback(msg)
         except IOError as e:
             if e.errno == errno.EPIPE:
                 rospy.loginfo("DB entry error -- re-initializing data accumulator")
                 self.init()
+        except rospy.ServiceException as e:
+            rospy.loginfo("info callback -- DB entry failed - trying again: %s, msg: %s", e, msg)
+            self.info_callback(msg)
 
     def show_db_entries(self, msg):
         rospy.loginfo("all DB entries of type String:")
