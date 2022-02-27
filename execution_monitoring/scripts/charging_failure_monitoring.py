@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 import rospy
-from std_msgs.msg import String
+from std_msgs.msg import String, Bool
 from execution_monitoring import config
 from arox_performance_parameters.msg import arox_battery_params
 
@@ -10,8 +10,14 @@ class ChargingFailureMonitoring:
         rospy.Subscriber('/explicit_charging_failure', String, self.explicit_failure_callback, queue_size=1)
         rospy.Subscriber('/charge_action', String, self.charge_monitoring, queue_size=1)
         rospy.Subscriber('/arox/battery_param', arox_battery_params, self.battery_callback, queue_size=1)
+        rospy.Subscriber('/resolve_charging_failure_success', Bool, self.resolve_callback, queue_size=1)
         self.contingency_pub = rospy.Publisher('/contingency_preemption', String, queue_size=1)
+        self.catastrophe_pub = rospy.Publisher('/catastrophe_preemption', String, queue_size=1)
         self.latest_charge_level = 0.0
+
+    def resolve_callback(self, msg):
+        if not msg.data:
+            self.catastrophe_pub.publish(config.CHARGING_CATA)
 
     def battery_callback(self, msg):
         self.latest_charge_level = msg.charge
