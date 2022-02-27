@@ -29,7 +29,7 @@ CONTINGENCY_DISCHARGE_RATE = 0.35
 CATASTROPHE_DISCHARGE_RATE = 0.59
 
 POWER_MANAGEMENT_FAILURE_ONE = "immediate return to the base station required in order to still be able to reach it"
-POWER_MANAGEMENT_FAILURE_TWO = "no longer possible to reach the base station based on battery charge level"
+POWER_MANAGEMENT_CATA = "no longer possible to reach the base station based on battery charge level"
 #############################################################################
 #############################################################################
 #############################################################################
@@ -47,6 +47,7 @@ GOAL_STATUS_ABORTED = 4
 NAV_FAILURE_ONE = "sustained recovery - mbf cannot recover"
 NAV_FAILURE_TWO = "sustained recover - but still making progress - continuing for now"
 NAV_FAILURE_THREE = "explicit nav failure reported by low-level operation state machine"
+NAV_CATA = "nav resolution failed -- catastrophe"
 
 RECOVERY_POINT_ONE = [52.32056824755535, 8.153337579568582, 270]
 
@@ -66,6 +67,7 @@ CHARGING_FAILURE_TIME = 10
 CHARGING_FAILURE_ONE = "docking failure - explicit docking smach failure"
 CHARGING_FAILURE_TWO = "undocking failure - explicit undocking smach failure"
 CHARGING_FAILURE_THREE = "battery not charging although docked"
+CHARGING_CATA = "charging resolution failed -- catastrophe"
 #############################################################################
 #############################################################################
 #############################################################################
@@ -81,6 +83,7 @@ PLAN_DEPLOYMENT_FAILURE_TWO = "plan retrieval service unavailable"
 PLAN_DEPLOYMENT_FAILURE_THREE = "deployed plan empty"
 PLAN_DEPLOYMENT_FAILURE_FOUR = "deployed plan corrupted / infeasible"
 PLAN_DEPLOYMENT_FAILURE_FIVE = "unspecified plan deployment failure"
+PLAN_DEPLOYMENT_CATA = "plan deployment resolution failed -- catastrophe"
 
 FEASIBLE_ACTIONS = ["drive_to", "return_to_base", "charge", "scan"]
 
@@ -96,6 +99,7 @@ INFEASIBLE_PLAN_CODE = 2
 #############################################################################
 DATA_MANAGEMENT_FAILURE_ONE = "full memory"
 DATA_MANAGEMENT_FAILURE_TWO = "scan not logged correctly"
+DATA_MANAGEMENT_CATA = "data management resolution failed -- catastrophe"
 
 # DATA MANAGEMENT SETTINGS
 MONITOR_DRIVE = "/"
@@ -112,6 +116,7 @@ SENSOR_FAILURE_ONE = "total sensor failure"
 SENSOR_FAILURE_TWO = "empty list of range values"
 SENSOR_FAILURE_THREE = "predominantly infeasible range values (inf)"
 SENSOR_FAILURE_FOUR = "repeated scan"
+SENSOR_CATA = "sensor resolution failed -- catastrophe"
 
 # SCAN SETTINGS
 SCAN_PATH = MONITOR_DRIVE + "home/docker/catkin_ws/src/execution_monitoring/execution_monitoring/scans/"
@@ -170,6 +175,7 @@ LOCALIZATION_FAILURE_TEN = "linear twist too high for passive state"
 LOCALIZATION_FAILURE_ELEVEN = "angular twist too high for passive state"
 LOCALIZATION_FAILURE_TWELVE = "odometry pose standard deviation too high"
 LOCALIZATION_FAILURE_THIRTEEN = "odometry twist standard deviation too high"
+LOCALIZATION_CATA = "localization failure resolution not successful -- catastrophe"
 #############################################################################
 #############################################################################
 #############################################################################
@@ -195,6 +201,7 @@ WEATHER_FAILURE_FIFTEEN = "perception may be impaired by mist, smoke or fog - in
 WEATHER_FAILURE_SIXTEEN = "before sunrise - interrupting work until then"
 WEATHER_FAILURE_SEVENTEEN = "after sunset - interrupting work until sunrise"
 WEATHER_FAILURE_EIGHTEEN = "sunset in a few minutes - interrupting work and driving back to base"
+WEATHER_CATA = "drastic weather change resolution failed -- catastrophe"
 
 WEATHER_MONITORING_FREQUENCY = 300  # seconds
 
@@ -288,6 +295,7 @@ CONNECTION_FAILURE_SEVENTEEN = "GNSS - unknown covariance type"
 CONNECTION_FAILURE_EIGHTEEN = "GNSS - critically high standard deviations"
 CONNECTION_FAILURE_NINETEEN = "GNSS - critically high approximated standard deviations"
 CONNECTION_FAILURE_TWENTY = "GNSS - standard deviation progression issue (increasingly higher)"
+CONNECTION_CATA = "connection resolution failed -- catastrophe"
 BAD_WIFI_LINK_QUALITY = 2
 BAD_WIFI_SIGNAL_LEVEL = -90
 BAD_WIFI_BIT_RATE = 0.1
