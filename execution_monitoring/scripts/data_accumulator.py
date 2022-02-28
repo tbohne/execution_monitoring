@@ -8,10 +8,13 @@ from sensor_msgs.msg import NavSatFix
 from std_msgs.msg import String
 import json
 import errno
+from signal import signal, SIGPIPE, SIG_DFL
 
 class DataAccumulator:
 
     def __init__(self):
+        # prevent broken pipe issue when logging during LTA experiments
+        signal(SIGPIPE, SIG_DFL)
         self.init()
 
     def init(self):
