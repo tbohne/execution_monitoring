@@ -262,6 +262,10 @@ class ExecutePlan(smach.State):
             success = self.scan_client.wait_for_result()
             rospy.loginfo("successfully performed action: %s", success)
             rospy.loginfo(self.scan_client.get_result())
+            if self.scan_client.get_result() == "scanning failed":
+                # 10s for monitoring -> afterwards, low-level failure
+                rospy.sleep(10)
+                return False
             return success
 
         elif action.name == "charge":
