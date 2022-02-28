@@ -48,27 +48,23 @@ class RepublishVelodyne:
                 rospy.loginfo("SIMULATING EMPTY RANGES FAILURE")
                 self.sim_info_pub.publish("republish velodyne: sim empty ranges fail")
                 scan.ranges = []
-                self.simulate_empty_ranges = False
 
             if self.simulate_look_to_sky:
                 rospy.loginfo("SIMULATING LOOK TO SKY FAILURE")
                 self.sim_info_pub.publish("republish velodyne: sim 'look to sky' fail")
                 fake_ranges = [float('inf') for _ in range(len(scan.ranges))]
                 scan.ranges = fake_ranges
-                self.simulate_look_to_sky = False
 
             if self.simulate_scan_repetition:
                 if self.previous_scan:
                     rospy.loginfo("SIMULATING SCAN REPETITION FAILURE")
                     self.sim_info_pub.publish("republish velodyne: sim scan repetition fail")
                     scan = self.previous_scan
-                    self.simulate_scan_repetition = False
                 else:
                     rospy.loginfo("cannot simulate scan repitition failure - there is no previous scan - wait until there is one..")
             
             self.scan_pub.publish(scan)
         else:
-            self.simulate_sensor_failure = False
             rospy.loginfo("SIMULATING TOTAL SENSOR FAILURE..")
             self.sim_info_pub.publish("republish velodyne: sim total sensor fail")
 
