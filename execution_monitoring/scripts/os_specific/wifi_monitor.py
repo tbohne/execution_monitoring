@@ -81,16 +81,12 @@ class WiFiMonitor:
 
             if self.simulate_wifi_disconnect:
                 wifi_msg.link_quality = wifi_msg.signal_level = wifi_msg.bit_rate = config.WIFI_DISCONNECT
-                self.simulate_wifi_disconnect = False
             if self.simulate_bad_wifi_link:
                 wifi_msg.link_quality = config.BAD_WIFI_LINK_QUALITY
-                self.simulate_bad_wifi_link = False
             if self.simulate_bad_wifi_signal:
                 wifi_msg.signal_level = config.BAD_WIFI_SIGNAL_LEVEL
-                self.simulate_bad_wifi_signal = False
             if self.simulate_bad_wifi_bit_rate:
                 wifi_msg.bit_rate = config.BAD_WIFI_BIT_RATE
-                self.simulate_bad_wifi_bit_rate = False
 
             self.wifi_info_pub.publish(wifi_msg)
             rospy.sleep(10)
