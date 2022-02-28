@@ -115,7 +115,10 @@ class DataAccumulator:
         # only meta information that are not already published by the monitoring procedures
         # TODO: can be arbitrarily extended
         circumstances = {}
-        circumstances['robot_pose'] = "lat: " + str(nav_sat_fix.latitude) + ", lng: "  + str(nav_sat_fix.longitude)
+        if nav_sat_fix:
+            circumstances['robot_pose'] = "lat: " + str(nav_sat_fix.latitude) + ", lng: "  + str(nav_sat_fix.longitude)
+        else:
+            circumstances['robot_pose'] = "---"
         circumstances['completed_tasks'] = self.op_info.rewards_gained
         circumstances['operation_time'] = str((datetime.now() - self.operation_start_time).total_seconds()) + "s"
 
