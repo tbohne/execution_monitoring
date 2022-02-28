@@ -17,8 +17,9 @@ class ConnectionMonitoring:
         rospy.Subscriber('/fix', NavSatFix, self.gnss_callback, queue_size=1)
         rospy.Subscriber('/resolve_connection_failure_success', Bool, self.resolve_callback, queue_size=1)
         self.contingency_pub = rospy.Publisher('/contingency_preemption', String, queue_size=1)
-        self.catastrophe_pub = rospy.Publisher('/catastrophe_preemption', String, queue_size=1)
+        self.aggravate_pub = rospy.Publisher('/aggravate', String, queue_size=1)
         self.robot_info_pub = rospy.Publisher('/robot_info', String, queue_size=1)
+        self.interrupt_reason_pub = rospy.Publisher('/interrupt_reason', String, queue_size=1)
         self.active_monitoring = True
         self.last_gnss_msg_time = datetime.now()
         self.last_wifi_msg_time = datetime.now()
@@ -197,7 +198,8 @@ class ConnectionMonitoring:
         if msg.data:
             self.active_monitoring = True
         else:
-            self.catastrophe_pub.publish(config.CONNECTION_CATA)
+            self.interrupt_reason_pub.publish(config.CONNECTION_CATA)
+            self.aggravate_pub.publish(config.CONNECTION_CATA)
 
     def check_wifi_disconnect(self, wifi_info):
         if wifi_info.link_quality == wifi_info.signal_level == wifi_info.bit_rate == 0:

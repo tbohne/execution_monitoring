@@ -12,12 +12,14 @@ class ChargingFailureMonitoring:
         rospy.Subscriber('/arox/battery_param', arox_battery_params, self.battery_callback, queue_size=1)
         rospy.Subscriber('/resolve_charging_failure_success', Bool, self.resolve_callback, queue_size=1)
         self.contingency_pub = rospy.Publisher('/contingency_preemption', String, queue_size=1)
-        self.catastrophe_pub = rospy.Publisher('/catastrophe_preemption', String, queue_size=1)
+        self.aggravate_pub = rospy.Publisher('/aggravate', String, queue_size=1)
+        self.interrupt_reason_pub = rospy.Publisher('/interrupt_reason', String, queue_size=1)
         self.latest_charge_level = 0.0
 
     def resolve_callback(self, msg):
         if not msg.data:
-            self.catastrophe_pub.publish(config.CHARGING_CATA)
+            self.interrupt_reason_pub.publish(config.CHARGING_CATA)
+            self.aggravate_pub.publish(config.CHARGING_CATA)
 
     def battery_callback(self, msg):
         self.latest_charge_level = msg.charge

@@ -12,13 +12,15 @@ class SensorMonitoring:
         rospy.Subscriber('/scan_action', String, self.sensor_failure_monitoring, queue_size=1)
         rospy.Subscriber('/resolve_sensor_failure_success', Bool, self.resolution_callback, queue_size=1)
         self.contingency_pub = rospy.Publisher('/contingency_preemption', String, queue_size=1)
-        self.catastrophe_pub = rospy.Publisher('/catastrophe_preemption', String, queue_size=1)
+        self.aggravate_pub = rospy.Publisher('/aggravate', String, queue_size=1)
+        self.interrupt_reason_pub = rospy.Publisher('/interrupt_reason', String, queue_size=1)
 
         self.previous_scan = None
 
     def resolution_callback(self, msg):
         if not msg.data:
-            self.catastrophe_pub.publish(config.SENSOR_CATA)
+            self.interrupt_reason_pub.publish(config.SENSOR_CATA)
+            self.aggravate_pub.publish(config.SENSOR_CATA)
 
     def compute_scan_hash(self, scan):
         scan_str = str(scan.header.stamp.secs) + str(scan.header.stamp.nsecs) + scan.header.frame_id + str(scan.angle_min) \
@@ -59,9 +61,6 @@ class SensorMonitoring:
                     self.contingency_pub.publish(config.SENSOR_FAILURE_FOUR)
 
             self.previous_scan = scan
-        else:
-            rospy.loginfo("sensor failure detected: %s", config.SENSOR_FAILURE_ONE)
-            self.contingency_pub.publish(config.SENSOR_FAILURE_ONE)
 
 
 def node():

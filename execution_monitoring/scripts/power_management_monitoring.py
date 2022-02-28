@@ -10,6 +10,8 @@ class PowerManagementMonitoring:
         self.active_contingency_monitoring = True
         self.contingency_pub = rospy.Publisher('/contingency_preemption', String, queue_size=1)
         self.catastrophe_pub = rospy.Publisher('/catastrophe_preemption', String, queue_size=1)
+        self.aggravate_pub = rospy.Publisher('/aggravate', String, queue_size=1)
+        self.interrupt_reason_pub = rospy.Publisher('/interrupt_reason', String, queue_size=1)
         rospy.Subscriber('/watchdog', String, self.watchdog_callback, queue_size=1)
         rospy.Subscriber('/fully_charged', String, self.fully_charged_callback, queue_size=1)
         rospy.Subscriber('/catastrophe_launched', String, self.catastrophe_callback, queue_size=1)
@@ -17,7 +19,8 @@ class PowerManagementMonitoring:
 
     def resolution_callback(self, msg):
         if not msg.data:
-            self.catastrophe_pub.publish(config.POWER_MANAGEMENT_CATA)
+            self.interrupt_reason_pub.publish(config.POWER_MANAGEMENT_CATA)
+            self.aggravate_pub.publish(config.POWER_MANAGEMENT_CATA)
 
     def catastrophe_callback(self, msg):
         self.active_catastrophe_monitoring = False

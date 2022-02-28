@@ -23,9 +23,10 @@ class NavigationMonitoring:
         rospy.Subscriber('/explicit_nav_failure', String, self.explicit_fail_callback, queue_size=1)
 
         self.contingency_pub = rospy.Publisher('/contingency_preemption', String, queue_size=1)
-        self.catastrophe_pub = rospy.Publisher('/catastrophe_preemption', String, queue_size=1)
+        self.aggravate_pub = rospy.Publisher('/aggravate', String, queue_size=1)
         self.robot_info_pub = rospy.Publisher('/robot_info', String, queue_size=1)
         self.resolution_failure_pub = rospy.Publisher('/resolution_failure', String, queue_size=1)
+        self.interrupt_reason_pub = rospy.Publisher('/interrupt_reason', String, queue_size=1)
         self.navigation_monitoring()
 
     def explicit_fail_callback(self, msg):
@@ -37,7 +38,8 @@ class NavigationMonitoring:
         self.active_monitoring = True
         self.recovery_attempts  = 0
         if not msg.data:
-            self.catastrophe_pub.publish(config.NAV_CATA)
+            self.interrupt_reason_pub.publish(config.NAV_CATA)
+            self.aggravate_pub.publish(config.NAV_CATA)
 
     def gnss_update(self, nav_sat_fix):
         self.robot_pos = (nav_sat_fix.latitude, nav_sat_fix.longitude)

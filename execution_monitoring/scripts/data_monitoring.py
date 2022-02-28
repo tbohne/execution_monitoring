@@ -15,13 +15,15 @@ class DataMonitoring:
         rospy.Subscriber('/resolve_data_management_failure_success', Bool, self.resolution_callback, queue_size=1)
 
         self.contingency_pub = rospy.Publisher('/contingency_preemption', String, queue_size=1)
-        self.catastrophe_pub = rospy.Publisher('/catastrophe_preemption', String, queue_size=1)
+        self.aggravate_pub = rospy.Publisher('/aggravate', String, queue_size=1)
         self.robot_info_pub = rospy.Publisher('/robot_info', String, queue_size=1)
         self.logging_pub = rospy.Publisher('/scan_successfully_logged', String, queue_size=1)
+        self.interrupt_reason_pub = rospy.Publisher('/interrupt_reason', String, queue_size=1)
 
     def resolution_callback(self, msg):
         if not msg.data:
-            self.catastrophe_pub.publish(config.DATA_MANAGEMENT_CATA)
+            self.interrupt_reason_pub.publish(config.DATA_MANAGEMENT_CATA)
+            self.aggravate_pub.publish(config.DATA_MANAGEMENT_CATA)
 
     def sim_full_disk_callback(self, msg):
         rospy.loginfo("sim full disk failure..")
@@ -34,8 +36,7 @@ class DataMonitoring:
             rospy.loginfo("reading file before scan logging..")
             scan_cnt_before = self.count_scan_entries()
 
-        # TODO: should be scan time limit, but not too long either -> otherwise problems with next one
-        rospy.sleep(10)
+        rospy.sleep(config.SCAN_TIME_LIMIT)
         rospy.loginfo("reading file after scan logging..")
         scan_cnt_after = self.count_scan_entries()
 

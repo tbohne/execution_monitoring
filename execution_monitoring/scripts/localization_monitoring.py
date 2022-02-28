@@ -22,8 +22,9 @@ class LocalizationMonitoring:
     def __init__(self):
         self.init_vars()
         self.contingency_pub = rospy.Publisher('/contingency_preemption', String, queue_size=1)
-        self.catastrophe_pub = rospy.Publisher('/catastrophe_preemption', String, queue_size=1)
+        self.aggravate_pub = rospy.Publisher('/aggravate', String, queue_size=1)
         self.robot_info_pub = rospy.Publisher('/robot_info', String, queue_size=1)
+        self.interrupt_reason_pub = rospy.Publisher('/interrupt_reason', String, queue_size=1)
 
         rospy.Subscriber('/imu_data', Imu, self.imu_callback, queue_size=1)
         rospy.Subscriber('/odom', Odometry, self.odom_callback, queue_size=1)
@@ -73,7 +74,8 @@ class LocalizationMonitoring:
             rospy.sleep(10)
             self.init()
         else:
-            self.catastrophe_pub.publish(config.LOCALIZATION_CATA)
+            self.interrupt_reason_pub.publish(config.LOCALIZATION_CATA)
+            self.aggravate_pub.publish(config.LOCALIZATION_CATA)
 
     def mbf_status_callback(self, mbf_status):
         if self.active_monitoring and len(mbf_status.status_list) > 0:

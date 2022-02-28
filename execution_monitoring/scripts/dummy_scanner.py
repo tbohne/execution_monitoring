@@ -59,9 +59,12 @@ class DummyScanner():
                 self.sim_info_pub.publish("dummy scanner: sim scan failure")
                 self.simulate_scan_logging_failure = False
 
-        self.result.result = "scanning successfully completed"
-        self.server.set_succeeded(self.result)
-        rospy.loginfo("scanning completed..")
+            self.result.result = "scanning successfully completed"
+            self.server.set_succeeded(self.result)
+            rospy.loginfo("scanning completed..")
+        else:
+            self.result.result = "scanning failed"
+            self.server.set_aborted(self.result)
 
 
 def node():

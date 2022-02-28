@@ -68,10 +68,11 @@ class WeatherMonitoring:
 
     def __init__(self):
         self.contingency_pub = rospy.Publisher('/contingency_preemption', String, queue_size=1)
-        self.catastrophe_pub = rospy.Publisher('/catastrophe_preemption', String, queue_size=1)
+        self.aggravate_pub = rospy.Publisher('/aggravate', String, queue_size=1)
         self.robot_info_pub = rospy.Publisher('/robot_info', String, queue_size=1)
         self.moderate_weather_pub = rospy.Publisher('/moderate_weather', String, queue_size=1)
         self.sim_info_pub = rospy.Publisher('/sim_info', String, queue_size=1)
+        self.interrupt_reason_pub = rospy.Publisher('/interrupt_reason', String, queue_size=1)
         rospy.Subscriber('/fix', NavSatFix, self.gnss_callback, queue_size=1)
         rospy.Subscriber('/resolve_weather_failure_success', Bool, self.resolve_callback, queue_size=1)
         rospy.Subscriber('/toggle_rain_sim', String, self.rain_callback, queue_size=1)
@@ -97,7 +98,8 @@ class WeatherMonitoring:
         if msg.data:
             self.active_monitoring = True
         else:
-            self.catastrophe_pub.publish(config.WEATHER_CATA)
+            self.interrupt_reason_pub.publish(config.WEATHER_CATA)
+            self.aggravate_pub.publish(config.WEATHER_CATA)
     
     def rain_callback(self, msg):
         self.sim_rain = not self.sim_rain
