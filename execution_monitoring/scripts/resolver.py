@@ -382,10 +382,9 @@ class SensorFailureResolver(GeneralFailureResolver):
     def resolve_sensor_failure(self, msg):
         if self.fail_cnt == 0:
             rospy.loginfo("resolve sensor failure..")
-            self.resolution_pub.publish("resolve sensor failure")
-            self.fallback_pub.publish(msg)
-            while not self.problem_resolved:
-                rospy.sleep(5)
+            self.resolution_pub.publish("resolve sensor failure - simply trying again")
+            rospy.loginfo("simply trying again..")
+            self.problem_resolved = True
         else:
             # initiate catastrophe
             self.success_pub.publish(False)
