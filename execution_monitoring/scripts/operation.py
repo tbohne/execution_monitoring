@@ -69,7 +69,7 @@ class Idle(smach.State):
         if len(userdata.input_plan) > 0:
             rospy.loginfo("input_plan: %s", userdata.input_plan)
             rospy.loginfo("continuing preempted plan..")
-            self.robot_info_pub.publish("continuing preempted plan: " + str(userdata.input_plan))
+            self.robot_info_pub.publish("continuing preempted plan - remaining operations: " + str(len(userdata.input_plan)))
             userdata.output_plan = userdata.input_plan
             return "plan_received"
 
