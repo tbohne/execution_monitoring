@@ -7,12 +7,14 @@ from arox_performance_parameters.msg import arox_operational_param
 from arox_performance_parameters.msg import arox_battery_params
 
 FAILURE_TOPICS = ["/toggle_simulated_total_sensor_failure", "/toggle_simulated_empty_ranges", "/toggle_simulated_impermissible_ranges", "/toggle_simulated_scan_repetition",
-    "/toggle_simulated_bad_wifi_link", "/toggle_simulated_bad_wifi_signal", "/toggle_simulated_bad_wifi_bit_rate", "/toggle_simulated_wifi_disconnect", "/toggle_simulated_bad_download",
-    "/toggle_simulated_bad_upload", "/toggle_simulated_timeout_failure", "/set_simulated_good_quality", "/set_simulated_med_quality", "/set_simulated_low_quality",
-    "/set_simulated_unknown_status", "/set_simulated_no_fix", "/set_simulated_no_rtk", "/toggle_simulated_unknown_service", "/toggle_simulated_infeasible_lat_lng",
-    "/toggle_simulated_variance_history_failure", "/toggle_simulated_high_deviation", "/toggle_rain_sim", "/toggle_snow_sim", "/toggle_wind_sim", "/toggle_low_temp_sim",
-    "/toggle_thuderstorm_sim", "/toggle_sunset_sim", "/toggle_simulated_scan_logging_failure", "/wheel_movement_without_pos_change", "/pos_change_without_wheel_movement",
-    "/yaw_divergence", "/moving_although_standing_still_imu", "/moving_although_standing_still_odom"]
+    "/toggle_simulated_bad_wifi_link", "/toggle_simulated_bad_wifi_signal", "/toggle_simulated_bad_wifi_bit_rate", "/toggle_simulated_wifi_disconnect", "/sim_internet_connection_failure"
+    "/toggle_simulated_bad_download", "/toggle_simulated_bad_upload", "/toggle_simulated_timeout_failure", "/set_simulated_good_quality", "/set_simulated_med_quality",
+    "/set_simulated_low_quality", "/set_simulated_unknown_status", "/set_simulated_no_fix", "/set_simulated_no_rtk", "/toggle_simulated_unknown_service", "/toggle_simulated_infeasible_lat_lng",
+    "/toggle_simulated_variance_history_failure", "/toggle_simulated_high_deviation", "/toggle_rain_sim", "/toggle_snow_sim", "/toggle_wind_sim", "/toggle_low_temp_sim", "/toggle_thuderstorm_sim",
+    "/toggle_sunset_sim", "/sim_full_disk_failure"  "/toggle_simulated_scan_logging_failure", "/wheel_movement_without_pos_change", "/pos_change_without_wheel_movement", "/yaw_divergence",
+    "/moving_although_standing_still_imu", "/moving_although_standing_still_odom", "sim_extended_idle_time", "toggle_unavailable_plan_service", "sim_empty_plan",
+    "sim_infeasible_plan", "spawn_static_obstacles", "spawn_robot_prison", "trigger_nav_fail", "sim_undocking_failure", "sim_docking_failure_raised_ramp", "sim_docking_failure_base_pose",
+    "sim_charging_failure", "sim_power_management_contingency"]
 
 # random fail every 60s
 RANDOM_FAIL_FREQUENCY = 60
