@@ -16,8 +16,8 @@ FAILURE_TOPICS = ["/toggle_simulated_total_sensor_failure", "/toggle_simulated_e
     "sim_infeasible_plan", "spawn_static_obstacles", "spawn_robot_prison", "trigger_nav_fail", "sim_undocking_failure", "sim_docking_failure_raised_ramp", "sim_docking_failure_base_pose",
     "sim_charging_failure", "sim_power_management_contingency"]
 
-# random fail every 60s
-RANDOM_FAIL_FREQUENCY = 60
+# random fail every 15 minutes
+RANDOM_FAIL_FREQUENCY = 900
 SEED = 42
 
 class Experiment:
