@@ -253,7 +253,7 @@ class LocalizationMonitoring:
         if self.odom_data is not None:
             # MONITOR LINEAR + ANGULAR TWIST
             # if the robot is not moving, the corresponding odom values should be ~0.0
-            if self.mbf_status != GoalStatus.ACTIVE and self.mbf_status != GoalStatus.ABORTED:
+            if self.mbf_status != GoalStatus.ACTIVE and self.mbf_status != GoalStatus.ABORTED and self.mbf_status != GoalStatus.PREEMPTED:
                 if abs(odom_data.twist.twist.linear.x) > config.NOT_MOVING_LINEAR_TWIST_UB \
                     or abs(odom_data.twist.twist.linear.y) > config.NOT_MOVING_LINEAR_TWIST_UB \
                     or abs(odom_data.twist.twist.linear.z) > config.NOT_MOVING_LINEAR_TWIST_UB:
