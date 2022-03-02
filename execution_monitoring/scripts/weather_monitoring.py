@@ -330,7 +330,7 @@ class WeatherMonitoring:
         wind_ok = self.monitor_wind(weather_data.wind_gust_speed, weather_data.wind_speed)
         temp_ok = self.monitor_temperature(weather_data.min_temp, weather_data.max_temp, weather_data.temp)
         code_ok = self.monitor_owm_weather_condition_code(weather_data.owm_weather_condition_code)
-        sun_ok =  True# self.monitor_sunrise_and_sunset(weather_data.sunrise_time_sec, weather_data.sunset_time_sec)
+        sun_ok =  self.monitor_sunrise_and_sunset(weather_data.sunrise_time_sec, weather_data.sunset_time_sec)
         if not self.active_monitoring and rain_ok and snow_ok and wind_ok and temp_ok and code_ok and sun_ok:
             self.moderate_weather_pub.publish("weather is moderate again..")
             self.robot_info_pub.publish("weather is moderate again..")
@@ -338,6 +338,7 @@ class WeatherMonitoring:
     def launch_weather_monitoring(self):
 
         owm = OWM(secret_config.OWM_API_KEY)
+        cnt = 0
 
         while not rospy.is_shutdown():
             if owm.is_API_online() and self.position is not None:
@@ -345,7 +346,8 @@ class WeatherMonitoring:
                 rospy.loginfo("monitoring weather for: %s", observation.get_location().get_name())
                 self.robot_info_pub.publish("monitoring weather for: " + observation.get_location().get_name())
                 weather_data = self.parse_weather_data(observation.get_weather())
-                weather_data.log_complete_info()
+                if cnt % 5 == 0:
+                    weather_data.log_complete_info()
                 self.monitor_weather_data(weather_data)
                 
                 # TODO: implement forecast monitoring -> seek shelter in time..
@@ -357,6 +359,7 @@ class WeatherMonitoring:
                 #     forecast.log_complete_info()
 
             rospy.sleep(config.WEATHER_MONITORING_FREQUENCY)
+            cnt += 1
 
 
 def node():
