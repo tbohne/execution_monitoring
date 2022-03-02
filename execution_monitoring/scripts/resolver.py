@@ -60,10 +60,8 @@ class WeatherFailureResolver(GeneralFailureResolver):
     def __init__(self):
         super(WeatherFailureResolver, self).__init__()
         rospy.Subscriber('/resolve_weather_failure', String, self.resolve_callback, queue_size=1)
-        rospy.Subscriber('/moderate_weather', String, self.moderate_weather_callback, queue_size=1)
         self.success_pub = rospy.Publisher('/resolve_weather_failure_success', Bool, queue_size=1)
-        self.drive_to_goal_client = actionlib.SimpleActionClient('drive_to_goal', drive_to_goalAction)
-        self.moderate_weather = True
+        self.insert_goal_pub = rospy.Publisher('introduce_intermediate_shelter_goal', String, queue_size=1)
 
     def resolve_callback(self, msg):
         rospy.loginfo("launch weather failure resolver..")
@@ -71,7 +69,6 @@ class WeatherFailureResolver(GeneralFailureResolver):
         rospy.sleep(2)
         self.resolution_pub.publish("launch weather failure resolver -- type of weather failure: " + msg.data)
         self.problem_resolved = False
-        self.moderate_weather = False
 
         # all these failures are resolved by seeking shelter and waiting
         if msg.data in [config.WEATHER_FAILURE_TWO, config.WEATHER_FAILURE_FIVE, config.WEATHER_FAILURE_EIGHT, config.WEATHER_FAILURE_NINE, config.WEATHER_FAILURE_TEN,
@@ -86,9 +83,6 @@ class WeatherFailureResolver(GeneralFailureResolver):
         if self.problem_resolved:
             self.success_pub.publish(True)
 
-    def moderate_weather_callback(self, msg):
-        self.moderate_weather = True
-
     def resolve_catastrophe(self, msg):
         rospy.loginfo("resolve weather change catastrophe -- requesting help from human operator")
         self.resolution_pub.publish("resolve weather change catastrophe -- requesting help from human operator")
@@ -98,42 +92,11 @@ class WeatherFailureResolver(GeneralFailureResolver):
 
     def resolve_weather_failure(self, msg):
         self.resolution_pub.publish("resolve drastic weather change -- seeking shelter -- driving back to base")
-        rospy.loginfo("resolve drastic weather change..")
-        rospy.loginfo("seeking shelter - driving back to base..")
-
-        # TODO: implement docking for config.DOCKING cases
-        action_goal = util.create_dtg_goal(config.BASE_POSE, None)
-        self.drive_to_goal_client.wait_for_server()
-        self.drive_to_goal_client.send_goal(action_goal)
-        rospy.loginfo("goal sent, wait for accomplishment..")
-        self.drive_to_goal_client.wait_for_result()
-
-        out = self.drive_to_goal_client.get_result()
-        if out.progress > 0:
-            # initiate catastrophe
-            self.success_pub.publish(False)
-        else:
-            rospy.loginfo("start docking procedure..")
-            rospy.loginfo("waiting until weather is moderate again - charging battery in the meantime..")
-            self.robot_info_pub.publish("waiting until weather is moderate again -- charging battery in the meantime")
-            rospy.set_param("charging_mode", True)
-            charge_mode = rospy.get_param("charging_mode")
-
-            while charge_mode:
-                charge_mode = rospy.get_param("charging_mode")
-                rospy.loginfo("charging battery..")
-                rospy.sleep(2)
-
-            if not charge_mode:
-                rospy.loginfo("battery charged..")
-                self.robot_info_pub.publish("battery charged")
-
-            rospy.loginfo("waiting until weather is moderate again")
-            while not self.moderate_weather:
-                rospy.sleep(5)
-            
-            self.resolution_pub.publish("weather moderate again -- problem solved")
-            self.problem_resolved = True
+        rospy.loginfo("resolve drastic weather change -- introduce intermediate goals in plan - [return_to_base, charge, wait]")
+        self.resolution_pub.publish("resolve drastic weather change -- introduce intermediate goals in plan - [return_to_base, charge, wait]")
+        # insert intermediate recharge goals [return_to_base, charge, wait]
+        self.insert_goal_pub.publish("")
+        self.problem_resolved = True
 
 
 class DataManagementFailureResolver(GeneralFailureResolver):
