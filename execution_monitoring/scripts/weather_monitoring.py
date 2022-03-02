@@ -70,9 +70,9 @@ class WeatherMonitoring:
         self.contingency_pub = rospy.Publisher('/contingency_preemption', String, queue_size=1)
         self.aggravate_pub = rospy.Publisher('/aggravate', String, queue_size=1)
         self.robot_info_pub = rospy.Publisher('/robot_info', String, queue_size=1)
-        self.moderate_weather_pub = rospy.Publisher('/moderate_weather', String, queue_size=1)
         self.sim_info_pub = rospy.Publisher('/sim_info', String, queue_size=1)
         self.interrupt_reason_pub = rospy.Publisher('/interrupt_reason', String, queue_size=1)
+        self.stop_waiting_pub = rospy.Publisher('/stop_waiting', String, queue_size=1)
         rospy.Subscriber('/fix', NavSatFix, self.gnss_callback, queue_size=1)
         rospy.Subscriber('/resolve_weather_failure_success', Bool, self.resolve_callback, queue_size=1)
         rospy.Subscriber('/toggle_rain_sim', String, self.rain_callback, queue_size=1)
@@ -95,9 +95,7 @@ class WeatherMonitoring:
         self.position = (nav_sat_fix.latitude, nav_sat_fix.longitude)
 
     def resolve_callback(self, msg):
-        if msg.data:
-            self.active_monitoring = True
-        else:
+        if not msg.data:
             self.interrupt_reason_pub.publish(config.WEATHER_CATA)
             self.aggravate_pub.publish(config.WEATHER_CATA)
     
@@ -332,7 +330,8 @@ class WeatherMonitoring:
         code_ok = self.monitor_owm_weather_condition_code(weather_data.owm_weather_condition_code)
         sun_ok =  self.monitor_sunrise_and_sunset(weather_data.sunrise_time_sec, weather_data.sunset_time_sec)
         if not self.active_monitoring and rain_ok and snow_ok and wind_ok and temp_ok and code_ok and sun_ok:
-            self.moderate_weather_pub.publish("weather is moderate again..")
+            self.active_monitoring = True
+            self.stop_waiting_pub.publish("weather moderate again..")
             self.robot_info_pub.publish("weather is moderate again..")
 
     def launch_weather_monitoring(self):
