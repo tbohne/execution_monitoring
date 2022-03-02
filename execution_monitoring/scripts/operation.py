@@ -205,7 +205,7 @@ class ExecutePlan(smach.State):
             self.publish_state_of_ongoing_operation("dead")
             self.robot_info_pub.publish("battery completely discharged..")
 
-    def perform_action(self, action):
+    def perform_action(self, action, next_action):
 
         # moving actions
         if action.name == "drive_to" or action.name == "return_to_base":
@@ -279,13 +279,14 @@ class ExecutePlan(smach.State):
                 return False
             return success
 
-        elif action.name == "wait":
+        elif action.name == "wait_in_shelter":
             rospy.loginfo("performing action %s", action.name)
             self.action_info_pub.publish("performing action " + str(action.name))
             self.publish_state_of_ongoing_operation("waiting")
             self.waiting = True
             while self.waiting:
                 rospy.sleep(5)
+            self.undock_from_charging_station(self.pose_in_front_of_container)
 
         elif action.name == "charge":
             rospy.loginfo("performing action %s", action.name)
@@ -317,7 +318,8 @@ class ExecutePlan(smach.State):
                 rospy.loginfo("battery charged..")
                 self.fully_charged_pub.publish("")
                 self.robot_info_pub.publish("battery charged..")
-                return self.undock_from_charging_station(self.pose_in_front_of_container)
+                # if the next action is to wait in the container, we shouldn't undock
+                return True if next_action.name == "wait_in_shelter" else self.undock_from_charging_station(self.pose_in_front_of_container)
         else:
             rospy.loginfo("error - unknown action: %s", action.name)
         return False
@@ -443,7 +445,7 @@ class ExecutePlan(smach.State):
                 self.introduce_shelter_goal = False
                 # first return to base, then charge, then wait
                 a = action()
-                a.name = "wait"
+                a.name = "wait_in_shelter"
                 userdata.plan.insert(0, a)
                 a = action()
                 a.name = "charge"
@@ -453,9 +455,10 @@ class ExecutePlan(smach.State):
                 userdata.plan.insert(0, a)
 
             a = userdata.plan.pop(0)
+            next_action = userdata.plan[0]
             self.latest_action = a
             if not self.battery_discharged:
-                action_successfully_performed = self.perform_action(a)
+                action_successfully_performed = self.perform_action(a, next_action)
             else:
                 rospy.loginfo("hard failure..")
                 self.robot_info_pub.publish("hard failure -- battery discharged")
