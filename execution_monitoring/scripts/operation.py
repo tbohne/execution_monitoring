@@ -110,8 +110,10 @@ class ExecutePlan(smach.State):
         rospy.Subscriber('/arox/battery_param', arox_battery_params, self.battery_callback, queue_size=1)
         rospy.Subscriber('introduce_intermediate_nav_goal', String, self.introduce_intermediate_nav_goal, queue_size=1)
         rospy.Subscriber('introduce_intermediate_recharge_goal', String, self.introduce_intermediate_recharge_goal, queue_size=1)
+        rospy.Subscriber('introduce_intermediate_shelter_goal', String, self.introduce_intermediate_shelter_goal, queue_size=1)
         rospy.Subscriber('/sim_docking_failure_base_pose', String, self.sim_docking_fail_callback, queue_size=1)
         rospy.Subscriber('/sim_charging_failure', String, self.sim_charge_fail_callback, queue_size=1)
+        rospy.Subscriber('/stop_waiting', String, self.stop_waiting_callback, queue_size=1)
 
         self.drive_to_goal_client = actionlib.SimpleActionClient('drive_to_goal', drive_to_goalAction)
         self.scan_client = actionlib.SimpleActionClient('dummy_scanner', ScanAction)
@@ -133,14 +135,19 @@ class ExecutePlan(smach.State):
 
         self.sim_docking_fail = False
         self.sim_charge_fail = False
+        self.waiting = False
 
         self.battery_discharged = False
         self.remaining_tasks = 0
         self.completed_tasks = 0
         self.introduce_nav_goal = False
         self.introduce_recharge_goal = False
+        self.introduce_shelter_goal = False
         self.intermediate_nav_goal_pose = None
         self.latest_action = None
+
+    def stop_waiting_callback(self, msg):
+        self.waiting = False
 
     def sim_docking_fail_callback(self, msg):
         rospy.loginfo("preparing simulation of docking failure..")
@@ -170,6 +177,10 @@ class ExecutePlan(smach.State):
             self.intermediate_nav_goal_pose = config.STREET
         elif msg.data == "2":
             self.intermediate_nav_goal_pose = config.FIELD
+
+    def introduce_intermediate_shelter_goal(self, msg):
+        rospy.loginfo("preparing introduction of intermediate shelter goal..")
+        self.introduce_shelter_goal = True
 
     def introduce_intermediate_recharge_goal(self, msg):
         rospy.loginfo("preparing introduction of intermediate recharge goal..")
@@ -267,6 +278,14 @@ class ExecutePlan(smach.State):
                 rospy.sleep(10)
                 return False
             return success
+
+        elif action.name == "wait":
+            rospy.loginfo("performing action %s", action.name)
+            self.action_info_pub.publish("performing action " + str(action.name))
+            self.publish_state_of_ongoing_operation("waiting")
+            self.waiting = True
+            while self.waiting:
+                rospy.sleep(5)
 
         elif action.name == "charge":
             rospy.loginfo("performing action %s", action.name)
@@ -411,6 +430,21 @@ class ExecutePlan(smach.State):
                 self.robot_info_pub.publish("introducing intermediate recharge goal [return_to_base, charge]")
                 self.introduce_recharge_goal = False
                 # first return to base, then charge
+                a = action()
+                a.name = "charge"
+                userdata.plan.insert(0, a)
+                a = action()
+                a.name = "return_to_base"
+                userdata.plan.insert(0, a)
+
+            elif self.introduce_shelter_goal:
+                rospy.loginfo("introducing intermediate shelter goal [return_to_base, charge, wait]")
+                self.robot_info_pub.publish("introducing intermediate shelter goal [return_to_base, charge, wait]")
+                self.introduce_shelter_goal = False
+                # first return to base, then charge, then wait
+                a = action()
+                a.name = "wait"
+                userdata.plan.insert(0, a)
                 a = action()
                 a.name = "charge"
                 userdata.plan.insert(0, a)
