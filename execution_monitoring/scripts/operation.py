@@ -396,7 +396,7 @@ class ExecutePlan(smach.State):
 
     def execute(self, userdata):
         rospy.loginfo("executing EXECUTE_PLAN state..")
-        self.publish_state_of_ongoing_operation("processing")
+        #self.publish_state_of_ongoing_operation("processing")
 
         self.remaining_tasks = len(userdata.plan)
 
