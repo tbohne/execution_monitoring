@@ -42,6 +42,7 @@ class DataAccumulator:
         mission_info['operation_time'] = str((datetime.now() - self.operation_start_time).total_seconds()) + "s"
 
         try:
+            rospy.loginfo("STORING MISSION INFO: %s", json.dumps(mission_info))
             self.msg_store.insert_named("mission_info", String(json.dumps(mission_info)))
         except IOError as e:
             if e.errno == errno.EPIPE:
@@ -50,6 +51,14 @@ class DataAccumulator:
         except rospy.ServiceException as e:
             rospy.loginfo("log mission info -- DB entry failed - trying again: %s", e)
             self.operation_callback(msg)
+        except AttributeError as e:
+            rospy.loginfo("--------------------------------------------")
+            rospy.loginfo("--------------------------------------------")
+            rospy.loginfo("ERROR: %s", e)
+            rospy.loginfo("entered: %s", String(json.dumps(mission_info)))
+            self.operation_callback(msg)
+            rospy.loginfo("--------------------------------------------")
+            rospy.loginfo("--------------------------------------------")
 
     def resolution_callback(self, msg):
         rospy.loginfo("saving resolution data in DB..")
@@ -62,6 +71,14 @@ class DataAccumulator:
         except rospy.ServiceException as e:
             rospy.loginfo("resolution callback -- DB entry failed - trying again: %s, msg: %s", e, msg)
             self.resolution_callback(msg)
+        except AttributeError as e:
+            rospy.loginfo("--------------------------------------------")
+            rospy.loginfo("--------------------------------------------")
+            rospy.loginfo("ERROR: %s", e)
+            rospy.loginfo("entered: %s", msg)
+            self.resolution_callback(msg)
+            rospy.loginfo("--------------------------------------------")
+            rospy.loginfo("--------------------------------------------")
 
     def operator_communication_callback(self, msg):
         rospy.loginfo("saving operator communication data in DB..")
@@ -74,9 +91,17 @@ class DataAccumulator:
         except rospy.ServiceException as e:
             rospy.loginfo("operator communication callback -- DB entry failed - trying again: %s, msg: %s", e, msg)
             self.operator_communication_callback(msg)
+        except AttributeError as e:
+            rospy.loginfo("--------------------------------------------")
+            rospy.loginfo("--------------------------------------------")
+            rospy.loginfo("ERROR: %s", e)
+            rospy.loginfo("entered: %s", msg)
+            self.operator_communication_callback(msg)
+            rospy.loginfo("--------------------------------------------")
+            rospy.loginfo("--------------------------------------------")
 
     def action_info_callback(self, msg):
-        rospy.loginfo("saving action info data in DB..")
+        rospy.loginfo("saving action info data in DB.. %s", msg)
         try:
             self.msg_store.insert_named("action_info", msg)
         except IOError as e:
@@ -86,6 +111,13 @@ class DataAccumulator:
         except rospy.ServiceException as e:
             rospy.loginfo("action info callback -- DB entry failed - trying again: %s, msg: %s", e, msg)
             self.action_info_callback(msg)
+        except AttributeError as e:
+            rospy.loginfo("--------------------------------------------")
+            rospy.loginfo("--------------------------------------------")
+            rospy.loginfo("ERROR: %s", e)
+            rospy.loginfo("entered: %s", String(msg))
+            rospy.loginfo("--------------------------------------------")
+            rospy.loginfo("--------------------------------------------")
 
     def sim_info_callback(self, msg):
         rospy.loginfo("saving sim info data in DB..")
@@ -98,6 +130,14 @@ class DataAccumulator:
         except rospy.ServiceException as e:
             rospy.loginfo("sim info callback -- DB entry failed - trying again: %s, msg: %s", e, msg)
             self.sim_info_callback(msg)
+        except AttributeError as e:
+            rospy.loginfo("--------------------------------------------")
+            rospy.loginfo("--------------------------------------------")
+            rospy.loginfo("ERROR: %s", e)
+            rospy.loginfo("entered: %s", msg)
+            self.sim_info_callback(msg)
+            rospy.loginfo("--------------------------------------------")
+            rospy.loginfo("--------------------------------------------")
 
     def log_failure_circumstances(self):
         rospy.loginfo("saving failure circumstances in DB..")
@@ -131,6 +171,13 @@ class DataAccumulator:
         except rospy.ServiceException as e:
             rospy.loginfo("log failure circumstances -- DB entry failed - trying again: %s", e)
             self.log_failure_circumstances()
+        except AttributeError as e:
+            rospy.loginfo("--------------------------------------------")
+            rospy.loginfo("--------------------------------------------")
+            rospy.loginfo("ERROR: %s", e)
+            self.log_failure_circumstances()
+            rospy.loginfo("--------------------------------------------")
+            rospy.loginfo("--------------------------------------------")
 
     def contingency_callback(self, msg):
         rospy.loginfo("saving contingency data in DB..")
@@ -144,6 +191,14 @@ class DataAccumulator:
         except rospy.ServiceException as e:
             rospy.loginfo("contingency callback -- DB entry failed - trying again: %s, msg: %s", e, msg)
             self.contingency_callback(msg)
+        except AttributeError as e:
+            rospy.loginfo("--------------------------------------------")
+            rospy.loginfo("--------------------------------------------")
+            rospy.loginfo("ERROR: %s", e)
+            rospy.loginfo("entered: %s", msg)
+            self.contingency_callback(msg)
+            rospy.loginfo("--------------------------------------------")
+            rospy.loginfo("--------------------------------------------")
 
     def catastrophe_callback(self, msg):
         rospy.loginfo("saving catastrophe data in DB..")
@@ -157,6 +212,14 @@ class DataAccumulator:
         except rospy.ServiceException as e:
             rospy.loginfo("catastrophe callback -- DB entry failed - trying again: %s, msg: %s", e, msg)
             self.catastrophe_callback(msg)
+        except AttributeError as e:
+            rospy.loginfo("--------------------------------------------")
+            rospy.loginfo("--------------------------------------------")
+            rospy.loginfo("ERROR: %s", e)
+            rospy.loginfo("entered: %s", msg)
+            self.catastrophe_callback(msg)
+            rospy.loginfo("--------------------------------------------")
+            rospy.loginfo("--------------------------------------------")
 
     def info_callback(self, msg):
         rospy.loginfo("saving robot info data in DB..: %s", msg)
@@ -169,6 +232,14 @@ class DataAccumulator:
         except rospy.ServiceException as e:
             rospy.loginfo("info callback -- DB entry failed - trying again: %s, msg: %s", e, msg)
             self.info_callback(msg)
+        except AttributeError as e:
+            rospy.loginfo("--------------------------------------------")
+            rospy.loginfo("--------------------------------------------")
+            rospy.loginfo("ERROR: %s", e)
+            rospy.loginfo("entered: %s", msg)
+            self.info_callback(msg)
+            rospy.loginfo("--------------------------------------------")
+            rospy.loginfo("--------------------------------------------")
 
     def show_db_entries(self, msg):
         rospy.loginfo("all DB entries of type String:")
