@@ -3,21 +3,61 @@ import rospy
 from datetime import datetime
 import random
 from std_msgs.msg import String
+from execution_monitoring import config
 from arox_performance_parameters.msg import arox_operational_param
 from arox_performance_parameters.msg import arox_battery_params
 
-FAILURE_TOPICS = ["/toggle_simulated_total_sensor_failure", "/toggle_simulated_empty_ranges", "/toggle_simulated_impermissible_ranges", "/toggle_simulated_scan_repetition",
-    "/toggle_simulated_bad_wifi_link", "/toggle_simulated_bad_wifi_signal", "/toggle_simulated_bad_wifi_bit_rate", "/toggle_simulated_wifi_disconnect", "/sim_internet_connection_failure"
-    "/toggle_simulated_bad_download", "/toggle_simulated_bad_upload", "/toggle_simulated_timeout_failure", "/set_simulated_good_quality", "/set_simulated_med_quality",
-    "/set_simulated_low_quality", "/set_simulated_unknown_status", "/set_simulated_no_fix", "/set_simulated_no_rtk", "/toggle_simulated_unknown_service", "/toggle_simulated_infeasible_lat_lng",
-    "/toggle_simulated_variance_history_failure", "/toggle_simulated_high_deviation", "/toggle_rain_sim", "/toggle_snow_sim", "/toggle_wind_sim", "/toggle_low_temp_sim", "/toggle_thuderstorm_sim",
-    "/toggle_sunset_sim", "/sim_full_disk_failure"  "/toggle_simulated_scan_logging_failure", "/wheel_movement_without_pos_change", "/pos_change_without_wheel_movement", "/yaw_divergence",
-    "/moving_although_standing_still_imu", "/moving_although_standing_still_odom", "sim_extended_idle_time", "toggle_unavailable_plan_service", "sim_empty_plan",
-    "sim_infeasible_plan", "spawn_static_obstacles", "spawn_robot_prison", "trigger_nav_fail", "sim_undocking_failure", "sim_docking_failure_raised_ramp", "sim_docking_failure_base_pose",
-    "sim_charging_failure", "sim_power_management_contingency"]
+
+TOPIC_MSG_MAPPING = {
+    "/toggle_simulated_total_sensor_failure": config.SENSOR_FAILURE_ONE,
+    "/toggle_simulated_empty_ranges": config.SENSOR_FAILURE_TWO,
+    "/toggle_simulated_impermissible_ranges": config.SENSOR_FAILURE_THREE,
+    "/toggle_simulated_scan_repetition": config.SENSOR_FAILURE_FOUR,
+    "/toggle_simulated_bad_wifi_link":  config.CONNECTION_FAILURE_ONE,
+    "/toggle_simulated_bad_wifi_signal": config.CONNECTION_FAILURE_TWO,
+    "/toggle_simulated_bad_wifi_bit_rate": config.CONNECTION_FAILURE_THREE,
+    "/toggle_simulated_wifi_disconnect": config.CONNECTION_FAILURE_FOUR,
+    "/sim_internet_connection_failure": config.CONNECTION_FAILURE_FIVE,
+    "/toggle_simulated_bad_download": config.CONNECTION_FAILURE_SIX,
+    "/toggle_simulated_bad_upload": config.CONNECTION_FAILURE_SEVEN,
+    "/toggle_simulated_timeout_failure": config.CONNECTION_FAILURE_EIGHT,
+    "/set_simulated_unknown_status": config.CONNECTION_FAILURE_ELEVEN,
+    "/set_simulated_no_fix": config.CONNECTION_FAILURE_TWELVE,
+    "/set_simulated_no_rtk": config.CONNECTION_FAILURE_THIRTEEN,
+    "/toggle_simulated_unknown_service": config.CONNECTION_FAILURE_FOURTEEN,
+    "/toggle_simulated_infeasible_lat_lng": [config.CONNECTION_FAILURE_FIFTEEN, config.CONNECTION_FAILURE_SIXTEEN],
+    "/toggle_simulated_variance_history_failure": config.CONNECTION_FAILURE_TWENTY,
+    "/toggle_simulated_high_deviation": config.CONNECTION_FAILURE_EIGHTEEN,
+    "/toggle_rain_sim": config.WEATHER_FAILURE_TWO,
+    "/toggle_snow_sim": config.WEATHER_FAILURE_FIVE,
+    "/toggle_wind_sim": config.WEATHER_FAILURE_EIGHT,
+    "/toggle_low_temp_sim": config.WEATHER_FAILURE_TWELVE,
+    "/toggle_thuderstorm_sim": config.WEATHER_FAILURE_THIRTEEN,
+    "/toggle_sunset_sim": config.WEATHER_FAILURE_SEVENTEEN,
+    "/sim_full_disk_failure": config.DATA_MANAGEMENT_FAILURE_ONE,
+    "/toggle_simulated_scan_logging_failure": config.DATA_MANAGEMENT_FAILURE_TWO,
+    "/wheel_movement_without_pos_change": [config.LOCALIZATION_FAILURE_ONE, config.LOCALIZATION_FAILURE_TWO],
+    "/pos_change_without_wheel_movement": [config.LOCALIZATION_FAILURE_ONE, config.LOCALIZATION_FAILURE_TWO],
+    "/yaw_divergence": [config.LOCALIZATION_FAILURE_FOUR, config.LOCALIZATION_FAILURE_FIVE],
+    "/moving_although_standing_still_imu": [config.LOCALIZATION_FAILURE_SEVEN, config.LOCALIZATION_FAILURE_EIGHT],
+    "/moving_although_standing_still_odom": [config.LOCALIZATION_FAILURE_ONE, config.LOCALIZATION_FAILURE_TWO],
+    "sim_extended_idle_time": config.PLAN_DEPLOYMENT_FAILURE_ONE,
+    "toggle_unavailable_plan_service": config.PLAN_DEPLOYMENT_FAILURE_TWO,
+    "sim_empty_plan": config.PLAN_DEPLOYMENT_FAILURE_THREE,
+    "sim_infeasible_plan": config.PLAN_DEPLOYMENT_FAILURE_FOUR,
+    "spawn_static_obstacles": [],
+    "spawn_robot_prison": [config.NAV_FAILURE_ONE, config.NAV_FAILURE_THREE],
+    "trigger_nav_fail": config.NAV_FAILURE_ONE,
+    "sim_undocking_failure": config.CHARGING_FAILURE_TWO,
+    "sim_docking_failure_raised_ramp": config.CHARGING_FAILURE_ONE,
+    "sim_docking_failure_base_pose": config.CHARGING_FAILURE_ONE,
+    "sim_charging_failure": config.CHARGING_FAILURE_THREE,
+    "sim_power_management_contingency": config.POWER_MANAGEMENT_FAILURE_ONE
+}
+
 
 # random fail every 15 minutes
-RANDOM_FAIL_FREQUENCY = 900
+RANDOM_FAIL_FREQUENCY = 300 #900
 SEED = 42
 
 class Experiment:
@@ -33,6 +73,7 @@ class Experiment:
         self.battery_charge = 0
         self.battery_charging_cycle = 0
         self.sim_fail_time = datetime.now()
+        self.expected_contingency = None
 
         rospy.Subscriber("/contingency_preemption", String, self.contingency_callback)
         rospy.Subscriber("/catastrophe_preemption", String, self.catastrophe_callback)
@@ -56,17 +97,31 @@ class Experiment:
         self.operation_time = msg.operation_time
 
     def contingency_callback(self, msg):
+        rospy.loginfo("CONTINIGENCY: %s", msg.data)
+        rospy.loginfo("EXPECTED: %s", self.expected_contingency)
+        if isinstance(self.expected_contingency, list):
+            if msg.data in self.expected_contingency:
+                self.expected_contingency = None
+        else:
+            if msg.data == self.expected_contingency:
+                self.expected_contingency = None
         self.contingency_cnt += 1
 
     def catastrophe_callback(self, msg):
         self.catastrophe_cnt += 1
 
     def simulate_random_failure(self):
-        global SEED, FAILURE_TOPICS
+        global SEED, TOPIC_MSG_MAPPING
         self.sim_fail_time = datetime.now()
-        rand = random.randint(0, len(FAILURE_TOPICS) - 1)
-        random_topic = FAILURE_TOPICS[rand]
+        rand = random.randint(0, len(TOPIC_MSG_MAPPING.keys()) - 1)
+        random_topic = TOPIC_MSG_MAPPING.keys()[rand]
+        rospy.loginfo("###################################################################")
+        rospy.loginfo("###################################################################")
         rospy.loginfo("init random failure: %s", random_topic)
+        self.expected_contingency = TOPIC_MSG_MAPPING[random_topic]
+        rospy.loginfo("expected contingency: %s", self.expected_contingency)
+        rospy.loginfo("###################################################################")
+        rospy.loginfo("###################################################################")
         pub = rospy.Publisher(random_topic, String, queue_size=1)
         # needs a moment to init the publisher
         rospy.sleep(3)
@@ -75,12 +130,12 @@ class Experiment:
     def run_experiment(self):
         while not rospy.is_shutdown():
 
-            if (datetime.now() - self.sim_fail_time).total_seconds() >= RANDOM_FAIL_FREQUENCY:
+            if (datetime.now() - self.sim_fail_time).total_seconds() >= RANDOM_FAIL_FREQUENCY and self.expected_contingency is None:
                 self.simulate_random_failure()
 
             rospy.loginfo("time since last fail sim: %s", (datetime.now() - self.sim_fail_time).total_seconds())
             #self.log_info()
-            rospy.sleep(1)
+            rospy.sleep(120)
 
     def log_info(self):
         rospy.loginfo("###########################################################")
