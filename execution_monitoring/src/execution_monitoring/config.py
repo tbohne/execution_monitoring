@@ -203,7 +203,7 @@ WEATHER_FAILURE_SEVENTEEN = "after sunset - interrupting work until sunrise"
 WEATHER_FAILURE_EIGHTEEN = "sunset in a few minutes - interrupting work and driving back to base"
 WEATHER_CATA = "drastic weather change resolution failed -- catastrophe"
 
-WEATHER_MONITORING_FREQUENCY = 30  # seconds
+WEATHER_MONITORING_FREQUENCY = 15  # seconds
 
 # WEATHER CONDITION CODES
 # Group 2xx: Thunderstorm

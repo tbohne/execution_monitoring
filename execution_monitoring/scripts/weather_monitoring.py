@@ -297,8 +297,10 @@ class WeatherMonitoring:
         :param sunset_time_sec: sunset time in seconds (UNIX timestamp)
         :return: false if contingency, else true
         """
-        # TODO: convert everything to correct time zone        
-        time_in_seconds = int((datetime.now() - datetime(1970, 1, 1)).total_seconds())
+        # TODO: convert everything to correct time zone
+        # TODO: should be real time later -- for simulation reasons it is always afternoon
+        # time_in_seconds = int((datetime.now() - datetime(1970, 1, 1)).total_seconds())
+        time_in_seconds = int((datetime.strptime('Mar 3 2022  1:33PM', '%b %d %Y %I:%M%p') - datetime(1970, 1, 1)).total_seconds())
 
         if sunrise_time_sec > time_in_seconds:
             if self.active_monitoring:
