@@ -54,4 +54,6 @@
     <node pkg="arox_performance_parameters" type="arox_params.py" name="arox_parameters" output="screen"/>
     <node pkg="arox_performance_parameters" type="arox_safety_thresholds.py" name="arox_watchdog" output="screen"/>
 
+    <!-- experiments -->
+    <node pkg="execution_monitoring" type="experiments.py" name="experiments" output="screen" />
 </launch>
