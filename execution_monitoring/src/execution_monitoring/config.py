@@ -120,7 +120,7 @@ SENSOR_CATA = "sensor resolution failed -- catastrophe"
 
 # SCAN SETTINGS
 SCAN_PATH = MONITOR_DRIVE + "home/docker/catkin_ws/src/execution_monitoring/execution_monitoring/scans/"
-SCAN_TIME_LIMIT = 60
+SCAN_TIME_LIMIT = 20
 SCAN_FILE_EXTENSION = ".txt"
 SCAN_VALUES_LB_PERCENTAGE = 5
 #############################################################################
@@ -203,7 +203,7 @@ WEATHER_FAILURE_SEVENTEEN = "after sunset - interrupting work until sunrise"
 WEATHER_FAILURE_EIGHTEEN = "sunset in a few minutes - interrupting work and driving back to base"
 WEATHER_CATA = "drastic weather change resolution failed -- catastrophe"
 
-WEATHER_MONITORING_FREQUENCY = 300  # seconds
+WEATHER_MONITORING_FREQUENCY = 30  # seconds
 
 # WEATHER CONDITION CODES
 # Group 2xx: Thunderstorm
