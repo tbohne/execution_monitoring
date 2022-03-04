@@ -7,8 +7,15 @@ from execution_monitoring import config
 from arox_performance_parameters.msg import arox_operational_param
 from arox_performance_parameters.msg import arox_battery_params
 
+CATA_TOPIC_MSG_MAPPING = {
+    "/sim_full_disk_failure": config.DATA_MANAGEMENT_FAILURE_ONE,
+    "spawn_robot_prison": [config.NAV_FAILURE_ONE, config.NAV_FAILURE_THREE],
+    "sim_docking_failure_raised_ramp": config.CHARGING_FAILURE_ONE,
+    "sim_undocking_failure": config.CHARGING_FAILURE_TWO,
+    "sim_power_management_catastrophe": config.POWER_MANAGEMENT_CATA
+}
 
-TOPIC_MSG_MAPPING = {
+CONT_TOPIC_MSG_MAPPING = {
     "/toggle_simulated_total_sensor_failure": config.SENSOR_FAILURE_ONE,
     "/toggle_simulated_empty_ranges": config.SENSOR_FAILURE_TWO,
     "/toggle_simulated_impermissible_ranges": config.SENSOR_FAILURE_THREE,
@@ -24,7 +31,6 @@ TOPIC_MSG_MAPPING = {
     "/set_simulated_unknown_status": config.CONNECTION_FAILURE_ELEVEN,
     "/set_simulated_no_fix": config.CONNECTION_FAILURE_TWELVE,
     "/set_simulated_no_rtk": config.CONNECTION_FAILURE_THIRTEEN,
-    "/toggle_simulated_unknown_service": config.CONNECTION_FAILURE_FOURTEEN,
     "/toggle_simulated_infeasible_lat_lng": [config.CONNECTION_FAILURE_FIFTEEN, config.CONNECTION_FAILURE_SIXTEEN],
     "/toggle_simulated_variance_history_failure": config.CONNECTION_FAILURE_TWENTY,
     "/toggle_simulated_high_deviation": config.CONNECTION_FAILURE_EIGHTEEN,
@@ -34,7 +40,6 @@ TOPIC_MSG_MAPPING = {
     "/toggle_low_temp_sim": config.WEATHER_FAILURE_TWELVE,
     "/toggle_thuderstorm_sim": config.WEATHER_FAILURE_THIRTEEN,
     "/toggle_sunset_sim": config.WEATHER_FAILURE_SEVENTEEN,
-    "/sim_full_disk_failure": config.DATA_MANAGEMENT_FAILURE_ONE,
     "/toggle_simulated_scan_logging_failure": config.DATA_MANAGEMENT_FAILURE_TWO,
     "/wheel_movement_without_pos_change": [config.LOCALIZATION_FAILURE_ONE, config.LOCALIZATION_FAILURE_TWO],
     "/pos_change_without_wheel_movement": [config.LOCALIZATION_FAILURE_ONE, config.LOCALIZATION_FAILURE_TWO],
@@ -46,15 +51,13 @@ TOPIC_MSG_MAPPING = {
     "sim_empty_plan": config.PLAN_DEPLOYMENT_FAILURE_THREE,
     "sim_infeasible_plan": config.PLAN_DEPLOYMENT_FAILURE_FOUR,
     "spawn_static_obstacles": [],
-    "spawn_robot_prison": [config.NAV_FAILURE_ONE, config.NAV_FAILURE_THREE],
+    "spawn_static_obstacles": [],
+    "/toggle_simulated_unknown_service": [],
     "trigger_nav_fail": config.NAV_FAILURE_ONE,
-    "sim_undocking_failure": config.CHARGING_FAILURE_TWO,
-    "sim_docking_failure_raised_ramp": config.CHARGING_FAILURE_ONE,
     "sim_docking_failure_base_pose": config.CHARGING_FAILURE_ONE,
     "sim_charging_failure": config.CHARGING_FAILURE_THREE,
     "sim_power_management_contingency": config.POWER_MANAGEMENT_FAILURE_ONE
 }
-
 
 # random fail every 15 minutes
 RANDOM_FAIL_FREQUENCY = 300 #900
@@ -63,7 +66,13 @@ SEED = 42
 class Experiment:
 
     def __init__(self):
-        self.contingency_cnt = 0
+        global SEED
+        random.seed(SEED)
+        self.expected_contingency_cnt = 0
+        self.false_positive_contingency = 0
+        self.issue_expected_without_contingy_and_fulfilled = 0
+        self.false_negative_contingency = 0
+        self.unexpected_contingency_cnt = 0
         self.catastrophe_cnt = 0
         self.total_completed_goals = 0
         self.completed_goals_current_mission = 0
@@ -74,13 +83,20 @@ class Experiment:
         self.battery_charging_cycle = 0
         self.sim_fail_time = datetime.now()
         self.expected_contingency = None
+        self.sim_launched = True
 
         rospy.Subscriber("/contingency_preemption", String, self.contingency_callback)
         rospy.Subscriber("/catastrophe_preemption", String, self.catastrophe_callback)
         rospy.Subscriber("/arox/ongoing_operation", arox_operational_param, self.operation_callback)
         rospy.Subscriber("/arox/battery_param", arox_battery_params, self.battery_callback)
+        rospy.Subscriber('/sim_info', String, self.sim_info_callback, queue_size=1)
 
         self.run_experiment()
+
+    def sim_info_callback(self, msg):
+        self.sim_launched = True
+        # reset timer -- sim only launched now -- next shouldn't follow immediately, e.g. docking
+        self.sim_fail_time = datetime.now()
 
     def operation_callback(self, msg):
         self.operation_mode = msg.operation_mode
@@ -97,28 +113,55 @@ class Experiment:
         self.operation_time = msg.operation_time
 
     def contingency_callback(self, msg):
+        rospy.loginfo("------------------------------------------------")
         rospy.loginfo("CONTINIGENCY: %s", msg.data)
         rospy.loginfo("EXPECTED: %s", self.expected_contingency)
+        rospy.loginfo("------------------------------------------------")
+        self.log_info()
+
+        # expected contingency -- answer to simulated failure
         if isinstance(self.expected_contingency, list):
             if msg.data in self.expected_contingency:
                 self.expected_contingency = None
-        else:
+                self.expected_contingency_cnt += 1
+        elif self.expected_contingency is not None:
             if msg.data == self.expected_contingency:
                 self.expected_contingency = None
-        self.contingency_cnt += 1
+                self.expected_contingency_cnt += 1
+            # expected a contingency, but not the present one
+            else:
+                self.unexpected_contingency_cnt += 1
+        elif self.expected_contingency is None:
+            # false positive -- contingency although no failure sim
+            self.false_positive_contingency += 1
 
     def catastrophe_callback(self, msg):
         self.catastrophe_cnt += 1
 
     def simulate_random_failure(self):
-        global SEED, TOPIC_MSG_MAPPING
+        global CONT_TOPIC_MSG_MAPPING
         self.sim_fail_time = datetime.now()
-        rand = random.randint(0, len(TOPIC_MSG_MAPPING.keys()) - 1)
-        random_topic = TOPIC_MSG_MAPPING.keys()[rand]
+        self.sim_launched = False
+        rand = random.randint(0, len(CONT_TOPIC_MSG_MAPPING.keys()) - 1)
+        random_topic = CONT_TOPIC_MSG_MAPPING.keys()[rand]
+
+        # doesn't make any sense to simulate IDLE time during active mission
+        if random_topic == "sim_extended_idle_time"  and self.operation_mode != "waiting":
+            self.simulate_random_failure()
+
         rospy.loginfo("###################################################################")
         rospy.loginfo("###################################################################")
         rospy.loginfo("init random failure: %s", random_topic)
-        self.expected_contingency = TOPIC_MSG_MAPPING[random_topic]
+
+        if self.expected_contingency == []:
+            self.issue_expected_without_contingy_and_fulfilled += 1
+            self.expected_contingency = None
+
+        # previously expected contingency was not detected -> false negative
+        if self.expected_contingency is not None:
+            self.false_negative_contingency += 1
+
+        self.expected_contingency = CONT_TOPIC_MSG_MAPPING[random_topic]
         rospy.loginfo("expected contingency: %s", self.expected_contingency)
         rospy.loginfo("###################################################################")
         rospy.loginfo("###################################################################")
@@ -130,7 +173,11 @@ class Experiment:
     def run_experiment(self):
         while not rospy.is_shutdown():
 
-            if (datetime.now() - self.sim_fail_time).total_seconds() >= RANDOM_FAIL_FREQUENCY and self.expected_contingency is None:
+            # assumption -- there is enough time to complete all the simulated failures, e.g. docking fail
+            #       - docking does not occur every 2 minutes, it can take a while to get in this situation
+            #       - thus, docking shouldn't be entirely random, but only when the last docking is 
+            # elegant way to avoid these issues: wait until sim is actually launched, not until sim launch is "prepared"
+            if (datetime.now() - self.sim_fail_time).total_seconds() >= RANDOM_FAIL_FREQUENCY and self.sim_launched: # and self.expected_contingency is None:
                 self.simulate_random_failure()
 
             rospy.loginfo("time since last fail sim: %s", (datetime.now() - self.sim_fail_time).total_seconds())
@@ -139,7 +186,10 @@ class Experiment:
 
     def log_info(self):
         rospy.loginfo("###########################################################")
-        rospy.loginfo("contingency cnt: %s", self.contingency_cnt)
+        rospy.loginfo("contingency cnt: %s", self.expected_contingency_cnt)
+        rospy.loginfo("false positives: %s", self.false_positive_contingency)
+        rospy.loginfo("false negatives: %s", self.false_negative_contingency)
+        rospy.loginfo("unexpected contingency: %s", self.unexpected_contingency_cnt)
         rospy.loginfo("catastrophe cnt: %s", self.catastrophe_cnt)
         rospy.loginfo("operation mode: %s", self.operation_mode)
         rospy.loginfo("operation time: %s", self.operation_time)
