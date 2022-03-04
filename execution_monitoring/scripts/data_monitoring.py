@@ -9,16 +9,23 @@ class DataMonitoring:
 
     def __init__(self):
         self.sim_full_disk = False
+        self.scan_contingency = False
         rospy.Subscriber('/scan_action', String, self.data_management_failure_monitoring, queue_size=1)
         rospy.Subscriber('/mission_name', String, self.mission_name_callback, queue_size=1)
         rospy.Subscriber('/sim_full_disk_failure', String, self.sim_full_disk_callback, queue_size=1)
         rospy.Subscriber('/resolve_data_management_failure_success', Bool, self.resolution_callback, queue_size=1)
+        rospy.Subscriber('/contingency_preemption', String, self.contingency_callback, queue_size=1)
 
         self.contingency_pub = rospy.Publisher('/contingency_preemption', String, queue_size=1)
         self.aggravate_pub = rospy.Publisher('/aggravate', String, queue_size=1)
         self.robot_info_pub = rospy.Publisher('/robot_info', String, queue_size=1)
         self.logging_pub = rospy.Publisher('/scan_successfully_logged', String, queue_size=1)
         self.interrupt_reason_pub = rospy.Publisher('/interrupt_reason', String, queue_size=1)
+
+    def contingency_callback(self, msg):
+        # no longer a need for data monitoring -- problem already detected
+        if msg.data in [config.SENSOR_FAILURE_ONE, config.SENSOR_FAILURE_TWO, config.SENSOR_FAILURE_THREE, config.SENSOR_FAILURE_FOUR, config.SENSOR_CATA]:
+            self.scan_contingency = True
 
     def resolution_callback(self, msg):
         if not msg.data:
@@ -37,6 +44,11 @@ class DataMonitoring:
             scan_cnt_before = self.count_scan_entries()
 
         rospy.sleep(config.SCAN_TIME_LIMIT)
+
+        if self.scan_contingency:
+            self.scan_contingency = False
+            return
+
         rospy.loginfo("reading file after scan logging..")
         scan_cnt_after = self.count_scan_entries()
 
