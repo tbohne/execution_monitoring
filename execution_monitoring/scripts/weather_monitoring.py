@@ -2,7 +2,9 @@
 import rospy
 from std_msgs.msg import String, Bool
 from execution_monitoring import util, config, secret_config
+from arox_performance_parameters.msg import arox_operational_param
 from datetime import datetime
+import time
 from sensor_msgs.msg import NavSatFix
 
 from pyowm import OWM
@@ -81,6 +83,7 @@ class WeatherMonitoring:
         rospy.Subscriber('/toggle_low_temp_sim', String, self.low_temp_callback, queue_size=1)
         rospy.Subscriber('/toggle_thuderstorm_sim', String, self.thunderstorm_callback, queue_size=1)
         rospy.Subscriber('/toggle_sunset_sim', String, self.sunset_callback, queue_size=1)
+        rospy.Subscriber('arox/ongoing_operation', arox_operational_param, self.operation_callback, queue_size=1)
         self.sim_rain = False
         self.sim_snow = False
         self.sim_wind = False
@@ -89,7 +92,11 @@ class WeatherMonitoring:
         self.sunset_sim = False
         self.active_monitoring = True
         self.position = None
+        self.operation_mode = None
         self.launch_weather_monitoring()
+
+    def operation_callback(self, msg):
+        self.operation_mode = msg.operation_mode
 
     def gnss_callback(self, nav_sat_fix):
         self.position = (nav_sat_fix.latitude, nav_sat_fix.longitude)
@@ -154,7 +161,7 @@ class WeatherMonitoring:
             code = 221
         if self.sunset_sim:
             self.sim_info_pub.publish("weather monitoring: sim sunset")
-            sunset = int((datetime.now() - datetime(1970, 1, 1)).total_seconds())
+            sunset = datetime.now().timestamp() #int((datetime.now() - datetime(1970, 1, 1)).total_seconds())
 
         return WeatherData(time, status, clouds, humid, pressure, rain, snow, wind, temp, code, icon, sunrise, sunset, sunrise_iso, sunset_iso)
 
@@ -300,7 +307,7 @@ class WeatherMonitoring:
         # TODO: convert everything to correct time zone
         # TODO: should be real time later -- for simulation reasons it is always afternoon
         # time_in_seconds = int((datetime.now() - datetime(1970, 1, 1)).total_seconds())
-        time_in_seconds = int((datetime.strptime('Mar 3 2022  1:33PM', '%b %d %Y %I:%M%p') - datetime(1970, 1, 1)).total_seconds())
+        time_in_seconds = int((datetime(2022, 3, 3, 12, 7, 47) - datetime(1970, 1, 1)).total_seconds())
 
         if sunrise_time_sec > time_in_seconds:
             if self.active_monitoring:
@@ -331,7 +338,7 @@ class WeatherMonitoring:
         temp_ok = self.monitor_temperature(weather_data.min_temp, weather_data.max_temp, weather_data.temp)
         code_ok = self.monitor_owm_weather_condition_code(weather_data.owm_weather_condition_code)
         sun_ok =  self.monitor_sunrise_and_sunset(weather_data.sunrise_time_sec, weather_data.sunset_time_sec)
-        if not self.active_monitoring and rain_ok and snow_ok and wind_ok and temp_ok and code_ok and sun_ok:
+        if self.operation_mode == "waiting" and not self.active_monitoring and rain_ok and snow_ok and wind_ok and temp_ok and code_ok and sun_ok:
             self.active_monitoring = True
             self.stop_waiting_pub.publish("weather moderate again..")
             self.robot_info_pub.publish("weather is moderate again..")
@@ -347,7 +354,7 @@ class WeatherMonitoring:
                 rospy.loginfo("monitoring weather for: %s", observation.get_location().get_name())
                 self.robot_info_pub.publish("monitoring weather for: " + observation.get_location().get_name())
                 weather_data = self.parse_weather_data(observation.get_weather())
-                if cnt % 5 == 0:
+                if cnt % 50 == 0:
                     weather_data.log_complete_info()
                 self.monitor_weather_data(weather_data)
                 
