@@ -63,6 +63,10 @@ BARRIER_MODEL = "/home/docker/catkin_ws/src/execution_monitoring/models/jersey_b
 class ObstacleSpawner:
 
     def __init__(self):
+        self.robot_location = None
+        self.mbf_status = None
+        self.sim_prison_retarded = False
+        self.spawned_obstacles = []
         rospy.Subscriber('/spawn_static_obstacles', String, self.spawn_static_obstacles, queue_size=1)
         rospy.Subscriber('/spawn_robot_prison', String, self.spawn_robot_prison, queue_size=1)
         rospy.Subscriber('/trigger_nav_fail', String, self.trigger_nav_fail, queue_size=1)
@@ -71,10 +75,6 @@ class ObstacleSpawner:
         rospy.Subscriber('/clear_spawned_obstacles', String, self.delete_spawned_obstacles, queue_size=1)
         self.insert_goal_pub = rospy.Publisher('introduce_intermediate_nav_goal', String, queue_size=1)
         self.sim_info_pub = rospy.Publisher('/sim_info', String, queue_size=1)
-        self.robot_location = None
-        self.mbf_status = None
-        self.sim_prison_retarded = False
-        self.spawned_obstacles = []
 
     def mbf_status_callback(self, mbf_status):
         if len(mbf_status.status_list) > 0:
