@@ -319,7 +319,9 @@ class ExecutePlan(smach.State):
                 self.fully_charged_pub.publish("")
                 self.robot_info_pub.publish("battery charged..")
                 # if the next action is to wait in the container, we shouldn't undock
-                return True if next_action.name == "wait_in_shelter" else self.undock_from_charging_station(self.pose_in_front_of_container)
+                if next_action:
+                    return True if next_action.name == "wait_in_shelter" else self.undock_from_charging_station(self.pose_in_front_of_container)
+                return self.undock_from_charging_station(self.pose_in_front_of_container)
         else:
             rospy.loginfo("error - unknown action: %s", action.name)
         return False
@@ -332,9 +334,12 @@ class ExecutePlan(smach.State):
         docking_client.wait_for_server()
         rospy.loginfo("START DOCKING PROCEDURE..")
         self.robot_info_pub.publish("start docking procedure")
-        self.deactivate_localization_pub.publish("")
         docking_client.send_goal(goal)
         rospy.loginfo("goal sent, wait for accomplishment..")
+
+        # possibility to consider simulated localization failures here
+        rospy.sleep(5)
+        self.deactivate_localization_pub.publish("")
 
         # success just means that the smach execution has been successful, not the docking itself
         success = docking_client.wait_for_result()
@@ -455,7 +460,7 @@ class ExecutePlan(smach.State):
                 userdata.plan.insert(0, a)
 
             a = userdata.plan.pop(0)
-            next_action = userdata.plan[0]
+            next_action = userdata.plan[0] if len(userdata.plan) > 0 else None
             self.latest_action = a
             if not self.battery_discharged:
                 action_successfully_performed = self.perform_action(a, next_action)
