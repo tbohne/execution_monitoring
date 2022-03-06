@@ -40,6 +40,7 @@ class ConnectionMonitoring:
                         rospy.loginfo("detected GNSS timeout - no new update since %s s", time_since_update)
                         self.contingency_pub.publish(config.CONNECTION_FAILURE_EIGHT)
                         self.active_monitoring = False
+                        self.last_gnss_msg_time = datetime.now()
 
                 if self.last_wifi_msg_time is not None:
                     time_since_update = (now - self.last_wifi_msg_time).total_seconds()
@@ -196,6 +197,10 @@ class ConnectionMonitoring:
 
     def resolve_callback(self, msg):
         if msg.data:
+            # reset all counters -- new run
+            self.last_gnss_msg_time = datetime.now()
+            self.last_wifi_msg_time = datetime.now()
+            self.last_internet_msg_time = datetime.now()
             self.active_monitoring = True
         else:
             self.interrupt_reason_pub.publish(config.CONNECTION_CATA)
