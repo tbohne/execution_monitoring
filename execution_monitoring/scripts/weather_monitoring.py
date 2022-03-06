@@ -304,10 +304,7 @@ class WeatherMonitoring:
         :param sunset_time_sec: sunset time in seconds (UNIX timestamp)
         :return: false if contingency, else true
         """
-        # TODO: convert everything to correct time zone
-        # TODO: should be real time later -- for simulation reasons it is always afternoon
-        # time_in_seconds = int((datetime.now() - datetime(1970, 1, 1)).total_seconds())
-        time_in_seconds = int((datetime(2022, 3, 3, 12, 7, 47) - datetime(1970, 1, 1)).total_seconds())
+        time_in_seconds = int((datetime.now() - datetime(1970, 1, 1)).total_seconds())
 
         if sunrise_time_sec > time_in_seconds:
             if self.active_monitoring:
@@ -337,7 +334,8 @@ class WeatherMonitoring:
         wind_ok = self.monitor_wind(weather_data.wind_gust_speed, weather_data.wind_speed)
         temp_ok = self.monitor_temperature(weather_data.min_temp, weather_data.max_temp, weather_data.temp)
         code_ok = self.monitor_owm_weather_condition_code(weather_data.owm_weather_condition_code)
-        sun_ok =  self.monitor_sunrise_and_sunset(weather_data.sunrise_time_sec, weather_data.sunset_time_sec)
+        # TODO: activate for real tests in practice
+        sun_ok =  True # self.monitor_sunrise_and_sunset(weather_data.sunrise_time_sec, weather_data.sunset_time_sec)
         if self.operation_mode == "waiting" and not self.active_monitoring and rain_ok and snow_ok and wind_ok and temp_ok and code_ok and sun_ok:
             self.active_monitoring = True
             self.stop_waiting_pub.publish("weather moderate again..")
