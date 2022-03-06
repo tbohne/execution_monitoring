@@ -9,10 +9,10 @@ from arox_performance_parameters.msg import arox_battery_params
 
 CATA_TOPIC_MSG_MAPPING = {
     "/sim_full_disk_failure": config.DATA_MANAGEMENT_FAILURE_ONE,
-    "spawn_robot_prison": [config.NAV_FAILURE_ONE, config.NAV_FAILURE_THREE],
-    "sim_docking_failure_raised_ramp": config.CHARGING_FAILURE_ONE,
-    "sim_undocking_failure": config.CHARGING_FAILURE_TWO,
-    "sim_power_management_catastrophe": config.POWER_MANAGEMENT_CATA
+    "/spawn_robot_prison": [config.NAV_FAILURE_ONE, config.NAV_FAILURE_THREE],
+    "/sim_docking_failure_raised_ramp": config.CHARGING_FAILURE_ONE,
+    "/sim_undocking_failure": config.CHARGING_FAILURE_TWO,
+    "/sim_power_management_catastrophe": config.POWER_MANAGEMENT_CATA
 }
 
 CONT_TOPIC_MSG_MAPPING = {
@@ -46,17 +46,17 @@ CONT_TOPIC_MSG_MAPPING = {
     "/yaw_divergence": [config.LOCALIZATION_FAILURE_FOUR, config.LOCALIZATION_FAILURE_FIVE],
     "/moving_although_standing_still_imu": [config.LOCALIZATION_FAILURE_SEVEN, config.LOCALIZATION_FAILURE_EIGHT],
     "/moving_although_standing_still_odom": [config.LOCALIZATION_FAILURE_ONE, config.LOCALIZATION_FAILURE_TWO],
-    "sim_extended_idle_time": config.PLAN_DEPLOYMENT_FAILURE_ONE,
-    "toggle_unavailable_plan_service": config.PLAN_DEPLOYMENT_FAILURE_TWO,
-    "sim_empty_plan": config.PLAN_DEPLOYMENT_FAILURE_THREE,
-    "sim_infeasible_plan": config.PLAN_DEPLOYMENT_FAILURE_FOUR,
-    "spawn_static_obstacles": [],
-    "spawn_static_obstacles": [],
+    "/sim_extended_idle_time": config.PLAN_DEPLOYMENT_FAILURE_ONE,
+    "/toggle_unavailable_plan_service": config.PLAN_DEPLOYMENT_FAILURE_TWO,
+    "/sim_empty_plan": config.PLAN_DEPLOYMENT_FAILURE_THREE,
+    "/sim_infeasible_plan": config.PLAN_DEPLOYMENT_FAILURE_FOUR,
+    "/spawn_static_obstacles": [],
+    "/spawn_static_obstacles": [],
     "/toggle_simulated_unknown_service": [],
-    "trigger_nav_fail": config.NAV_FAILURE_ONE,
-    "sim_docking_failure_base_pose": config.CHARGING_FAILURE_ONE,
-    "sim_charging_failure": config.CHARGING_FAILURE_THREE,
-    "sim_power_management_contingency": config.POWER_MANAGEMENT_FAILURE_ONE
+    "/trigger_nav_fail": config.NAV_FAILURE_ONE,
+    "/sim_docking_failure_base_pose": config.CHARGING_FAILURE_ONE,
+    "/sim_charging_failure": config.CHARGING_FAILURE_THREE,
+    "/sim_power_management_contingency": config.POWER_MANAGEMENT_FAILURE_ONE
 }
 
 # random fail every 15 minutes
@@ -117,7 +117,6 @@ class Experiment:
         rospy.loginfo("CONTINIGENCY: %s", msg.data)
         rospy.loginfo("EXPECTED: %s", self.expected_contingency)
         rospy.loginfo("------------------------------------------------")
-        self.log_info()
 
         # expected contingency -- answer to simulated failure
         if isinstance(self.expected_contingency, list):
@@ -135,11 +134,17 @@ class Experiment:
             # false positive -- contingency although no failure sim
             self.false_positive_contingency += 1
 
+        self.log_info()
+
     def catastrophe_callback(self, msg):
         self.catastrophe_cnt += 1
 
     def simulate_random_failure(self):
         global CONT_TOPIC_MSG_MAPPING
+        # shouldn't simulate any new failures during docking
+        if self.operation_mode == "docking":
+            return
+
         self.sim_fail_time = datetime.now()
         self.sim_launched = False
         rand = random.randint(0, len(CONT_TOPIC_MSG_MAPPING.keys()) - 1)
