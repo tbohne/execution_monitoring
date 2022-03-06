@@ -23,6 +23,7 @@ class GNSSSimulator:
         self.sim_variance_history_failure = False
         self.sim_high_dev = False
         self.sim_teleport = False
+        self.timeout_fail_successful = False
 
         self.gps_publisher = rospy.Publisher('/fix', NavSatFix, queue_size=1)
         self.sim_info_pub = rospy.Publisher('/sim_info', String, queue_size=1)
@@ -43,6 +44,11 @@ class GNSSSimulator:
         rospy.Subscriber("/toggle_simulated_variance_history_failure", String, self.toggle_var_history_failure_callback, queue_size=1)
         rospy.Subscriber("/toggle_simulated_high_deviation", String, self.toggle_high_dev_callback, queue_size=1)
         rospy.Subscriber("/toggle_simulated_teleport", String, self.toggle_sim_teleport_callback, queue_size=1)
+        rospy.Subscriber("/contingency_preemption", String, self.contingency_callback, queue_size=1)
+
+    def contingency_callback(self, msg):
+        if msg.data == config.CONNECTION_FAILURE_EIGHT:
+            self.timeout_fail_successful = True
 
     def toggle_sim_teleport_callback(self, msg):
         self.sim_teleport = not self.sim_teleport
@@ -94,7 +100,9 @@ class GNSSSimulator:
             self.sim_timeout = False
             self.gnss_sub.unregister()
             self.sim_info_pub.publish("GNSS simulator: sim GNSS timeout")
-            rospy.sleep(config.GPS_TIMEOUT)
+            while not self.timeout_fail_successful:
+                rospy.sleep(2)
+            self.timeout_fail_successful = False
             self.gnss_sub = rospy.Subscriber('/fix_plugin', NavSatFix, self.sim_gps_callback, queue_size=1)
 
         # quality sim
