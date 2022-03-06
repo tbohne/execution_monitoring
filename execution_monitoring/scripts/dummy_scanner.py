@@ -16,6 +16,7 @@ class DummyScanner():
         rospy.Subscriber('/mission_name', String, self.mission_name_callback, queue_size=1)
         rospy.Subscriber("/toggle_simulated_scan_logging_failure", String, self.toggle_scan_failure_callback, queue_size=1)
         self.perform_action_pub = rospy.Publisher('/scan_action', String, queue_size=1)
+        self.completed_action_pub = rospy.Publisher('/scan_completed', String, queue_size=1)
         self.sim_info_pub = rospy.Publisher('/sim_info', String, queue_size=1)
         self.simulate_scan_logging_failure = False
         self.server = actionlib.SimpleActionServer('dummy_scanner', ScanAction, execute_cb=self.execute_cb, auto_start=False)
@@ -62,6 +63,7 @@ class DummyScanner():
             self.result.result = "scanning successfully completed"
             self.server.set_succeeded(self.result)
             rospy.loginfo("scanning completed..")
+            self.completed_action_pub.publish("")
         else:
             self.result.result = "scanning failed"
             self.server.set_aborted(self.result)
