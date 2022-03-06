@@ -147,21 +147,27 @@ class WeatherMonitoring:
         if self.sim_rain:
             self.sim_info_pub.publish("weather monitoring: sim rain")
             rain = {'1h': 8}
+            self.sim_rain = False
         if self.sim_snow:
             self.sim_info_pub.publish("weather monitoring: sim snow")
             snow = {'1h': 4}
+            self.sim_snow = False
         if self.sim_wind:
             self.sim_info_pub.publish("weather monitoring: sim wind")
             wind['gust'] = wind['speed'] = 27
+            self.sim_wind = False
         if self.sim_temp:
             self.sim_info_pub.publish("weather monitoring: sim low temperature")
             temp = {'temp_min': -9, 'temp_max': -2, 'temp': -5}
+            self.sim_temp = False
         if self.code_sim:
             self.sim_info_pub.publish("weather monitoring: sim weather code RAGGED_THUNDERSTORM")
             code = 221
+            self.code_sim = False
         if self.sunset_sim:
             self.sim_info_pub.publish("weather monitoring: sim sunset")
             sunset = datetime.now().timestamp() #int((datetime.now() - datetime(1970, 1, 1)).total_seconds())
+            self.sunset_sim = False
 
         return WeatherData(time, status, clouds, humid, pressure, rain, snow, wind, temp, code, icon, sunrise, sunset, sunrise_iso, sunset_iso)
 
@@ -181,6 +187,7 @@ class WeatherMonitoring:
                 self.contingency_pub.publish(config.WEATHER_FAILURE_TWO)
                 self.active_monitoring = False
             return False
+        return True
 
     def monitor_snow_volume(self, snow_vol):
         """
@@ -338,6 +345,7 @@ class WeatherMonitoring:
         sun_ok =  True # self.monitor_sunrise_and_sunset(weather_data.sunrise_time_sec, weather_data.sunset_time_sec)
         if self.operation_mode == "waiting" and not self.active_monitoring and rain_ok and snow_ok and wind_ok and temp_ok and code_ok and sun_ok:
             self.active_monitoring = True
+            rospy.loginfo("weather moderate again..")
             self.stop_waiting_pub.publish("weather moderate again..")
             self.robot_info_pub.publish("weather is moderate again..")
 
