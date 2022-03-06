@@ -9,23 +9,18 @@ class DataMonitoring:
 
     def __init__(self):
         self.sim_full_disk = False
-        self.scan_contingency = False
+        self.scan_cnt_before = 0
         rospy.Subscriber('/scan_action', String, self.data_management_failure_monitoring, queue_size=1)
+        rospy.Subscriber('/scan_completed', String, self.after_scan_monitoring, queue_size=1)
         rospy.Subscriber('/mission_name', String, self.mission_name_callback, queue_size=1)
         rospy.Subscriber('/sim_full_disk_failure', String, self.sim_full_disk_callback, queue_size=1)
         rospy.Subscriber('/resolve_data_management_failure_success', Bool, self.resolution_callback, queue_size=1)
-        rospy.Subscriber('/contingency_preemption', String, self.contingency_callback, queue_size=1)
 
         self.contingency_pub = rospy.Publisher('/contingency_preemption', String, queue_size=1)
         self.aggravate_pub = rospy.Publisher('/aggravate', String, queue_size=1)
         self.robot_info_pub = rospy.Publisher('/robot_info', String, queue_size=1)
         self.logging_pub = rospy.Publisher('/scan_successfully_logged', String, queue_size=1)
         self.interrupt_reason_pub = rospy.Publisher('/interrupt_reason', String, queue_size=1)
-
-    def contingency_callback(self, msg):
-        # no longer a need for data monitoring -- problem already detected
-        if msg.data in [config.SENSOR_FAILURE_ONE, config.SENSOR_FAILURE_TWO, config.SENSOR_FAILURE_THREE, config.SENSOR_FAILURE_FOUR, config.SENSOR_CATA]:
-            self.scan_contingency = True
 
     def resolution_callback(self, msg):
         if not msg.data:
@@ -36,28 +31,22 @@ class DataMonitoring:
         rospy.loginfo("sim full disk failure..")
         self.sim_full_disk = True
 
-    def specific_scan_check(self):
-        log_file = Path(config.SCAN_PATH + self.mission_name + config.SCAN_FILE_EXTENSION)
-        scan_cnt_before = 0
-        if log_file.is_file():
-            rospy.loginfo("reading file before scan logging..")
-            scan_cnt_before = self.count_scan_entries()
-
-        rospy.sleep(config.SCAN_TIME_LIMIT)
-
-        if self.scan_contingency:
-            self.scan_contingency = False
-            return
-
+    def after_scan_monitoring(self, msg):
         rospy.loginfo("reading file after scan logging..")
         scan_cnt_after = self.count_scan_entries()
-
-        if scan_cnt_after != scan_cnt_before + 1:
-            rospy.loginfo("data management error.. before: %s, after: %s", scan_cnt_before, scan_cnt_after)
+        if scan_cnt_after != self.scan_cnt_before + 1:
+            rospy.loginfo("data management error.. before: %s, after: %s", self.scan_cnt_before, scan_cnt_after)
             self.contingency_pub.publish(config.DATA_MANAGEMENT_FAILURE_TWO)
         else:
             rospy.loginfo("data management OK - scan successfully logged..")
             self.logging_pub.publish("")
+
+    def specific_scan_check(self):
+        log_file = Path(config.SCAN_PATH + self.mission_name + config.SCAN_FILE_EXTENSION)
+        self.scan_cnt_before = 0
+        if log_file.is_file():
+            rospy.loginfo("reading file before scan logging..")
+            self.scan_cnt_before = self.count_scan_entries()
     
     def count_scan_entries(self):
         scan_cnt = 0
