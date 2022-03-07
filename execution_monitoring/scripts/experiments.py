@@ -60,7 +60,7 @@ CONT_TOPIC_MSG_MAPPING = {
 }
 
 # random fail every 15 minutes
-RANDOM_FAIL_FREQUENCY = 300 #900
+RANDOM_FAIL_FREQUENCY = 250 #900
 SEED = 42
 
 class Experiment:
@@ -151,7 +151,7 @@ class Experiment:
         random_topic = CONT_TOPIC_MSG_MAPPING.keys()[rand]
 
         # doesn't make any sense to simulate IDLE time during active mission
-        if random_topic == "sim_extended_idle_time"  and self.operation_mode != "waiting":
+        if random_topic in ["/sim_extended_idle_time", "/toggle_unavailable_plan_service", "/sim_empty_plan", "/sim_infeasible_plan"]  and self.operation_mode != "waiting":
             self.simulate_random_failure()
 
         rospy.loginfo("###################################################################")
@@ -194,6 +194,7 @@ class Experiment:
         rospy.loginfo("contingency cnt: %s", self.expected_contingency_cnt)
         rospy.loginfo("false positives: %s", self.false_positive_contingency)
         rospy.loginfo("false negatives: %s", self.false_negative_contingency)
+        rospy.loginfo("postively handled issue without CONT: %s", self.issue_expected_without_contingy_and_fulfilled)
         rospy.loginfo("unexpected contingency: %s", self.unexpected_contingency_cnt)
         rospy.loginfo("catastrophe cnt: %s", self.catastrophe_cnt)
         rospy.loginfo("operation mode: %s", self.operation_mode)
