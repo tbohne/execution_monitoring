@@ -54,8 +54,10 @@ class Idle(smach.State):
     def execute(self, userdata):
         rospy.loginfo("executing IDLE state..")
         self.action_info_pub.publish("executing IDLE state..")
-
         self.publish_state_of_ongoing_operation("waiting")
+
+        rospy.loginfo("sleeping for some time to allow IDLE-time-related fail sim..")
+        rospy.sleep(90)
 
         if self.preempt_requested():
             rospy.loginfo("external problem detected by monitoring procedures - preempting normal operation..")
