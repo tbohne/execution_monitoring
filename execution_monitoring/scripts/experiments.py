@@ -30,7 +30,7 @@ CONT_TOPIC_MSG_MAPPING = {
     "/toggle_simulated_timeout_failure": config.CONNECTION_FAILURE_EIGHT,
     "/set_simulated_unknown_status": config.CONNECTION_FAILURE_ELEVEN,
     "/set_simulated_no_fix": config.CONNECTION_FAILURE_TWELVE,
-    "/set_simulated_no_rtk": config.CONNECTION_FAILURE_THIRTEEN,
+    "/set_simulated_no_rtk": [],
     "/toggle_simulated_infeasible_lat_lng": [config.CONNECTION_FAILURE_FIFTEEN, config.CONNECTION_FAILURE_SIXTEEN],
     "/toggle_simulated_variance_history_failure": config.CONNECTION_FAILURE_TWENTY,
     "/toggle_simulated_high_deviation": config.CONNECTION_FAILURE_EIGHTEEN,
@@ -141,8 +141,8 @@ class Experiment:
 
     def simulate_random_failure(self):
         global CONT_TOPIC_MSG_MAPPING
-        # shouldn't simulate any new failures during docking
-        if self.operation_mode == "docking":
+        # shouldn't simulate any new failures during docking or when last sim has not even started
+        if self.operation_mode == "docking" or not self.sim_launched:
             return
 
         self.sim_fail_time = datetime.now()
