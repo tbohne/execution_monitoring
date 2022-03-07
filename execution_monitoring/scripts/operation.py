@@ -286,7 +286,7 @@ class ExecutePlan(smach.State):
             self.waiting = True
             while self.waiting:
                 rospy.sleep(5)
-            self.undock_from_charging_station(self.pose_in_front_of_container)
+            return self.undock_from_charging_station(self.pose_in_front_of_container)
 
         elif action.name == "charge":
             rospy.loginfo("performing action %s", action.name)
