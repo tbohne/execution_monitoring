@@ -94,6 +94,7 @@ class Experiment:
         self.run_experiment()
 
     def sim_info_callback(self, msg):
+        rospy.loginfo("SIM LAUNCHED --------------------------")
         self.sim_launched = True
         # reset timer -- sim only launched now -- next shouldn't follow immediately, e.g. docking
         self.sim_fail_time = datetime.now()
@@ -129,6 +130,7 @@ class Experiment:
                 self.expected_contingency_cnt += 1
             # expected a contingency, but not the present one
             else:
+                # keep the expected one - could still come
                 self.unexpected_contingency_cnt += 1
         elif self.expected_contingency is None:
             # false positive -- contingency although no failure sim
@@ -143,37 +145,39 @@ class Experiment:
         global CONT_TOPIC_MSG_MAPPING
         # shouldn't simulate any new failures during docking or when last sim has not even started
         if self.operation_mode == "docking" or not self.sim_launched:
+            rospy.loginfo("NOT SIMULATING DUE TO DOCKING / NOT SIM LAUNCHED ------------------")
             return
 
-        self.sim_fail_time = datetime.now()
-        self.sim_launched = False
         rand = random.randint(0, len(CONT_TOPIC_MSG_MAPPING.keys()) - 1)
         random_topic = CONT_TOPIC_MSG_MAPPING.keys()[rand]
 
         # doesn't make any sense to simulate IDLE time during active mission
-        if random_topic in ["/sim_extended_idle_time", "/toggle_unavailable_plan_service", "/sim_empty_plan", "/sim_infeasible_plan"]  and self.operation_mode != "waiting":
+        if random_topic in ["/sim_extended_idle_time", "/toggle_unavailable_plan_service", "/sim_empty_plan", "/sim_infeasible_plan"] and self.operation_mode != "waiting":
+            rospy.loginfo("topic: %s currently not feasible -- selecting another one..", random_topic)
             self.simulate_random_failure()
+        else:
+            self.sim_fail_time = datetime.now()
+            self.sim_launched = False
+            rospy.loginfo("###################################################################")
+            rospy.loginfo("###################################################################")
+            rospy.loginfo("init random failure: %s", random_topic)
 
-        rospy.loginfo("###################################################################")
-        rospy.loginfo("###################################################################")
-        rospy.loginfo("init random failure: %s", random_topic)
+            if self.expected_contingency == []:
+                self.issue_expected_without_contingy_and_fulfilled += 1
+                self.expected_contingency = None
 
-        if self.expected_contingency == []:
-            self.issue_expected_without_contingy_and_fulfilled += 1
-            self.expected_contingency = None
+            # previously expected contingency was not detected -> false negative
+            if self.expected_contingency is not None:
+                self.false_negative_contingency += 1
 
-        # previously expected contingency was not detected -> false negative
-        if self.expected_contingency is not None:
-            self.false_negative_contingency += 1
-
-        self.expected_contingency = CONT_TOPIC_MSG_MAPPING[random_topic]
-        rospy.loginfo("expected contingency: %s", self.expected_contingency)
-        rospy.loginfo("###################################################################")
-        rospy.loginfo("###################################################################")
-        pub = rospy.Publisher(random_topic, String, queue_size=1)
-        # needs a moment to init the publisher
-        rospy.sleep(3)
-        pub.publish("sim fail")
+            self.expected_contingency = CONT_TOPIC_MSG_MAPPING[random_topic]
+            rospy.loginfo("expected contingency: %s", self.expected_contingency)
+            rospy.loginfo("###################################################################")
+            rospy.loginfo("###################################################################")
+            pub = rospy.Publisher(random_topic, String, queue_size=1)
+            # needs a moment to init the publisher
+            rospy.sleep(3)
+            pub.publish("sim fail")
 
     def run_experiment(self):
         while not rospy.is_shutdown():
