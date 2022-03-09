@@ -7,7 +7,9 @@ from execution_monitoring import config
 from arox_performance_parameters.msg import arox_operational_param
 from arox_performance_parameters.msg import arox_battery_params
 
+# would break the mission -- it's a cata in 100% of the cases
 CATA_TOPIC_MSG_MAPPING = {
+    # prerequisite: prepare full USB flash drive + mount it under config.FULL_DRIVE, e.g. "/mnt/usb"
     "/sim_full_disk_failure": config.DATA_MANAGEMENT_FAILURE_ONE,
     "/spawn_robot_prison": [config.NAV_FAILURE_ONE, config.NAV_FAILURE_THREE],
     "/sim_docking_failure_raised_ramp": config.CHARGING_FAILURE_ONE,
@@ -95,6 +97,7 @@ class Experiment:
         self.run_experiment()
 
     def sim_info_callback(self, msg):
+        # by this, we know when there is a msg on a fail sim topic and thus when a contingency is expected
         rospy.loginfo("SIM LAUNCHED --------------------------")
         self.sim_launched = True
         # reset timer -- sim only launched now -- next shouldn't follow immediately, e.g. docking
