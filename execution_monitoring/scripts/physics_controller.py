@@ -104,8 +104,8 @@ class PhysicsController:
 
         x = y = 0.0
         z = -9.81
-        self.change_gravity(x, y, z)
         rospy.loginfo("changing gravity back to normal..")
+        self.change_gravity(x, y, z)
 
     def yaw_divergence(self):
         rospy.loginfo("PHYS CON: yaw divergence sim..")
@@ -184,7 +184,7 @@ class PhysicsController:
         twist.linear.x = 1
         for _ in range(150):
             self.cmd_vel_pub.publish(twist)
-            rospy.sleep(0.01)
+            rospy.sleep(0.005)
 
         # back to normal
         z = -9.81
