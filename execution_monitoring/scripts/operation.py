@@ -116,6 +116,9 @@ class ExecutePlan(smach.State):
 
         self.drive_to_goal_client = actionlib.SimpleActionClient('drive_to_goal', drive_to_goalAction)
         self.scan_client = actionlib.SimpleActionClient('dummy_scanner', ScanAction)
+        self.docking_client = actionlib.SimpleActionClient('dock_to_charging_station', DockAction)
+        self.undocking_client = actionlib.SimpleActionClient('undock_from_charging_station', UndockAction)
+
         self.operation_pub = rospy.Publisher('arox/ongoing_operation', arox_operational_param, queue_size=1)
         self.nav_fail_pub = rospy.Publisher('/explicit_nav_failure', String, queue_size=1)
         self.charge_fail_pub = rospy.Publisher('/explicit_charging_failure', String, queue_size=1)
@@ -188,6 +191,8 @@ class ExecutePlan(smach.State):
     def interrupt_active_goals(self, msg):
         self.drive_to_goal_client.cancel_all_goals()
         self.scan_client.cancel_all_goals()
+        self.docking_client.cancel_all_goals()
+        self.undocking_client.cancel_all_goals()
 
     def publish_state_of_ongoing_operation(self, mode):
         msg = arox_operational_param()
@@ -326,14 +331,13 @@ class ExecutePlan(smach.State):
         return False
 
     def dock_to_charging_station(self):
-        docking_client = actionlib.SimpleActionClient('dock_to_charging_station', DockAction)
         self.publish_state_of_ongoing_operation("docking")
         goal = DockGoal()
         goal.goal = "custom goal"
-        docking_client.wait_for_server()
+        self.docking_client.wait_for_server()
         rospy.loginfo("START DOCKING PROCEDURE..")
         self.robot_info_pub.publish("start docking procedure")
-        docking_client.send_goal(goal)
+        self.docking_client.send_goal(goal)
         rospy.loginfo("goal sent, wait for accomplishment..")
 
         # possibility to consider simulated localization failures here
@@ -341,13 +345,13 @@ class ExecutePlan(smach.State):
         self.deactivate_localization_pub.publish("")
 
         # success just means that the smach execution has been successful, not the docking itself
-        success = docking_client.wait_for_result()
+        success = self.docking_client.wait_for_result()
 
         if success:
             rospy.loginfo("SMACH execution terminated successfully")
-            rospy.loginfo("DOCKING PROCEDURE FINISHED: %s", docking_client.get_result().result_state)
+            rospy.loginfo("DOCKING PROCEDURE FINISHED: %s", self.docking_client.get_result().result_state)
 
-            if docking_client.get_result().result_state == "success":
+            if self.docking_client.get_result().result_state == "success":
                 rospy.loginfo("successfully docked to charging station..")
                 self.robot_info_pub.publish("successfully docked to charging station..")
                 return True
@@ -357,28 +361,27 @@ class ExecutePlan(smach.State):
                 # sleep to let monitoring detect the problem
                 rospy.sleep(5)
         else:
-            rospy.loginfo("SMACH execution failed: %s", docking_client.get_goal_status_text())
+            rospy.loginfo("SMACH execution failed: %s", self.docking_client.get_goal_status_text())
             self.charge_fail_pub.publish(config.CHARGING_FAILURE_ONE)
             # sleep to let monitoring detect the problem
             rospy.sleep(5)
         return False
 
     def undock_from_charging_station(self, pose_in_front_of_container):
-        undocking_client = actionlib.SimpleActionClient('undock_from_charging_station', UndockAction)
         self.publish_state_of_ongoing_operation("undocking")
         goal = UndockGoal()
         goal.ramp_alignment_pose = pose_in_front_of_container
-        undocking_client.wait_for_server()
+        self.undocking_client.wait_for_server()
         rospy.loginfo("START UNDOCKING PROCEDURE..")
         self.robot_info_pub.publish("start undocking procedure")
-        undocking_client.send_goal(goal)
+        self.undocking_client.send_goal(goal)
         rospy.loginfo("goal sent, wait for accomplishment")
-        success = undocking_client.wait_for_result()
+        success = self.undocking_client.wait_for_result()
         if success:
             rospy.loginfo("SMACH execution terminated successfully")
-            rospy.loginfo("UNDOCKING PROCEDURE FINISHED: %s", undocking_client.get_result().result_state)
+            rospy.loginfo("UNDOCKING PROCEDURE FINISHED: %s", self.undocking_client.get_result().result_state)
 
-            if undocking_client.get_result().result_state == "success":
+            if self.undocking_client.get_result().result_state == "success":
                 rospy.loginfo("successfully undocked from charging station..")
                 self.robot_info_pub.publish("successfully undocked from charging station..")
                 # after docking-undocking done - reactivate localization monitoring
@@ -391,7 +394,7 @@ class ExecutePlan(smach.State):
                 self.charge_fail_pub.publish(config.CHARGING_FAILURE_TWO)
                 rospy.sleep(5)
         else:
-            rospy.loginfo("SMACH execution failed: %s", undocking_client.get_goal_status_text())
+            rospy.loginfo("SMACH execution failed: %s", self.undocking_client.get_goal_status_text())
             self.charge_fail_pub.publish(config.CHARGING_FAILURE_TWO)
             rospy.sleep(5)
         return False
