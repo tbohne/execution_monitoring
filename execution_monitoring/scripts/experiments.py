@@ -124,6 +124,10 @@ class Experiment:
             if msg.data in self.expected_contingency:
                 self.expected_contingency = None
                 self.expected_contingency_cnt += 1
+            # expected a contingency, but not the present one
+            else:
+                # keep the expected one - could still come
+                self.unexpected_contingency_cnt += 1
         elif self.expected_contingency is not None:
             if msg.data == self.expected_contingency:
                 self.expected_contingency = None
