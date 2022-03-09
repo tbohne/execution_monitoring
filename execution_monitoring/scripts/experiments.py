@@ -59,9 +59,10 @@ CONT_TOPIC_MSG_MAPPING = {
     "/sim_power_management_contingency": config.POWER_MANAGEMENT_FAILURE_ONE
 }
 
-# random fail every 15 minutes
-RANDOM_FAIL_FREQUENCY = 250 #900
+RANDOM_FAIL_FREQUENCY = 250 # random fail every 250s
 SEED = 42
+EXPERIMENT_DURATION = 14400 # 4 hours
+IDX = 0
 
 class Experiment:
 
@@ -184,7 +185,10 @@ class Experiment:
             pub.publish("sim fail")
 
     def run_experiment(self):
-        while not rospy.is_shutdown():
+
+        start_time = datetime.now()
+
+        while not rospy.is_shutdown() and (datetime.now() - start_time).total_seconds() < EXPERIMENT_DURATION:
 
             # assumption -- there is enough time to complete all the simulated failures, e.g. docking fail
             #       - docking does not occur every 2 minutes, it can take a while to get in this situation
@@ -194,8 +198,21 @@ class Experiment:
                 self.simulate_random_failure()
 
             rospy.loginfo("time since last fail sim: %s", (datetime.now() - self.sim_fail_time).total_seconds())
-            #self.log_info()
             rospy.sleep(120)
+
+        self.save_results((datetime.now() - start_time).total_seconds() / 60 / 60)
+
+    def save_results(self, duration):
+        name = str(RANDOM_FAIL_FREQUENCY) + "_" + str(SEED) + "_" + str(IDX)
+        completed = duration >= 4 and self.catastrophe_cnt == 0
+        try:
+            with open(config.EXP_PATH + "results.csv", 'a') as out_file:
+                out_file.write("experiment,duration,correct_contingencies,false_positives,false_negatives,correct_no_contingency,unexpected_contingencies,completed,completed_tasks,charge_cycles\n")
+                out_file.write(name + "," + str(duration) + "," + str(self.expected_contingency_cnt) + "," + str(self.false_positive_contingency) + "," + str(self.false_negative_contingency)
+                + "," + str(self.issue_expected_without_contingy_and_fulfilled) + "," + str(self.unexpected_contingency_cnt) + "," + str(completed) + "," + str(self.total_completed_goals
+                + self.completed_goals_current_mission) + "," + str(self.battery_charging_cycle) + "\n")
+        except Exception as e:
+            rospy.loginfo("EXCEPTION during storage of experiment results: %s", e)
 
     def log_info(self):
         rospy.loginfo("###########################################################")
