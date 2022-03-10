@@ -12,7 +12,7 @@ MBF_PAT_EXCEEDED = 103
 
 DOCKING = True
 
-MISSION_IDLE_LIMIT = 600
+MISSION_IDLE_LIMIT = 900
 
 EXP_PATH = "/home/docker/catkin_ws/src/execution_monitoring/execution_monitoring/experiments/"
 
