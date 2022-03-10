@@ -64,7 +64,8 @@ CONT_TOPIC_MSG_MAPPING = {
 RANDOM_FAIL_FREQUENCY = 250 # random fail every 250s
 SEED = 42
 EXPERIMENT_DURATION = 14400 # 4 hours
-IDX = 1
+IDX = 0
+SIM_FAILURES = False
 
 class Experiment:
 
@@ -199,10 +200,12 @@ class Experiment:
             #       - docking does not occur every 2 minutes, it can take a while to get in this situation
             #       - thus, docking shouldn't be entirely random, but only when the last docking is 
             # elegant way to avoid these issues: wait until sim is actually launched, not until sim launch is "prepared"
-            if (datetime.now() - self.sim_fail_time).total_seconds() >= RANDOM_FAIL_FREQUENCY and self.sim_launched: # and self.expected_contingency is None:
+            if SIM_FAILURES and (datetime.now() - self.sim_fail_time).total_seconds() >= RANDOM_FAIL_FREQUENCY and self.sim_launched: # and self.expected_contingency is None:
                 self.simulate_random_failure()
 
-            rospy.loginfo("time since last fail sim: %s", (datetime.now() - self.sim_fail_time).total_seconds())
+            if SIM_FAILURES:
+                rospy.loginfo("time since last fail sim: %s", (datetime.now() - self.sim_fail_time).total_seconds())
+
             rospy.sleep(120)
 
         self.save_results((datetime.now() - start_time).total_seconds() / 60 / 60)
