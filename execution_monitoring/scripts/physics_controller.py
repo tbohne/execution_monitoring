@@ -11,6 +11,7 @@ from arox_navigation_flex.msg import drive_to_goalAction
 from execution_monitoring import config, util
 from sensor_msgs.msg import Imu
 from tf.transformations import euler_from_quaternion
+from arox_performance_parameters.msg import arox_operational_param
 import numpy as np
 import math
 from sensor_msgs.msg import NavSatFix
@@ -26,6 +27,7 @@ class PhysicsController:
         self.sim_yaw_divergence = False
         self.pose_list = None
         self.imu_data = None
+        self.operation_mode = None
 
         self.unpause = rospy.ServiceProxy('/gazebo/unpause_physics', Empty)
         self.pause = rospy.ServiceProxy('/gazebo/pause_physics', Empty)
@@ -36,6 +38,7 @@ class PhysicsController:
         rospy.Subscriber('/move_base_flex/exe_path/status', GoalStatusArray, self.mbf_status_callback, queue_size=1)
         rospy.Subscriber('/fix', NavSatFix, self.gnss_callback, queue_size=1)
         rospy.Subscriber('/imu_data', Imu, self.imu_callback, queue_size=1)
+        rospy.Subscriber("/arox/ongoing_operation", arox_operational_param, self.operation_callback)
         # SIM TOPICS
         rospy.Subscriber('/wheel_movement_without_pos_change', String, self.wheel_movement_without_pos_change_callback, queue_size=1)
         rospy.Subscriber('/pos_change_without_wheel_movement', String, self.pos_change_without_wheel_movement_callback, queue_size=1)
@@ -50,6 +53,9 @@ class PhysicsController:
 
         self.set_physics = rospy.ServiceProxy(service_name, SetPhysicsProperties)
         self.init_values()
+
+    def operation_callback(self, msg):
+        self.operation_mode = msg.operation_mode
 
     def gnss_callback(self, nav_sat_fix):
         _, _, yaw = euler_from_quaternion([self.imu_data.orientation.x, self.imu_data.orientation.y, self.imu_data.orientation.z, self.imu_data.orientation.w])
@@ -69,7 +75,8 @@ class PhysicsController:
                 if self.mbf_status != curr and self.sim_wheel_movement_without_pos_change:
                     self.wheel_movement_without_pos_change()
 
-            elif curr != GoalStatus.ACTIVE:
+            # only during scanning -- prevents issues with docking etc.
+            elif curr != GoalStatus.ACTIVE and self.operation_mode == "scanning":
                 if self.sim_moving_although_standing_still_imu:
                     self.moving_although_standing_still_imu()
                 if self.sim_moving_although_standing_still_odom:
@@ -80,7 +87,7 @@ class PhysicsController:
             self.mbf_status = curr
 
     def moving_although_standing_still_odom(self):
-        rospy.sleep(config.STATUS_SWITCH_DELAY + 1)
+        rospy.sleep(config.STATUS_SWITCH_DELAY)
         rospy.loginfo("physics controller: sim unplanned movement via cmd_vel")
         self.sim_info_pub.publish("physics controller: sim unplanned odometry movement via cmd_vel")
         self.sim_moving_although_standing_still_odom = False
@@ -89,7 +96,7 @@ class PhysicsController:
         self.cmd_vel_pub.publish(twist)
 
     def moving_although_standing_still_imu(self):
-        rospy.sleep(config.STATUS_SWITCH_DELAY + 1)
+        rospy.sleep(config.STATUS_SWITCH_DELAY)
         rospy.loginfo("physics controller: sim unplanned IMU movement via gravity manipulation")
         self.sim_info_pub.publish("physics controller: sim unplanned IMU movement via gravity manipulation")
         self.sim_moving_although_standing_still_imu = False
