@@ -64,7 +64,7 @@ CONT_TOPIC_MSG_MAPPING = {
 RANDOM_FAIL_FREQUENCY = 250 # random fail every 250s
 SEED = 42
 EXPERIMENT_DURATION = 14400 # 4 hours
-IDX = 0
+IDX = 1
 
 class Experiment:
 
@@ -210,7 +210,8 @@ class Experiment:
         completed = duration >= 4 and self.catastrophe_cnt == 0
         try:
             with open(config.EXP_PATH + "results.csv", 'a') as out_file:
-                out_file.write("experiment,duration,correct_contingencies,false_positives,false_negatives,correct_no_contingency,unexpected_contingencies,completed,completed_tasks,charge_cycles\n")
+                if IDX == 0:
+                    out_file.write("experiment,duration,correct_contingencies,false_positives,false_negatives,correct_no_contingency,unexpected_contingencies,completed,completed_tasks,charge_cycles\n")
                 out_file.write(name + "," + str(duration) + "," + str(self.expected_contingency_cnt) + "," + str(self.false_positive_contingency) + "," + str(self.false_negative_contingency)
                 + "," + str(self.issue_expected_without_contingy_and_fulfilled) + "," + str(self.unexpected_contingency_cnt) + "," + str(completed) + "," + str(self.total_completed_goals
                 + self.completed_goals_current_mission) + "," + str(self.battery_charging_cycle) + "\n")
