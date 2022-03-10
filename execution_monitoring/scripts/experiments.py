@@ -84,6 +84,7 @@ class Experiment:
         self.operation_time = 0
         self.battery_charge = 0
         self.battery_charging_cycle = 0
+        self.mission_cycle = 0
         self.sim_fail_time = datetime.now()
         self.expected_contingency = None
         self.sim_launched = True
@@ -110,6 +111,7 @@ class Experiment:
 
         # when one mission is complete, increase the total counter
         if msg.rewards_gained == msg.total_tasks:
+            self.mission_cycle += 1
             self.total_completed_goals += msg.rewards_gained
 
     def battery_callback(self, msg):
@@ -211,10 +213,10 @@ class Experiment:
         try:
             with open(config.EXP_PATH + "results.csv", 'a') as out_file:
                 if IDX == 0:
-                    out_file.write("experiment,duration,correct_contingencies,false_positives,false_negatives,correct_no_contingency,unexpected_contingencies,completed,completed_tasks,charge_cycles\n")
+                    out_file.write("experiment,duration,correct_contingencies,false_positives,false_negatives,correct_no_contingency,unexpected_contingencies,completed,completed_tasks,charge_cycles,mission_cycles\n")
                 out_file.write(name + "," + str(duration) + "," + str(self.expected_contingency_cnt) + "," + str(self.false_positive_contingency) + "," + str(self.false_negative_contingency)
                 + "," + str(self.issue_expected_without_contingy_and_fulfilled) + "," + str(self.unexpected_contingency_cnt) + "," + str(completed) + "," + str(self.total_completed_goals
-                + self.completed_goals_current_mission) + "," + str(self.battery_charging_cycle) + "\n")
+                + self.completed_goals_current_mission) + "," + str(self.battery_charging_cycle) + "," + str(self.mission_cycle) + "\n")
         except Exception as e:
             rospy.loginfo("EXCEPTION during storage of experiment results: %s", e)
 
@@ -231,6 +233,7 @@ class Experiment:
         rospy.loginfo("total completed goals: %s", self.total_completed_goals + self.completed_goals_current_mission)
         rospy.loginfo("goals curr mission: %s / %s", self.completed_goals_current_mission, self.total_goals_current_mission)
         rospy.loginfo("battery charge: %s, cycle: %s", self.battery_charge, self.battery_charging_cycle)
+        rospy.loginfo("mission cycle: %s", self.mission_cycle)
         rospy.loginfo("###########################################################")
 
 def node():
