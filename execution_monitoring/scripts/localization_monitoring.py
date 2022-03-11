@@ -66,6 +66,7 @@ class LocalizationMonitoring:
         rospy.loginfo("ACTIVATING LOCALIZATION MONITORING..")
         self.robot_info_pub.publish("activating localization monitoring")
         self.active_monitoring = True
+        self.localization_monitoring()
 
     def re_init(self, msg):
         if msg.data:
