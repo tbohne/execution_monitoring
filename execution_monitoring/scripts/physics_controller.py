@@ -188,10 +188,10 @@ class PhysicsController:
         rospy.loginfo("changing gravity in z direction to: %s", z)
         twist = Twist()
         # amplify wheel rotations in the air
-        twist.linear.x = 1
-        for _ in range(150):
+        twist.linear.x = -1
+        for _ in range(250):
             self.cmd_vel_pub.publish(twist)
-            rospy.sleep(0.005)
+            rospy.sleep(0.02)
 
         # back to normal
         z = -9.81
