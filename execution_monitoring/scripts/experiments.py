@@ -65,7 +65,7 @@ RANDOM_FAIL_FREQUENCY = 250 # random fail every 250s
 SEED = 42
 EXPERIMENT_DURATION = 14400 # 4 hours
 IDX = 0
-SIM_FAILURES = False
+SIM_FAILURES = True
 
 class Experiment:
 
@@ -78,8 +78,7 @@ class Experiment:
         self.false_negative_contingency = 0
         self.unexpected_contingency_cnt = 0
         self.catastrophe_cnt = 0
-        self.total_completed_goals = 0
-        self.completed_goals_current_mission = 0
+        self.completed_goals = 0
         self.total_goals_current_mission = 0
         self.operation_mode = None
         self.operation_time = 0
@@ -89,6 +88,7 @@ class Experiment:
         self.sim_fail_time = datetime.now()
         self.expected_contingency = None
         self.sim_launched = True
+        self.open_goals_prev = None
 
         rospy.Subscriber("/contingency_preemption", String, self.contingency_callback)
         rospy.Subscriber("/catastrophe_preemption", String, self.catastrophe_callback)
@@ -107,13 +107,13 @@ class Experiment:
 
     def operation_callback(self, msg):
         self.operation_mode = msg.operation_mode
-        self.completed_goals_current_mission = msg.rewards_gained
-        self.total_goals_current_mission = msg.total_tasks
+        self.completed_goals = msg.rewards_gained
 
-        # when one mission is complete, increase the total counter
-        if msg.rewards_gained == msg.total_tasks:
+        # new mission
+        if self.open_goals_prev and msg.total_tasks > self.open_goals_prev:
             self.mission_cycle += 1
-            self.total_completed_goals += msg.rewards_gained
+
+        self.open_goals_prev = msg.total_tasks
 
     def battery_callback(self, msg):
         self.battery_charge = msg.charge
@@ -218,8 +218,8 @@ class Experiment:
                 if IDX == 0:
                     out_file.write("experiment,duration,correct_contingencies,false_positives,false_negatives,correct_no_contingency,unexpected_contingencies,completed,completed_tasks,charge_cycles,mission_cycles\n")
                 out_file.write(name + "," + str(duration) + "," + str(self.expected_contingency_cnt) + "," + str(self.false_positive_contingency) + "," + str(self.false_negative_contingency)
-                + "," + str(self.issue_expected_without_contingy_and_fulfilled) + "," + str(self.unexpected_contingency_cnt) + "," + str(completed) + "," + str(self.total_completed_goals
-                + self.completed_goals_current_mission) + "," + str(self.battery_charging_cycle) + "," + str(self.mission_cycle) + "\n")
+                + "," + str(self.issue_expected_without_contingy_and_fulfilled) + "," + str(self.unexpected_contingency_cnt) + "," + str(completed) + "," + str(self.completed_goals)
+                + "," + str(self.battery_charging_cycle) + "," + str(self.mission_cycle) + "\n")
         except Exception as e:
             rospy.loginfo("EXCEPTION during storage of experiment results: %s", e)
 
@@ -233,8 +233,7 @@ class Experiment:
         rospy.loginfo("catastrophe cnt: %s", self.catastrophe_cnt)
         rospy.loginfo("operation mode: %s", self.operation_mode)
         rospy.loginfo("operation time: %s", self.operation_time)
-        rospy.loginfo("total completed goals: %s", self.total_completed_goals + self.completed_goals_current_mission)
-        rospy.loginfo("goals curr mission: %s / %s", self.completed_goals_current_mission, self.total_goals_current_mission)
+        rospy.loginfo("completed goals: %s", self.completed_goals)
         rospy.loginfo("battery charge: %s, cycle: %s", self.battery_charge, self.battery_charging_cycle)
         rospy.loginfo("mission cycle: %s", self.mission_cycle)
         rospy.loginfo("###########################################################")
