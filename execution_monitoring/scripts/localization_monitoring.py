@@ -250,6 +250,9 @@ class LocalizationMonitoring:
     def monitor_odom(self, filtered):
         name = "odometry" if not filtered else "filtered odometry"
         odom_data = self.odom_data if not filtered else self.odom_filtered_data
+
+        if self.status_switch_time is None or (datetime.now() - self.status_switch_time).total_seconds() < config.STATUS_SWITCH_DELAY:
+            return
         
         if self.odom_data is not None:
             # MONITOR LINEAR + ANGULAR TWIST
