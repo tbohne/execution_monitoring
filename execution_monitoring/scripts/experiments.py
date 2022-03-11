@@ -63,7 +63,7 @@ CONT_TOPIC_MSG_MAPPING = {
 
 RANDOM_FAIL_FREQUENCY = 250 # random fail every 250s
 SEED = 42
-EXPERIMENT_DURATION = 14400 # 4 hours
+EXPERIMENT_DURATION = 18000 # 14400 # 4 hours
 IDX = 0
 SIM_FAILURES = True
 
@@ -89,6 +89,9 @@ class Experiment:
         self.expected_contingency = None
         self.sim_launched = True
         self.open_goals_prev = None
+        self.mode_times = {'traversing': 0, 'scanning': 0, 'waiting': 0, 'catastrophe': 0, 'contingency': 0, 'charging': 0, 'docking': 0, 'undocking': 0}
+        self.prev_mode = None
+        self.prev_start = None
 
         rospy.Subscriber("/contingency_preemption", String, self.contingency_callback)
         rospy.Subscriber("/catastrophe_preemption", String, self.catastrophe_callback)
@@ -107,6 +110,14 @@ class Experiment:
 
     def operation_callback(self, msg):
         self.operation_mode = msg.operation_mode
+
+        if self.operation_mode != self.prev_mode:
+            if self.prev_mode:
+                self.mode_times[self.prev_mode] += (datetime.now() - self.prev_start).total_seconds()
+            if not self.operation_mode in self.mode_times.keys():
+                self.mode_times[self.operation_mode] = 0
+            self.prev_mode = self.operation_mode
+            self.prev_start = datetime.now()
         self.completed_goals = msg.rewards_gained
 
         # new mission
@@ -216,10 +227,12 @@ class Experiment:
         try:
             with open(config.EXP_PATH + "results.csv", 'a') as out_file:
                 if IDX == 0:
-                    out_file.write("experiment,duration,correct_contingencies,false_positives,false_negatives,correct_no_contingency,unexpected_contingencies,completed,completed_tasks,charge_cycles,mission_cycles\n")
+                    out_file.write("experiment,duration,correct_contingencies,false_positives,false_negatives,correct_no_contingency,unexpected_contingencies,completed,completed_tasks,charge_cycles,mission_cycles,traverse_time,scan_time,wait_time,cata_time,cont_time,charge_time,dock_time,undock_time\n")
                 out_file.write(name + "," + str(duration) + "," + str(self.expected_contingency_cnt) + "," + str(self.false_positive_contingency) + "," + str(self.false_negative_contingency)
                 + "," + str(self.issue_expected_without_contingy_and_fulfilled) + "," + str(self.unexpected_contingency_cnt) + "," + str(completed) + "," + str(self.completed_goals)
-                + "," + str(self.battery_charging_cycle) + "," + str(self.mission_cycle) + "\n")
+                + "," + str(self.battery_charging_cycle) + "," + str(self.mission_cycle) + "," + str(self.mode_times['traversing']) + "," + str(self.mode_times['scanning']) + ","
+                + str(self.mode_times['waiting']) + "," + str(self.mode_times['catastrophe']) + "," + str(self.mode_times['contingency']) + "," + str(self.mode_times['charging']) + ","
+                + str(self.mode_times['docking']) + "," + str(self.mode_times['undocking']) + "\n")
         except Exception as e:
             rospy.loginfo("EXCEPTION during storage of experiment results: %s", e)
 
@@ -236,6 +249,8 @@ class Experiment:
         rospy.loginfo("completed goals: %s", self.completed_goals)
         rospy.loginfo("battery charge: %s, cycle: %s", self.battery_charge, self.battery_charging_cycle)
         rospy.loginfo("mission cycle: %s", self.mission_cycle)
+        for i in self.mode_times.keys():
+            rospy.loginfo("time in '%s' mode: %ss", i, self.mode_times[i])
         rospy.loginfo("###########################################################")
 
 def node():
