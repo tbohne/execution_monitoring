@@ -120,18 +120,18 @@ class LocalizationMonitoring:
             odom_dist = math.sqrt((self.initial_odom.x - odom_x) ** 2 + (self.initial_odom.y - odom_y) ** 2)
             gps_dist = math.sqrt((self.initial_GPS.x - gps_x) ** 2 + (self.initial_GPS.y - gps_y) ** 2)
 
-            if abs(odom_dist - gps_dist) > 1.0:
+            if abs(odom_dist - gps_dist) > 2.0:
                 rospy.loginfo("CONTINGENCY: GNSS (initial-current) and odometry (initial-current) distances are diverging quite heavily -> indicator for localization issue")
                 self.contingency_pub.publish(config.LOCALIZATION_FAILURE_ONE)
                 self.active_monitoring = False
-            elif abs(odom_dist - gps_dist) > 0.5:
+            elif abs(odom_dist - gps_dist) > 1.5:
                 rospy.loginfo("CONTINGENCY: GNSS (initial-current) and odometry (initial-current) distances are diverging quite a bit -> indicator for localization issue")
                 self.contingency_pub.publish(config.LOCALIZATION_FAILURE_TWO)
                 self.active_monitoring = False
-            elif abs(odom_dist - gps_dist) > 0.4:
+            elif abs(odom_dist - gps_dist) > 1:
                 rospy.loginfo("INFO: GNSS (initial-current) and odometry (initial-current) distances are slightly diverging -> indicator for minor localization issue")
                 self.robot_info_pub.publish(config.LOCALIZATION_FAILURE_THREE)
-            if abs(odom_dist - gps_dist) > 0.4:
+            if abs(odom_dist - gps_dist) > 1:
                 rospy.loginfo("2D dist between initial filtered odom and current: %s", odom_dist)
                 rospy.loginfo("2D dist between initial GPS and current: %s", gps_dist)
 
@@ -225,7 +225,7 @@ class LocalizationMonitoring:
                     if i < len(self.lin_acc_active_history) and i < len(self.lin_acc_passive_history):
                         avg_ratio += self.lin_acc_active_history[i] / self.lin_acc_passive_history[i]
                         if self.lin_acc_passive_history[i] > config.NOT_MOVING_LIN_ACC_UB:
-                            rospy.loginfo("mbf status: %s", )
+                            rospy.loginfo("mbf status: %s", self.mbf_status)
                             rospy.loginfo("CONTINGENCY..... linear acceleration too high for passive state: %s",self.lin_acc_passive_history[i])
                             self.contingency_pub.publish(config.LOCALIZATION_FAILURE_EIGHT)
                             self.active_monitoring = False
