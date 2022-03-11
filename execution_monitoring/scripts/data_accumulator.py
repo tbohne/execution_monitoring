@@ -3,7 +3,7 @@ import time
 from datetime import datetime
 import rospy
 from mongodb_store.message_store import MessageStoreProxy
-from arox_performance_parameters.msg import arox_operational_param
+from arox_performance_parameters.msg import arox_operational_param, arox_battery_params
 from sensor_msgs.msg import NavSatFix
 from std_msgs.msg import String
 import json
@@ -21,6 +21,7 @@ class DataAccumulator:
         self.msg_store = MessageStoreProxy()
         self.operation_start_time = datetime.now()
         self.op_info = None
+        self.charge_info = None
 
         rospy.Subscriber('/show_db_entries', String, self.show_db_entries, queue_size=1)
         rospy.Subscriber('/contingency_preemption', String, self.contingency_callback, queue_size=1)
@@ -31,6 +32,11 @@ class DataAccumulator:
         rospy.Subscriber('/action_info', String, self.action_info_callback, queue_size=1)
         rospy.Subscriber('/operator_communication', String, self.operator_communication_callback, queue_size=1)
         rospy.Subscriber('/resolution', String, self.resolution_callback, queue_size=1)
+
+        rospy.Subscriber('/arox/battery_param', arox_battery_params, self.battery_callback, queue_size=1)
+
+    def battery_callback(self, msg):
+        self.charge_info = msg
 
     def operation_callback(self, msg):
         self.op_info = msg
@@ -162,6 +168,8 @@ class DataAccumulator:
             circumstances['robot_pose'] = "---"
         circumstances['completed_tasks'] = self.op_info.rewards_gained
         circumstances['operation_time'] = str((datetime.now() - self.operation_start_time).total_seconds()) + "s"
+        circumstances['charge'] = self.charge_info.charge
+        circumstances['charge_cycle'] = self.charge_info.charging_cycle
 
         try:
             self.msg_store.insert_named("failure_circumstances", String(json.dumps(circumstances)))
