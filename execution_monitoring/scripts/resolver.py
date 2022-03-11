@@ -323,7 +323,7 @@ class SensorFailureResolver(GeneralFailureResolver):
         self.problem_resolved = False
 
         # reset outdated fail count
-        if self.fail_cnt_update and (datetime.now() - self.fail_cnt_update).total_seconds() > 500:
+        if self.fail_cnt_update and (datetime.now() - self.fail_cnt_update).total_seconds() > 300:
             self.fail_cnt = 0
 
         if msg.data in [config.SENSOR_FAILURE_ONE, config.SENSOR_FAILURE_TWO, config.SENSOR_FAILURE_THREE, config.SENSOR_FAILURE_FOUR]:

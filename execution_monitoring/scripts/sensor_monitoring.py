@@ -43,6 +43,7 @@ class SensorMonitoring:
             # create a new subscription to the topic, receive one message, then unsubscribe
             scan = rospy.wait_for_message("/RIEGL", LaserScan, timeout=config.SCAN_TIME_LIMIT)
         except rospy.ROSException as e:
+            rospy.loginfo("error: %s", e)
             rospy.loginfo("sensor failure detected: %s", config.SENSOR_FAILURE_ONE)
             self.contingency_pub.publish(config.SENSOR_FAILURE_ONE)
 
