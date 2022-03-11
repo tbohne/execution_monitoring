@@ -139,7 +139,8 @@ STATUS_SWITCH_DELAY = 4
 
 # TODO: should be checked - arbitrarily selected
 NOT_MOVING_ANG_VELO_UB = 0.05
-NOT_MOVING_LIN_ACC_UB = 1.2
+# TODO: not sure -- check later
+NOT_MOVING_LIN_ACC_UB = 3
 
 ACTIVE_PASSIVE_FACTOR_LB = 1.2
 
