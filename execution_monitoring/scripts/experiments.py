@@ -6,6 +6,10 @@ from std_msgs.msg import String
 from execution_monitoring import config
 from arox_performance_parameters.msg import arox_operational_param
 from arox_performance_parameters.msg import arox_battery_params
+from nav_msgs.msg import Odometry
+from geometry_msgs.msg import PoseStamped
+import tf
+import math
 
 # would break the mission -- it's a cata in 100% of the cases
 CATA_TOPIC_MSG_MAPPING = {
@@ -66,6 +70,7 @@ SEED = 42
 EXPERIMENT_DURATION = 18000 # 14400 # 4 hours
 IDX = 0
 SIM_FAILURES = True
+PLAN_LENGTH = 34
 
 class Experiment:
 
@@ -83,8 +88,8 @@ class Experiment:
         self.operation_mode = None
         self.operation_time = 0
         self.battery_charge = 0
-        self.battery_charging_cycle = 0
-        self.mission_cycle = 0
+        self.battery_charging_cycle = 1
+        self.mission_cycle = 1
         self.sim_fail_time = datetime.now()
         self.expected_contingency = None
         self.sim_launched = True
@@ -92,14 +97,41 @@ class Experiment:
         self.mode_times = {'traversing': 0, 'scanning': 0, 'waiting': 0, 'catastrophe': 0, 'contingency': 0, 'charging': 0, 'docking': 0, 'undocking': 0}
         self.prev_mode = None
         self.prev_start = None
+        self.prev_pose = None
+        self.arox_total_dist = 0
 
         rospy.Subscriber("/contingency_preemption", String, self.contingency_callback)
         rospy.Subscriber("/catastrophe_preemption", String, self.catastrophe_callback)
         rospy.Subscriber("/arox/ongoing_operation", arox_operational_param, self.operation_callback)
         rospy.Subscriber("/arox/battery_param", arox_battery_params, self.battery_callback)
         rospy.Subscriber('/sim_info', String, self.sim_info_callback, queue_size=1)
+        rospy.Subscriber('/odometry/filtered_odom', Odometry, self.filtered_odom_callback, queue_size=1)
 
         self.run_experiment()
+
+    def filtered_odom_callback(self, msg):
+        curr_pose = PoseStamped()
+        curr_pose.header.frame_id = msg.header.frame_id
+        curr_pose.pose.position.x = msg.pose.pose.position.x
+        curr_pose.pose.position.y = msg.pose.pose.position.y
+        curr_pose.pose.orientation.z = msg.pose.pose.orientation.z
+        curr_pose.pose.orientation.w = msg.pose.pose.orientation.w
+        tf_listener = tf.TransformListener()
+            
+        try:
+            tf_listener.waitForTransform(target_frame="map", source_frame=curr_pose.header.frame_id, time=rospy.Time(0), timeout=rospy.Duration(10.0))
+            curr_pose_map = tf_listener.transformPose("map", curr_pose)
+
+            if not self.prev_pose:
+                self.prev_pose = curr_pose_map
+            else:
+                dist = math.sqrt((self.prev_pose.pose.position.x - curr_pose_map.pose.position.x) ** 2 
+                    + (self.prev_pose.pose.position.y - curr_pose_map.pose.position.y) ** 2)
+
+                self.arox_total_dist += dist
+                self.prev_pose = curr_pose_map
+        except Exception as e:
+            rospy.loginfo("ERROR: %s", e)
 
     def sim_info_callback(self, msg):
         # by this, we know when there is a msg on a fail sim topic and thus when a contingency is expected
@@ -121,7 +153,7 @@ class Experiment:
         self.completed_goals = msg.rewards_gained
 
         # new mission
-        if self.open_goals_prev and msg.total_tasks > self.open_goals_prev:
+        if self.open_goals_prev and msg.total_tasks == PLAN_LENGTH and self.open_goals_prev == 1:
             self.mission_cycle += 1
 
         self.open_goals_prev = msg.total_tasks
@@ -227,12 +259,12 @@ class Experiment:
         try:
             with open(config.EXP_PATH + "results.csv", 'a') as out_file:
                 if IDX == 0:
-                    out_file.write("experiment,duration,correct_contingencies,false_positives,false_negatives,correct_no_contingency,unexpected_contingencies,completed,completed_tasks,charge_cycles,mission_cycles,traverse_time,scan_time,wait_time,cata_time,cont_time,charge_time,dock_time,undock_time\n")
+                    out_file.write("experiment,duration,correct_contingencies,false_positives,false_negatives,correct_no_contingency,unexpected_contingencies,completed,completed_tasks,charge_cycles,mission_cycles,total_dist,traverse_time,scan_time,wait_time,cata_time,cont_time,charge_time,dock_time,undock_time\n")
                 out_file.write(name + "," + str(duration) + "," + str(self.expected_contingency_cnt) + "," + str(self.false_positive_contingency) + "," + str(self.false_negative_contingency)
                 + "," + str(self.issue_expected_without_contingy_and_fulfilled) + "," + str(self.unexpected_contingency_cnt) + "," + str(completed) + "," + str(self.completed_goals)
-                + "," + str(self.battery_charging_cycle) + "," + str(self.mission_cycle) + "," + str(self.mode_times['traversing']) + "," + str(self.mode_times['scanning']) + ","
-                + str(self.mode_times['waiting']) + "," + str(self.mode_times['catastrophe']) + "," + str(self.mode_times['contingency']) + "," + str(self.mode_times['charging']) + ","
-                + str(self.mode_times['docking']) + "," + str(self.mode_times['undocking']) + "\n")
+                + "," + str(self.battery_charging_cycle + 1) + "," + str(self.mission_cycle) + "," + str(self.arox_total_dist) + "," + str(self.mode_times['traversing']) + "," 
+                + str(self.mode_times['scanning']) + "," + str(self.mode_times['waiting']) + "," + str(self.mode_times['catastrophe']) + "," + str(self.mode_times['contingency']) + ","
+                + str(self.mode_times['charging']) + "," + str(self.mode_times['docking']) + "," + str(self.mode_times['undocking']) + "\n")
         except Exception as e:
             rospy.loginfo("EXCEPTION during storage of experiment results: %s", e)
 
@@ -247,8 +279,9 @@ class Experiment:
         rospy.loginfo("operation mode: %s", self.operation_mode)
         rospy.loginfo("operation time: %s", self.operation_time)
         rospy.loginfo("completed goals: %s", self.completed_goals)
-        rospy.loginfo("battery charge: %s, cycle: %s", self.battery_charge, self.battery_charging_cycle)
+        rospy.loginfo("battery charge: %s, cycle: %s", self.battery_charge, self.battery_charging_cycle + 1)
         rospy.loginfo("mission cycle: %s", self.mission_cycle)
+        rospy.loginfo("total distance: %sm", self.arox_total_dist)
         for i in self.mode_times.keys():
             rospy.loginfo("time in '%s' mode: %ss", i, self.mode_times[i])
         rospy.loginfo("###########################################################")
