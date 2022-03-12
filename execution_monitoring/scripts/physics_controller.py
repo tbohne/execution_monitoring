@@ -103,7 +103,7 @@ class PhysicsController:
 
         z = -9.81
         x = 0.0
-        y = 3.5
+        y = 5.5
 
         self.change_gravity(x, y, z)
         rospy.loginfo("changing gravity..")
@@ -188,10 +188,13 @@ class PhysicsController:
         rospy.loginfo("changing gravity in z direction to: %s", z)
         twist = Twist()
         # amplify wheel rotations in the air
-        twist.linear.x = -1
-        for _ in range(250):
+        twist.linear.x = 1
+        for i in range(2000):
             self.cmd_vel_pub.publish(twist)
-            rospy.sleep(0.02)
+            if i < 500:
+                rospy.sleep(0.01)
+            else:
+                rospy.sleep(0.001)
 
         # back to normal
         z = -9.81
