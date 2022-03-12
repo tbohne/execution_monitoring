@@ -9,7 +9,7 @@ from execution_monitoring.msg import ScanAction, ScanGoal
 from arox_performance_parameters.msg import arox_operational_param
 from arox_performance_parameters.msg import arox_battery_params
 from arox_docking.msg import DockAction, UndockAction, UndockGoal, DockGoal
-from std_msgs.msg import String, UInt16
+from std_msgs.msg import String, UInt16, Bool
 from datetime import datetime
 from execution_monitoring import config, util
 from plan_generation.msg import plan, action
@@ -134,6 +134,8 @@ class ExecutePlan(smach.State):
 
         self.activate_localization_pub = rospy.Publisher('/activate_localization_monitoring', String, queue_size=1)
         self.deactivate_localization_pub = rospy.Publisher('/deactivate_localization_monitoring', String, queue_size=1)
+        self.loc_pub = rospy.Publisher('/resolve_localization_failure_success', Bool, queue_size=1)
+
 
         self.sim_docking_fail = False
         self.sim_charge_fail = False
@@ -384,8 +386,12 @@ class ExecutePlan(smach.State):
             if self.undocking_client.get_result().result_state == "success":
                 rospy.loginfo("successfully undocked from charging station..")
                 self.robot_info_pub.publish("successfully undocked from charging station..")
-                # after docking-undocking done - reactivate localization monitoring
-                self.activate_localization_pub.publish("")
+
+                # # after docking-undocking done - reactivate localization monitoring
+                # self.activate_localization_pub.publish("")
+                # TODO: perhaps even reinit it -- reset everything
+                self.loc_pub.publish(True)
+
                 # clear costmap due to ramp movement
                 self.clear_costmaps()
                 return True
