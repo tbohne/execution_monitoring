@@ -189,7 +189,7 @@ class PhysicsController:
         twist = Twist()
         # amplify wheel rotations in the air
         twist.linear.x = 1
-        for i in range(2000):
+        for i in range(1500):
             self.cmd_vel_pub.publish(twist)
             if i < 500:
                 rospy.sleep(0.01)
