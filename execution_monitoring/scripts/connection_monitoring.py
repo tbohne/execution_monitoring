@@ -106,7 +106,7 @@ class ConnectionMonitoring:
         if nav_sat_fix.latitude < config.LAT_LB or nav_sat_fix.latitude > config.LAT_UB:
             # lat (degrees): pos -> north of equator, neg -> south of equator
             self.contingency_pub.publish(config.CONNECTION_FAILURE_FIFTEEN)
-        if nav_sat_fix.longitude < config.LNG_LB or nav_sat_fix.longitude > config.LNG_UB:
+        elif nav_sat_fix.longitude < config.LNG_LB or nav_sat_fix.longitude > config.LNG_UB:
             # lng (degrees): pos -> east of prime meridian, neg -> west of prime meridian
             self.contingency_pub.publish(config.CONNECTION_FAILURE_SIXTEEN)
 
