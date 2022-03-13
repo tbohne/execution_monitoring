@@ -90,11 +90,10 @@ class Experiment:
         self.operation_time = 0
         self.battery_charge = 0
         self.battery_charging_cycle = 1
-        self.mission_cycle = 1
+        self.mission_cycle = 0
         self.sim_fail_time = datetime.now()
         self.expected_contingency = None
         self.sim_launched = True
-        self.open_goals_prev = None
         self.mode_times = {'traversing': 0, 'scanning': 0, 'waiting': 0, 'catastrophe': 0, 'contingency': 0, 'charging': 0, 'docking': 0, 'undocking': 0}
         self.prev_mode = None
         self.prev_start = None
@@ -155,10 +154,8 @@ class Experiment:
         self.completed_goals = msg.rewards_gained
 
         # new mission
-        if msg.total_tasks == PLAN_LENGTH and self.open_goals_prev == 1:
+        if msg.total_tasks == PLAN_LENGTH:
             self.mission_cycle += 1
-
-        self.open_goals_prev = msg.total_tasks
 
     def battery_callback(self, msg):
         self.battery_charge = msg.charge
