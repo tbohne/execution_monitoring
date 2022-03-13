@@ -40,7 +40,7 @@ POWER_MANAGEMENT_CATA = "no longer possible to reach the base station based on b
 #############################################################################
 ########################## NAVIGATION MONITORING ############################
 #############################################################################
-RECOVERY_LIMIT = 10
+RECOVERY_LIMIT = 20
 
 GOAL_STATUS_ACTIVE = 1
 GOAL_STATUS_PREEMPTED = 2
