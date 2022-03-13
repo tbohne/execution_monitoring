@@ -381,6 +381,29 @@ class LocalizationFailureResolver(GeneralFailureResolver):
             self.resolution_pub.publish("problem resolved")
             self.success_pub.publish(True)
 
+    def clear_costmaps(self):
+        rospy.wait_for_service('/move_base_flex/clear_costmaps')
+        clear_costmaps_service = rospy.ServiceProxy('/move_base_flex/clear_costmaps', Empty)
+        rec_client = actionlib.SimpleActionClient("move_base_flex/recovery", RecoveryAction)
+        rec_client.wait_for_server()
+
+        # order matters -> first global, then local
+        rospy.loginfo("clearing global costmap..")
+        self.resolution_pub.publish("clearing global costmap")
+        try:
+            clear_costmaps_service()
+        except rospy.ServiceException as e:
+            rospy.loginfo("error: %s", e)
+
+        rospy.loginfo("clearing local costmap..")
+        self.resolution_pub.publish("clearing local costmap")
+        # concurrency_slot 3
+        clear_local_costmap_goal = RecoveryGoal('clear_costmap', 3)
+        rec_client.send_goal(clear_local_costmap_goal)
+        res = rec_client.wait_for_result()
+        if res:
+            rospy.loginfo("cleared costmap..")
+
     def resolve_localization_failure(self):
         rospy.loginfo("resolve localization failure..")
         # sleeping a moment to wait for the robot to stand still
@@ -397,18 +420,8 @@ class LocalizationFailureResolver(GeneralFailureResolver):
                 rate.sleep()
             twist.linear.x = 3.0
 
-        rospy.loginfo("clearing local costmap..")
-        self.resolution_pub.publish("clearing local costmap")
-        rec_client = actionlib.SimpleActionClient("move_base_flex/recovery", RecoveryAction)
-        rec_client.wait_for_server()
-
-        # concurrency_slot 3
-        clear_local_costmap_goal = RecoveryGoal('clear_costmap', 3)
-        rec_client.send_goal(clear_local_costmap_goal)
-        res = rec_client.wait_for_result()
-        if res:
-            rospy.loginfo("cleared costmap..")
-
+        rospy.loginfo("clearing costmaps..")
+        self.clear_costmaps()
         self.problem_resolved = True
 
 
