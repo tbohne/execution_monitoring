@@ -155,7 +155,7 @@ class Experiment:
         self.completed_goals = msg.rewards_gained
 
         # new mission
-        if self.open_goals_prev and msg.total_tasks == PLAN_LENGTH and self.open_goals_prev == 1:
+        if msg.total_tasks == PLAN_LENGTH and self.open_goals_prev == 1:
             self.mission_cycle += 1
 
         self.open_goals_prev = msg.total_tasks
