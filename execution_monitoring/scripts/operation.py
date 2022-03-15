@@ -140,6 +140,7 @@ class ExecutePlan(smach.State):
         self.sim_docking_fail = False
         self.sim_charge_fail = False
         self.waiting = False
+        self.battery_charge = None
 
         self.battery_discharged = False
         self.remaining_tasks = 0
@@ -205,6 +206,7 @@ class ExecutePlan(smach.State):
         self.operation_pub.publish(msg)
 
     def battery_callback(self, data):
+        self.battery_charge = data.charge
         if data.charge == 0.0:
             self.battery_discharged = True
             rospy.loginfo("battery completely discharged..")
@@ -469,6 +471,16 @@ class ExecutePlan(smach.State):
 
             a = userdata.plan.pop(0)
             next_action = userdata.plan[0] if len(userdata.plan) > 0 else None
+
+            if a.name == "return_to_base" and next_action and next_action.name == "charge":
+                # skip all of them when battery is already charged and the next action is not wait_in_shelter
+                sec_next_action = userdata.plan[1] if len(userdata.plan) > 1 else None
+                if sec_next_action and sec_next_action.name != "wait_in_shelter" and self.battery_charge > 95:
+                    # remove charge action
+                    userdata.plan.pop(0)
+                    # and don't perform the redundant "return_to_base"
+                    return "action_completed"
+
             self.latest_action = a
             if not self.battery_discharged:
                 action_successfully_performed = self.perform_action(a, next_action)
