@@ -68,7 +68,7 @@ CONT_TOPIC_MSG_MAPPING = {
 RANDOM_FAIL_FREQUENCY = 250 # random fail every 250s
 SEED = 42
 EXPERIMENT_DURATION = 18000 # 14400 # 4 hours
-IDX = 0
+IDX = 8
 SIM_FAILURES = True
 PLAN_LENGTH = 34
 TF_BUFFER = None
@@ -107,8 +107,13 @@ class Experiment:
         rospy.Subscriber("/arox/battery_param", arox_battery_params, self.battery_callback)
         rospy.Subscriber('/sim_info', String, self.sim_info_callback, queue_size=1)
         rospy.Subscriber('/odometry/filtered_odom', Odometry, self.filtered_odom_callback, queue_size=1)
+        rospy.Subscriber('/robot_info', String, self.robot_info_callback, queue_size=1)
 
         self.run_experiment()
+
+    def robot_info_callback(self, msg):
+        if msg.data == "catastrophe processed, shutting down":
+            self.catastrophe_cnt += 1
 
     def filtered_odom_callback(self, msg):
         curr_pose = PoseStamped()
@@ -236,7 +241,7 @@ class Experiment:
 
         start_time = datetime.now()
 
-        while not rospy.is_shutdown() and (datetime.now() - start_time).total_seconds() < EXPERIMENT_DURATION:
+        while not rospy.is_shutdown() and self.catastrophe_cnt == 0 and (datetime.now() - start_time).total_seconds() < EXPERIMENT_DURATION:
 
             # assumption -- there is enough time to complete all the simulated failures, e.g. docking fail
             #       - docking does not occur every 2 minutes, it can take a while to get in this situation
