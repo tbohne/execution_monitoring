@@ -40,7 +40,7 @@ POWER_MANAGEMENT_CATA = "no longer possible to reach the base station based on b
 #############################################################################
 ########################## NAVIGATION MONITORING ############################
 #############################################################################
-RECOVERY_LIMIT = 20
+RECOVERY_LIMIT = 30
 
 GOAL_STATUS_ACTIVE = 1
 GOAL_STATUS_PREEMPTED = 2
@@ -140,11 +140,11 @@ STATUS_SWITCH_DELAY = 4
 # TODO: should be checked - arbitrarily selected
 NOT_MOVING_ANG_VELO_UB = 0.05
 # TODO: not sure -- check later
-NOT_MOVING_LIN_ACC_UB = 3
+NOT_MOVING_LIN_ACC_UB = 3.5
 
 ACTIVE_PASSIVE_FACTOR_LB = 1.2
 
-NOT_MOVING_LINEAR_TWIST_UB = 0.3
+NOT_MOVING_LINEAR_TWIST_UB = 0.5
 NOT_MOVING_ANGULAR_TWIST_UB = 0.5
 MOVING_LINEAR_TWIST_LB = 0.3
 
