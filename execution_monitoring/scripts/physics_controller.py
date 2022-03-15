@@ -68,7 +68,7 @@ class PhysicsController:
         if len(mbf_status.status_list) > 0:
             curr = mbf_status.status_list[-1].status
 
-            if curr == GoalStatus.ACTIVE:
+            if curr == GoalStatus.ACTIVE and self.operation_mode not in ["docking", "undocking"]:
                 if self.sim_yaw_divergence:
                     self.yaw_divergence()
                 # starting to move -> initiate simulation of low gravity -> spinning wheels
