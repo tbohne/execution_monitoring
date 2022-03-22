@@ -123,6 +123,7 @@ SENSOR_CATA = "sensor resolution failed -- catastrophe"
 
 # SCAN SETTINGS
 SCAN_TIME = 4
+SCAN_TOPIC = "/RIEGL"
 SCAN_PATH = MONITOR_DRIVE + "home/docker/catkin_ws/src/execution_monitoring/execution_monitoring/scans/"
 SCAN_TIME_LIMIT = 30
 SCAN_FILE_EXTENSION = ".txt"

@@ -41,7 +41,7 @@ class SensorMonitoring:
         scan = None
         try:
             # create a new subscription to the topic, receive one message, then unsubscribe
-            scan = rospy.wait_for_message("/RIEGL", LaserScan, timeout=config.SCAN_TIME_LIMIT)
+            scan = rospy.wait_for_message(config.SCAN_TOPIC, LaserScan, timeout=config.SCAN_TIME_LIMIT)
         except rospy.ROSException as e:
             rospy.loginfo("error: %s", e)
             rospy.loginfo("sensor failure detected: %s", config.SENSOR_FAILURE_ONE)
