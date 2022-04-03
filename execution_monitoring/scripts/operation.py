@@ -136,7 +136,6 @@ class ExecutePlan(smach.State):
         self.deactivate_localization_pub = rospy.Publisher('/deactivate_localization_monitoring', String, queue_size=1)
         self.loc_pub = rospy.Publisher('/resolve_localization_failure_success', Bool, queue_size=1)
 
-
         self.sim_docking_fail = False
         self.sim_charge_fail = False
         self.waiting = False
@@ -481,6 +480,11 @@ class ExecutePlan(smach.State):
                     # and don't perform the redundant "return_to_base"
                     return "action_completed"
 
+            # durinig scan interruption, also the drive_to action before needs to be reattached
+            drive_to_before_scan = None
+            if a.name == "scan":
+                drive_to_before_scan = self.latest_action
+
             self.latest_action = a
             if not self.battery_discharged:
                 action_successfully_performed = self.perform_action(a, next_action)
@@ -495,6 +499,10 @@ class ExecutePlan(smach.State):
                 self.robot_info_pub.publish("external problem detected by monitoring procedures - preempting normal operation..")
                 # last action should be repeated
                 userdata.plan.insert(0, self.latest_action)
+                # if the preempted action was a scan action, the drive_to before is also required to be repeated
+                if drive_to_before_scan:
+                    userdata.plan.insert(0, drive_to_before_scan)
+
                 self.publish_state_of_ongoing_operation("contingency")
                 self.service_preempt()
                 return 'external_problem'
