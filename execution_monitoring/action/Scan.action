@@ -1,8 +1,5 @@
-# goal definition
 string goal
 ---
-# result definition
 string result
 ---
-# feedback
 string feedback
