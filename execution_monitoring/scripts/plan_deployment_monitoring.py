@@ -9,7 +9,7 @@ from datetime import datetime
 class PlanDeploymentMonitor:
 
     def __init__(self):
-        rospy.Subscriber('arox/ongoing_operation', arox_operational_param, self.operation_callback, queue_size=1)
+        rospy.Subscriber(config.OPERATION_TOPIC, arox_operational_param, self.operation_callback, queue_size=1)
         rospy.Subscriber('/plan_retrieval_failure', UInt16, self.plan_fail_callback, queue_size=1)
         rospy.Subscriber('resolve_plan_deployment_failure_success', Bool, self.resolve_callback, queue_size=1)
         self.aggravate_pub = rospy.Publisher('/aggravate', String, queue_size=1)

@@ -41,6 +41,7 @@ POWER_MANAGEMENT_CATA = "no longer possible to reach the base station based on b
 ########################## NAVIGATION MONITORING ############################
 #############################################################################
 RECOVERY_LIMIT = 30
+GOAL_STATUS_TOPIC = "/move_base_flex/exe_path/status"
 
 GOAL_STATUS_ACTIVE = 1
 GOAL_STATUS_PREEMPTED = 2
@@ -80,6 +81,7 @@ CHARGING_CATA = "charging resolution failed -- catastrophe"
 #############################################################################
 MON_FREQ = 10
 IDLE_THRESH = 300
+OPERATION_TOPIC = "arox/ongoing_operation"
 
 PLAN_DEPLOYMENT_FAILURE_ONE = "robot idle for an extended period of time"
 PLAN_DEPLOYMENT_FAILURE_TWO = "plan retrieval service unavailable"

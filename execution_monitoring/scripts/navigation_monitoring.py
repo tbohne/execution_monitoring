@@ -17,7 +17,7 @@ class NavigationMonitoring:
         self.robot_pos_when_started_recovery = None
         self.recovery_attempts = 0
 
-        rospy.Subscriber('/move_base_flex/exe_path/status', GoalStatusArray, self.mbf_status_callback, queue_size=1)
+        rospy.Subscriber(config.GOAL_STATUS_TOPIC, GoalStatusArray, self.mbf_status_callback, queue_size=1)
         rospy.Subscriber('/fix', NavSatFix, self.gnss_update, queue_size=1)
         rospy.Subscriber('/resolve_navigation_failure_success', Bool, self.resolved_callback, queue_size=1)
         rospy.Subscriber('/explicit_nav_failure', String, self.explicit_fail_callback, queue_size=1)
