@@ -111,7 +111,27 @@
 - OS-specific WiFi monitoring node (Ubuntu version):
     - `rosrun execution_monitoring wifi_monitor.py `
 
-## Simulate LTA problems
+## Communication with Human Operator
+
+- robot-human communication module: `rosrun execution_monitoring operator_communication.py`
+- human operator indicates that the problem is solved: `rostopic pub -1 /problem_solved std_msgs/String solved`
+
+## Monitoring States
+
+- manually trigger *CONTINGENCY* or *CATASTROPHE*:
+    - **contingency detected**: `rostopic pub -1 "/contingency_preemption" std_msgs/String contingency`
+    - **catastrophe detected**: `rostopic pub -1 "/catastrophe_preemption" std_msgs/String catastrophe`
+
+## Visualize State of Hierarchical SMACH (Introspection Server)
+
+`rosrun smach_viewer smach_viewer.py`
+
+## Architecture
+
+- *high level (plan execution + monitoring):* ![](img/SMACH_high_level.png)
+- *low level (operational model):* ![](img/SMACH_low_level.png)
+
+## Simulation of LTA Challenges
 
 - **sensor failures**
     - **total sensor failure:** `rostopic pub -1 /toggle_simulated_total_sensor_failure std_msgs/String fail`
@@ -181,23 +201,3 @@
 - **power management failures**
     - **contingency:** `rostopic pub -1 /sim_power_management_contingency std_msgs/String fail`
     - **catastrophe:** `rostopic pub -1 /sim_power_management_catastrophe std_msgs/String fail`
-
-## Communication with Human Operator
-
-- robot-human communication module: `rosrun execution_monitoring operator_communication.py`
-- human operator indicates that the problem is solved: `rostopic pub -1 /problem_solved std_msgs/String solved`
-
-## Monitoring States
-
-- manually trigger *CONTINGENCY* or *CATASTROPHE*:
-    - **contingency detected**: `rostopic pub -1 "/contingency_preemption" std_msgs/String contingency`
-    - **catastrophe detected**: `rostopic pub -1 "/catastrophe_preemption" std_msgs/String catastrophe`
-
-## Visualize State of Hierarchical SMACH
-
-`rosrun smach_viewer smach_viewer.py`
-
-## Architecture
-
-- *high level:* ![](img/SMACH_high_level.png)
-- *low level:* ![](img/SMACH_low_level.png)
