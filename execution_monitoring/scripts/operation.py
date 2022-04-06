@@ -40,8 +40,8 @@ class Idle(smach.State):
 
     def get_plan(self):
         try:
-            rospy.wait_for_service('arox_planner/get_plan', timeout=10)
-            res = rospy.ServiceProxy('arox_planner/get_plan', get_plan)()
+            rospy.wait_for_service('plan_generation/get_plan', timeout=10)
+            res = rospy.ServiceProxy('plan_generation/get_plan', get_plan)()
             if res.succeeded:
                 return res.generated_plan.actions
             return None
