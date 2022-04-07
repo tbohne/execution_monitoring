@@ -274,7 +274,8 @@ class ConnectionMonitoring:
 
     def resolve_callback(self, msg):
         """
-        Communication with connection failure resolver.
+        Resolver communication callback - determines whether resolution attempt was successful.
+        Aggravates to catastrophe in case of failure.
 
         @param msg: callback message - whether resolution of connection failure was successful
         """

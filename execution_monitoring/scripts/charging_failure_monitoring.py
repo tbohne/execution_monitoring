@@ -24,6 +24,7 @@ class ChargingFailureMonitoring:
     def resolve_callback(self, msg):
         """
         Resolver communication callback - determines whether resolution attempt was successful.
+        Aggravates to catastrophe in case of failure.
 
         @param msg: callback message - True: resolution successful / False: resolution failed
         """
