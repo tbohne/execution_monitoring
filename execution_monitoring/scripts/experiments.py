@@ -11,9 +11,8 @@ from geometry_msgs.msg import PoseStamped
 import tf2_ros
 import math
 
-# would break the mission -- it's a cata in 100% of the cases
 CATA_TOPIC_MSG_MAPPING = {
-    # prerequisite: prepare full USB flash drive + mount it under config.FULL_DRIVE, e.g. "/mnt/usb"
+    # prerequisite: prepare full USB flash drive + mount it under config.FULL_DRIVE, e.g., "/mnt/usb"
     "/sim_full_disk_failure": config.DATA_MANAGEMENT_FAILURE_ONE,
     "/spawn_robot_prison": [config.NAV_FAILURE_ONE, config.NAV_FAILURE_THREE],
     "/sim_docking_failure_raised_ramp": config.CHARGING_FAILURE_ONE,
@@ -26,7 +25,7 @@ CONT_TOPIC_MSG_MAPPING = {
     "/toggle_simulated_empty_ranges": config.SENSOR_FAILURE_TWO,
     "/toggle_simulated_impermissible_ranges": config.SENSOR_FAILURE_THREE,
     "/toggle_simulated_scan_repetition": config.SENSOR_FAILURE_FOUR,
-    "/toggle_simulated_bad_wifi_link":  config.CONNECTION_FAILURE_ONE,
+    "/toggle_simulated_bad_wifi_link": config.CONNECTION_FAILURE_ONE,
     "/toggle_simulated_bad_wifi_signal": config.CONNECTION_FAILURE_TWO,
     "/toggle_simulated_bad_wifi_bit_rate": config.CONNECTION_FAILURE_THREE,
     "/toggle_simulated_wifi_disconnect": config.CONNECTION_FAILURE_FOUR,
@@ -44,7 +43,7 @@ CONT_TOPIC_MSG_MAPPING = {
     "/toggle_snow_sim": config.WEATHER_FAILURE_FIVE,
     "/toggle_wind_sim": config.WEATHER_FAILURE_EIGHT,
     "/toggle_low_temp_sim": config.WEATHER_FAILURE_TWELVE,
-    "/toggle_thuderstorm_sim": config.WEATHER_FAILURE_THIRTEEN,
+    "/toggle_thunderstorm_sim": config.WEATHER_FAILURE_THIRTEEN,
     "/toggle_sunset_sim": config.WEATHER_FAILURE_SEVENTEEN,
     "/toggle_simulated_scan_logging_failure": config.DATA_MANAGEMENT_FAILURE_TWO,
     "/wheel_movement_without_pos_change": [config.LOCALIZATION_FAILURE_ONE, config.LOCALIZATION_FAILURE_TWO],
@@ -57,7 +56,6 @@ CONT_TOPIC_MSG_MAPPING = {
     "/sim_empty_plan": config.PLAN_DEPLOYMENT_FAILURE_THREE,
     "/sim_infeasible_plan": config.PLAN_DEPLOYMENT_FAILURE_FOUR,
     "/spawn_static_obstacles": [],
-    "/spawn_static_obstacles": [],
     "/toggle_simulated_unknown_service": [],
     "/trigger_nav_fail": config.NAV_FAILURE_ONE,
     "/sim_docking_failure_base_pose": config.CHARGING_FAILURE_ONE,
@@ -65,13 +63,15 @@ CONT_TOPIC_MSG_MAPPING = {
     "/sim_power_management_contingency": config.POWER_MANAGEMENT_FAILURE_ONE
 }
 
-RANDOM_FAIL_FREQUENCY = 250 # random fail every 250s
-SEED = 42
-EXPERIMENT_DURATION = 18000 # 14400 # 4 hours
-IDX = 8
-SIM_FAILURES = True
-PLAN_LENGTH = 34
-TF_BUFFER = None
+RANDOM_FAIL_FREQUENCY = 250  # random fail every 250s (lower bound + depends on RTF)
+SEED = 42  # for random failure selection
+EXPERIMENT_DURATION = 18000  # 5 hours
+IDX = 0  # to identify the experiment run (e.g. in a set of runs)
+PLAN_LENGTH = 34  # length of the plan that defines one mission (number of tasks)
+
+SIM_FAILURES = True  # whether there should be random failure simulation every n seconds
+TF_BUFFER = None  # transformation buffer
+
 
 class Experiment:
 
@@ -94,7 +94,8 @@ class Experiment:
         self.sim_fail_time = datetime.now()
         self.expected_contingency = None
         self.sim_launched = True
-        self.mode_times = {'traversing': 0, 'scanning': 0, 'waiting': 0, 'catastrophe': 0, 'contingency': 0, 'charging': 0, 'docking': 0, 'undocking': 0}
+        self.mode_times = {'traversing': 0, 'scanning': 0, 'waiting': 0, 'catastrophe': 0, 'contingency': 0,
+                           'charging': 0, 'docking': 0, 'undocking': 0}
         self.prev_mode = None
         self.prev_start = None
         self.prev_pose = None
@@ -122,19 +123,19 @@ class Experiment:
         curr_pose.pose.position.y = msg.pose.pose.position.y
         curr_pose.pose.orientation.z = msg.pose.pose.orientation.z
         curr_pose.pose.orientation.w = msg.pose.pose.orientation.w
-            
+
         try:
             curr_pose_map = util.transform_pose(TF_BUFFER, curr_pose, 'map')
 
             if not self.prev_pose:
                 self.prev_pose = curr_pose_map
             else:
-                dist = math.sqrt((self.prev_pose.pose.position.x - curr_pose_map.pose.position.x) ** 2 
-                    + (self.prev_pose.pose.position.y - curr_pose_map.pose.position.y) ** 2)
+                dist = math.sqrt((self.prev_pose.pose.position.x - curr_pose_map.pose.position.x) ** 2
+                                 + (self.prev_pose.pose.position.y - curr_pose_map.pose.position.y) ** 2)
 
                 self.arox_total_dist += dist
                 self.prev_pose = curr_pose_map
-                
+
         except Exception as e:
             rospy.loginfo("ERROR: %s", e)
 
@@ -210,7 +211,8 @@ class Experiment:
         random_topic = CONT_TOPIC_MSG_MAPPING.keys()[rand]
 
         # doesn't make any sense to simulate IDLE time during active mission
-        if random_topic in ["/sim_extended_idle_time", "/toggle_unavailable_plan_service", "/sim_empty_plan", "/sim_infeasible_plan"] and self.operation_mode != "waiting":
+        if random_topic in ["/sim_extended_idle_time", "/toggle_unavailable_plan_service", "/sim_empty_plan",
+                            "/sim_infeasible_plan"] and self.operation_mode != "waiting":
             rospy.loginfo("topic: %s currently not feasible -- selecting another one..", random_topic)
             self.simulate_random_failure()
         else:
@@ -241,13 +243,15 @@ class Experiment:
 
         start_time = datetime.now()
 
-        while not rospy.is_shutdown() and self.catastrophe_cnt == 0 and (datetime.now() - start_time).total_seconds() < EXPERIMENT_DURATION:
+        while not rospy.is_shutdown() and self.catastrophe_cnt == 0 and (
+                datetime.now() - start_time).total_seconds() < EXPERIMENT_DURATION:
 
             # assumption -- there is enough time to complete all the simulated failures, e.g. docking fail
             #       - docking does not occur every 2 minutes, it can take a while to get in this situation
             #       - thus, docking shouldn't be entirely random, but only when the last docking is 
             # elegant way to avoid these issues: wait until sim is actually launched, not until sim launch is "prepared"
-            if SIM_FAILURES and (datetime.now() - self.sim_fail_time).total_seconds() >= RANDOM_FAIL_FREQUENCY and self.sim_launched: # and self.expected_contingency is None:
+            if SIM_FAILURES and (
+                    datetime.now() - self.sim_fail_time).total_seconds() >= RANDOM_FAIL_FREQUENCY and self.sim_launched:  # and self.expected_contingency is None:
                 self.simulate_random_failure()
 
             if SIM_FAILURES:
@@ -263,12 +267,20 @@ class Experiment:
         try:
             with open(config.EXP_PATH + "results.csv", 'a') as out_file:
                 if IDX == 0:
-                    out_file.write("experiment,duration,correct_contingencies,false_positives,false_negatives,correct_no_contingency,unexpected_contingencies,completed,completed_tasks,charge_cycles,mission_cycles,total_dist,simulated_problems,traverse_time,scan_time,wait_time,cata_time,cont_time,charge_time,dock_time,undock_time\n")
-                out_file.write(name + "," + str(duration) + "," + str(self.expected_contingency_cnt) + "," + str(self.false_positive_contingency) + "," + str(self.false_negative_contingency)
-                + "," + str(self.issue_expected_without_contingy_and_fulfilled) + "," + str(self.unexpected_contingency_cnt) + "," + str(completed) + "," + str(self.completed_goals)
-                + "," + str(self.battery_charging_cycle + 1) + "," + str(self.mission_cycle) + "," + str(self.arox_total_dist) + "," + str(self.simulated_problems) + ","
-                + str(self.mode_times['traversing']) + "," + str(self.mode_times['scanning']) + "," + str(self.mode_times['waiting']) + "," + str(self.mode_times['catastrophe']) + ","
-                + str(self.mode_times['contingency']) + "," + str(self.mode_times['charging']) + "," + str(self.mode_times['docking']) + "," + str(self.mode_times['undocking']) + "\n")
+                    out_file.write(
+                        "experiment,duration,correct_contingencies,false_positives,false_negatives,correct_no_contingency,unexpected_contingencies,completed,completed_tasks,charge_cycles,mission_cycles,total_dist,simulated_problems,traverse_time,scan_time,wait_time,cata_time,cont_time,charge_time,dock_time,undock_time\n")
+                out_file.write(name + "," + str(duration) + "," + str(self.expected_contingency_cnt) + "," + str(
+                    self.false_positive_contingency) + "," + str(self.false_negative_contingency)
+                               + "," + str(self.issue_expected_without_contingy_and_fulfilled) + "," + str(
+                    self.unexpected_contingency_cnt) + "," + str(completed) + "," + str(self.completed_goals)
+                               + "," + str(self.battery_charging_cycle + 1) + "," + str(self.mission_cycle) + "," + str(
+                    self.arox_total_dist) + "," + str(self.simulated_problems) + ","
+                               + str(self.mode_times['traversing']) + "," + str(
+                    self.mode_times['scanning']) + "," + str(self.mode_times['waiting']) + "," + str(
+                    self.mode_times['catastrophe']) + ","
+                               + str(self.mode_times['contingency']) + "," + str(
+                    self.mode_times['charging']) + "," + str(self.mode_times['docking']) + "," + str(
+                    self.mode_times['undocking']) + "\n")
         except Exception as e:
             rospy.loginfo("EXCEPTION during storage of experiment results: %s", e)
 
@@ -291,9 +303,10 @@ class Experiment:
             rospy.loginfo("time in '%s' mode: %ss", i, self.mode_times[i])
         rospy.loginfo("###########################################################")
 
+
 def node():
     rospy.init_node('experiments')
-    
+
     global TF_BUFFER
     TF_BUFFER = tf2_ros.Buffer()
     tf2_ros.TransformListener(TF_BUFFER)
@@ -301,6 +314,7 @@ def node():
     Experiment()
     rospy.loginfo("launch experiments node..")
     rospy.spin()
+
 
 if __name__ == '__main__':
     try:

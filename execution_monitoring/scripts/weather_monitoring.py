@@ -81,7 +81,7 @@ class WeatherMonitoring:
         rospy.Subscriber('/toggle_snow_sim', String, self.snow_callback, queue_size=1)
         rospy.Subscriber('/toggle_wind_sim', String, self.wind_callback, queue_size=1)
         rospy.Subscriber('/toggle_low_temp_sim', String, self.low_temp_callback, queue_size=1)
-        rospy.Subscriber('/toggle_thuderstorm_sim', String, self.thunderstorm_callback, queue_size=1)
+        rospy.Subscriber('/toggle_thunderstorm_sim', String, self.thunderstorm_callback, queue_size=1)
         rospy.Subscriber('/toggle_sunset_sim', String, self.sunset_callback, queue_size=1)
         rospy.Subscriber('arox/ongoing_operation', arox_operational_param, self.operation_callback, queue_size=1)
         self.sim_rain = False
