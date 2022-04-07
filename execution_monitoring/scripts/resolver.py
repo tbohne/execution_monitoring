@@ -326,7 +326,7 @@ class SensorFailureResolver(GeneralFailureResolver):
         if self.fail_cnt_update and (datetime.now() - self.fail_cnt_update).total_seconds() > 300:
             self.fail_cnt = 0
 
-        if msg.data in [config.SENSOR_FAILURE_ONE, config.SENSOR_FAILURE_TWO, config.SENSOR_FAILURE_THREE, config.SENSOR_FAILURE_FOUR]:
+        if msg.data in config.SENSOR_FAILURES.values():
             self.resolve_sensor_failure(msg.data)
         elif msg.data == config.SENSOR_CATA:
             self.resolve_catastrophe(config.SENSOR_CATA)

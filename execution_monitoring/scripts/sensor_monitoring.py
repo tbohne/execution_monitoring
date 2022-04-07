@@ -44,22 +44,22 @@ class SensorMonitoring:
             scan = rospy.wait_for_message(config.SCAN_TOPIC, LaserScan, timeout=config.SCAN_TIME_LIMIT)
         except rospy.ROSException as e:
             rospy.loginfo("error: %s", e)
-            rospy.loginfo("sensor failure detected: %s", config.SENSOR_FAILURE_ONE)
-            self.contingency_pub.publish(config.SENSOR_FAILURE_ONE)
+            rospy.loginfo("sensor failure detected: %s", config.SENSOR_FAILURES[0])
+            self.contingency_pub.publish(config.SENSOR_FAILURES[0])
 
         if scan:
             # scan arrived - no total sensor failure, but the remaining sensor failures could still be present
             if len(scan.ranges) == 0:
-                rospy.loginfo("sensor failure detected: %s", config.SENSOR_FAILURE_TWO)
-                self.contingency_pub.publish(config.SENSOR_FAILURE_TWO)
+                rospy.loginfo("sensor failure detected: %s", config.SENSOR_FAILURES[1])
+                self.contingency_pub.publish(config.SENSOR_FAILURES[1])
             else:
                 feasible_scans = [s for s in scan.ranges if s != float('inf')]
                 if float(len(feasible_scans)) / float(len(scan.ranges)) * 100.0 < config.SCAN_VALUES_LB_PERCENTAGE:
-                    rospy.loginfo("sensor failure detected: %s", config.SENSOR_FAILURE_THREE)
-                    self.contingency_pub.publish(config.SENSOR_FAILURE_THREE)
+                    rospy.loginfo("sensor failure detected: %s", config.SENSOR_FAILURES[2])
+                    self.contingency_pub.publish(config.SENSOR_FAILURES[2])
                 elif self.previous_scan and self.repeated_scan(scan):
-                    rospy.loginfo("sensor failure detected: %s", config.SENSOR_FAILURE_FOUR)
-                    self.contingency_pub.publish(config.SENSOR_FAILURE_FOUR)
+                    rospy.loginfo("sensor failure detected: %s", config.SENSOR_FAILURES[3])
+                    self.contingency_pub.publish(config.SENSOR_FAILURES[3])
 
             self.previous_scan = scan
 

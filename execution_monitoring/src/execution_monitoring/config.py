@@ -126,10 +126,13 @@ ENABLE_SPECIFIC_LASER_SCAN_CHECK = True
 #############################################################################
 ############################# SENSOR MONITORING #############################
 #############################################################################
-SENSOR_FAILURE_ONE = "total sensor failure"
-SENSOR_FAILURE_TWO = "empty list of range values"
-SENSOR_FAILURE_THREE = "predominantly infeasible range values (inf)"
-SENSOR_FAILURE_FOUR = "repeated scan"
+
+SENSOR_FAILURES = {
+    0: "total sensor failure",
+    1: "empty list of range values",
+    2: "predominantly infeasible range values (inf)",
+    3: "repeated scan"
+}
 SENSOR_CATA = "sensor resolution failed -- catastrophe"
 
 # SCAN SETTINGS

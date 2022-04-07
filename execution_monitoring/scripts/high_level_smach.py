@@ -80,14 +80,9 @@ class Contingency(smach.State):
         rospy.sleep(1)
         self.successfully_resolved = False
 
-        if self.interrupt_reason == config.SENSOR_FAILURE_ONE:
-            self.sensor_failure_resolver_pub.publish(config.SENSOR_FAILURE_ONE)
-        elif self.interrupt_reason == config.SENSOR_FAILURE_TWO:
-            self.sensor_failure_resolver_pub.publish(config.SENSOR_FAILURE_TWO)
-        elif self.interrupt_reason == config.SENSOR_FAILURE_THREE:
-            self.sensor_failure_resolver_pub.publish(config.SENSOR_FAILURE_THREE)
-        elif self.interrupt_reason == config.SENSOR_FAILURE_FOUR:
-            self.sensor_failure_resolver_pub.publish(config.SENSOR_FAILURE_FOUR)
+        if self.interrupt_reason in config.SENSOR_FAILURES.values():
+            self.sensor_failure_resolver_pub.publish(self.interrupt_reason)
+
         elif self.interrupt_reason == config.CONNECTION_FAILURE_ONE:
             self.wifi_failure_resolver_pub.publish(config.CONNECTION_FAILURE_ONE)
         elif self.interrupt_reason == config.CONNECTION_FAILURE_TWO:

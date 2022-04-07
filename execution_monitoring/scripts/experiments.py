@@ -21,10 +21,10 @@ CATA_TOPIC_MSG_MAPPING = {
 }
 
 CONT_TOPIC_MSG_MAPPING = {
-    "/toggle_simulated_total_sensor_failure": config.SENSOR_FAILURE_ONE,
-    "/toggle_simulated_empty_ranges": config.SENSOR_FAILURE_TWO,
-    "/toggle_simulated_impermissible_ranges": config.SENSOR_FAILURE_THREE,
-    "/toggle_simulated_scan_repetition": config.SENSOR_FAILURE_FOUR,
+    "/toggle_simulated_total_sensor_failure": config.SENSOR_FAILURES[0],
+    "/toggle_simulated_empty_ranges": config.SENSOR_FAILURES[1],
+    "/toggle_simulated_impermissible_ranges": config.SENSOR_FAILURES[2],
+    "/toggle_simulated_scan_repetition": config.SENSOR_FAILURES[3],
     "/toggle_simulated_bad_wifi_link": config.CONNECTION_FAILURE_ONE,
     "/toggle_simulated_bad_wifi_signal": config.CONNECTION_FAILURE_TWO,
     "/toggle_simulated_bad_wifi_bit_rate": config.CONNECTION_FAILURE_THREE,
