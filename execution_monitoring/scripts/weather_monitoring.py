@@ -180,11 +180,11 @@ class WeatherMonitoring:
         """
         # moderate rain: greater than 2.6 mm per hour, but less than 7.6 mm per hour
         if 7.6 > rain_vol > 2.6 and self.active_monitoring:
-            self.robot_info_pub.publish(config.WEATHER_FAILURE_ONE)
+            self.robot_info_pub.publish(config.WEATHER_FAILURES[0])
         # heavy rain
         elif rain_vol > 7.6:
             if self.active_monitoring:
-                self.contingency_pub.publish(config.WEATHER_FAILURE_TWO)
+                self.contingency_pub.publish(config.WEATHER_FAILURES[1])
                 self.active_monitoring = False
             return False
         return True
@@ -198,11 +198,11 @@ class WeatherMonitoring:
         """
         # moderate snow
         if 2.0 > snow_vol > 0.5 and self.active_monitoring:
-            self.robot_info_pub.publish(config.WEATHER_FAILURE_FOUR)
+            self.robot_info_pub.publish(config.WEATHER_FAILURES[2])
         # heavy snow
         elif snow_vol > 2.0:
             if self.active_monitoring:
-                self.contingency_pub.publish(config.WEATHER_FAILURE_FIVE)
+                self.contingency_pub.publish(config.WEATHER_FAILURES[3])
                 self.active_monitoring = False
             return False
         return True
@@ -217,25 +217,25 @@ class WeatherMonitoring:
         """
         if 14 > gust_speed > 11 or 14 > speed > 11 and self.active_monitoring:
             # strong breeze -> large branches in continuous motion
-            self.robot_info_pub.publish(config.WEATHER_FAILURE_SIX)
+            self.robot_info_pub.publish(config.WEATHER_FAILURES[4])
         elif 20 > gust_speed > 14 or 20 > speed > 14 and self.active_monitoring:
             # gale -> whole trees in motion; inconvenience felt when walking against the wind; wind breaks twigs and small branches
-            self.robot_info_pub.publish(config.WEATHER_FAILURE_SEVEN)
+            self.robot_info_pub.publish(config.WEATHER_FAILURES[5])
         elif 28 > gust_speed > 21 or 28 > speed > 21:
             # strong gale -> risk for structural damage
             if self.active_monitoring:
-                self.contingency_pub.publish(config.WEATHER_FAILURE_EIGHT)
+                self.contingency_pub.publish(config.WEATHER_FAILURES[6])
                 self.active_monitoring = False
             return False
         elif 33 > gust_speed > 28 or 33 > speed > 28:
             # storm force -> very high risk for structural damage; larger trees blown over and uprooted
-            self.contingency_pub.publish(config.WEATHER_FAILURE_NINE)
+            self.contingency_pub.publish(config.WEATHER_FAILURES[7])
             self.active_monitoring = False
             return False
         elif gust_speed > 33 or speed > 33:
             # hurricane -> very high risk for severe and extensive structural damage
             if self.active_monitoring:
-                self.contingency_pub.publish(config.WEATHER_FAILURE_TEN)
+                self.contingency_pub.publish(config.WEATHER_FAILURES[8])
                 self.active_monitoring = False
             return False
         return True
@@ -252,13 +252,13 @@ class WeatherMonitoring:
         # arbitrarily chosen, depends on sensors etc., should be configurable by the user
         if temp > 40 or max_temp > 40:
             if self.active_monitoring:
-                self.contingency_pub.publish(config.WEATHER_FAILURE_ELEVEN)
+                self.contingency_pub.publish(config.WEATHER_FAILURES[9])
                 self.active_monitoring = False
             return False
         # arbitrarily chosen, depends on sensors etc., should be configurable by the user
         if temp < -5 or min_temp < -5:
             if self.active_monitoring:
-                self.contingency_pub.publish(config.WEATHER_FAILURE_TWELVE)
+                self.contingency_pub.publish(config.WEATHER_FAILURES[10])
                 self.active_monitoring = False
             return False
         return True
@@ -273,32 +273,32 @@ class WeatherMonitoring:
         if code in [config.THUNDERSTORM_WITH_LIGHT_RAIN, config.THUNDERSTORM_WITH_RAIN, config.THUNDERSTORM_WITH_HEAVY_RAIN, config.LIGHT_THUNDERSTORM, config.THUNDERSTORM,
             config.HEAVY_THUNDERSTORM, config.RAGGED_THUNDERSTORM, config.THUNDERSTORM_WITH_LIGHT_DRIZZLE, config.THUNDERSTORM_WITH_DRIZZLE, config.THUNDERSTORM_WITH_HEAVY_DRIZZLE]:
             if self.active_monitoring:
-                self.contingency_pub.publish(config.WEATHER_FAILURE_THIRTEEN)
+                self.contingency_pub.publish(config.WEATHER_FAILURES[11])
                 self.active_monitoring = False
             return False
         elif code in [config.HEAVY_INTENSITY_RAIN, config.VERY_HEAVY_RAIN, config.EXTREME_RAIN, config.FREEZING_RAIN, config.HEAVY_INTENSITY_SHOWER_RAIN, config.RAGGED_SHOWER_RAIN]:
             if self.active_monitoring:
-                self.contingency_pub.publish(config.WEATHER_FAILURE_TWO)
+                self.contingency_pub.publish(config.WEATHER_FAILURES[1])
                 self.active_monitoring = False
             return False
         elif code in [config.SNOW, config.HEAVY_SNOW, config.RAIN_AND_SNOW, config.HEAVY_SHOWER_SNOW]:
             if self.active_monitoring:
-                self.contingency_pub.publish(config.WEATHER_FAILURE_FIVE)
+                self.contingency_pub.publish(config.WEATHER_FAILURES[3])
                 self.active_monitoring = False
             return False
         elif code == config.TORNADO:
             if self.active_monitoring:
-                self.contingency_pub.publish(config.WEATHER_FAILURE_FOURTEEN)
+                self.contingency_pub.publish(config.WEATHER_FAILURES[12])
                 self.active_monitoring = False
             return False
         elif code == config.SQUALLS:
             if self.active_monitoring:
-                self.contingency_pub.publish(config.WEATHER_FAILURE_SEVEN)
+                self.contingency_pub.publish(config.WEATHER_FAILURES[5])
                 self.active_monitoring = False
             return False
         elif code in [config.MIST, config.SMOKE, config.FOG]:
             if self.active_monitoring:
-                self.contingency_pub.publish(config.WEATHER_FAILURE_FIFTEEN)
+                self.contingency_pub.publish(config.WEATHER_FAILURES[13])
                 self.active_monitoring = False
             return False
         return True
@@ -315,12 +315,12 @@ class WeatherMonitoring:
 
         if sunrise_time_sec > time_in_seconds:
             if self.active_monitoring:
-                self.contingency_pub.publish(config.WEATHER_FAILURE_SIXTEEN)
+                self.contingency_pub.publish(config.WEATHER_FAILURES[14])
                 self.active_monitoring = False
             return False
         elif time_in_seconds > sunset_time_sec:
             if self.active_monitoring:
-                self.contingency_pub.publish(config.WEATHER_FAILURE_SEVENTEEN)
+                self.contingency_pub.publish(config.WEATHER_FAILURES[15])
                 self.active_monitoring = False
             return False
         else:
@@ -330,7 +330,7 @@ class WeatherMonitoring:
             # rospy.loginfo("minutes before sunset: %s", time_before_sunset / 60)
             if time_before_sunset / 60 < 15:
                 if self.active_monitoring:
-                    self.contingency_pub.publish(config.WEATHER_FAILURE_EIGHTEEN)
+                    self.contingency_pub.publish(config.WEATHER_FAILURES[16])
                     self.active_monitoring = False
                 return False
         return True

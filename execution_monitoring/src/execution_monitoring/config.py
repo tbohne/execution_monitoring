@@ -208,23 +208,27 @@ LOCALIZATION_CATA = "localization failure resolution not successful -- catastrop
 ############################ WEATHER MONITORING #############################
 #############################################################################
 # WEATHER FAILURES / INFOS
-WEATHER_FAILURE_ONE = "moderate rain - continuing work"
-WEATHER_FAILURE_TWO = "heavy rain - interrupting work, seeking shelter"
-WEATHER_FAILURE_FOUR = "moderate snow - continuing work"
-WEATHER_FAILURE_FIVE = "heavy snow - interrupting work, seeking shelter"
-WEATHER_FAILURE_SIX = "strong breeze -> large branches in continuous motion etc. - continuing work"
-WEATHER_FAILURE_SEVEN = "gale -> whole trees in motion; inconvenience felt when walking against the wind; wind breaks twigs and small branches - continuing work, but it begins getting critical"
-WEATHER_FAILURE_EIGHT = "strong gale -> risk for structural damage - interrupting work, seeking shelter"
-WEATHER_FAILURE_NINE = "storm force -> very high risk for structural damage; larger trees blown over and uprooted - interrupting work, seeking shelter"
-WEATHER_FAILURE_TEN = "hurricane -> very high risk for severe and extensive structural damage - interrupting work, seeking shelter"
-WEATHER_FAILURE_ELEVEN = "very high temperature (> 40 deg. C); sensor damage possible - interrupting work, seeking shelter"
-WEATHER_FAILURE_TWELVE = "very low temperature (< -5 deg. C); battery and sensor damage expected - interrupting work, seeking shelter"
-WEATHER_FAILURE_THIRTEEN = "thunderstorm - interrupting work, seeking shelter"
-WEATHER_FAILURE_FOURTEEN = "tornado - interrupting work, seeking shelter"
-WEATHER_FAILURE_FIFTEEN = "perception may be impaired by mist, smoke or fog - interrupting work, continuing later"
-WEATHER_FAILURE_SIXTEEN = "before sunrise - interrupting work until then"
-WEATHER_FAILURE_SEVENTEEN = "after sunset - interrupting work until sunrise"
-WEATHER_FAILURE_EIGHTEEN = "sunset in a few minutes - interrupting work and driving back to base"
+
+WEATHER_FAILURES = {
+    0: "moderate rain - continuing work",
+    1: "heavy rain - interrupting work, seeking shelter",
+    2: "moderate snow - continuing work",
+    3: "heavy snow - interrupting work, seeking shelter",
+    4: "strong breeze -> large branches in continuous motion etc. - continuing work",
+    5: "gale -> whole trees in motion; inconvenience felt when walking against the wind; wind breaks twigs and small branches - continuing work, but it begins getting critical",
+    6: "strong gale -> risk for structural damage - interrupting work, seeking shelter",
+    7: "storm force -> very high risk for structural damage; larger trees blown over and uprooted - interrupting work, seeking shelter",
+    8: "hurricane -> very high risk for severe and extensive structural damage - interrupting work, seeking shelter",
+    9: "very high temperature (> 40 deg. C); sensor damage possible - interrupting work, seeking shelter",
+    10: "very low temperature (< -5 deg. C); battery and sensor damage expected - interrupting work, seeking shelter",
+    11: "thunderstorm - interrupting work, seeking shelter",
+    12: "tornado - interrupting work, seeking shelter",
+    13: "perception may be impaired by mist, smoke or fog - interrupting work, continuing later",
+    14: "before sunrise - interrupting work until then",
+    15: "after sunset - interrupting work until sunrise",
+    16: "sunset in a few minutes - interrupting work and driving back to base"
+}
+
 WEATHER_CATA = "drastic weather change resolution failed -- catastrophe"
 
 WEATHER_MONITORING_FREQUENCY = 15  # seconds
