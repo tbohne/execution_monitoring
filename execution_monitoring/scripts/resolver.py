@@ -363,12 +363,7 @@ class LocalizationFailureResolver(GeneralFailureResolver):
         self.resolution_pub.publish("launch localization failure resolver -- type of localization failure: " + msg.data)
         self.problem_resolved = False
 
-        # different types of resolution are required based on the type of issue
-
-        if msg.data in [config.LOCALIZATION_FAILURE_ONE, config.LOCALIZATION_FAILURE_TWO, config.LOCALIZATION_FAILURE_THREE, config.LOCALIZATION_FAILURE_FOUR,
-            config.LOCALIZATION_FAILURE_FIVE, config.LOCALIZATION_FAILURE_SIX, config.LOCALIZATION_FAILURE_SEVEN, config.LOCALIZATION_FAILURE_EIGHT, config.LOCALIZATION_FAILURE_NINE,
-            config.LOCALIZATION_FAILURE_TEN, config.LOCALIZATION_FAILURE_ELEVEN, config.LOCALIZATION_FAILURE_TWELVE, config.LOCALIZATION_FAILURE_THIRTEEN]:
-
+        if msg.data in config.LOCALIZATION_FAILURES.values():
             self.resolve_localization_failure()
 
         if self.problem_resolved:

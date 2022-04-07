@@ -122,15 +122,15 @@ class LocalizationMonitoring:
 
             if abs(odom_dist - gps_dist) > 2.0:
                 rospy.loginfo("CONTINGENCY: GNSS (initial-current) and odometry (initial-current) distances are diverging quite heavily -> indicator for localization issue")
-                self.contingency_pub.publish(config.LOCALIZATION_FAILURE_ONE)
+                self.contingency_pub.publish(config.LOCALIZATION_FAILURES[0])
                 self.active_monitoring = False
             elif abs(odom_dist - gps_dist) > 1.5:
                 rospy.loginfo("CONTINGENCY: GNSS (initial-current) and odometry (initial-current) distances are diverging quite a bit -> indicator for localization issue")
-                self.contingency_pub.publish(config.LOCALIZATION_FAILURE_TWO)
+                self.contingency_pub.publish(config.LOCALIZATION_FAILURES[1])
                 self.active_monitoring = False
             elif abs(odom_dist - gps_dist) > 1:
                 rospy.loginfo("INFO: GNSS (initial-current) and odometry (initial-current) distances are slightly diverging -> indicator for minor localization issue")
-                self.robot_info_pub.publish(config.LOCALIZATION_FAILURE_THREE)
+                self.robot_info_pub.publish(config.LOCALIZATION_FAILURES[2])
             if abs(odom_dist - gps_dist) > 1:
                 rospy.loginfo("2D dist between initial filtered odom and current: %s", odom_dist)
                 rospy.loginfo("2D dist between initial GPS and current: %s", gps_dist)
@@ -164,12 +164,12 @@ class LocalizationMonitoring:
 
             if abs(abs(gnss_orientation_z) - abs(self.imu_latest.orientation.z)) > config.Z_COMP_DIFF_UB:
                 rospy.loginfo("CONTINGENCY -- yaw diff between GNSS interpolation and IMU too high")
-                self.contingency_pub.publish(config.LOCALIZATION_FAILURE_FOUR)
+                self.contingency_pub.publish(config.LOCALIZATION_FAILURES[3])
                 self.active_monitoring = False
                 contingency = True
             if abs(abs(gnss_orientation_z) - abs(self.odom_filtered_data.pose.pose.orientation.z)) > config.Z_COMP_DIFF_UB:
                 rospy.loginfo("CONTINGENCY -- yaw diff between GNSS interpolation and filtered odometry too high")
-                self.contingency_pub.publish(config.LOCALIZATION_FAILURE_FIVE)
+                self.contingency_pub.publish(config.LOCALIZATION_FAILURES[4])
                 self.active_monitoring = False
                 contingency = True
             if contingency:
@@ -188,7 +188,7 @@ class LocalizationMonitoring:
             for i in range(0, len(cov_matrix), 4):
                 if math.sqrt(cov_matrix[i]) > std_dev_UB:
                     rospy.loginfo("CONTINGENCY -> IMU standard deviations too high")
-                    self.contingency_pub.publish(config.LOCALIZATION_FAILURE_SIX)
+                    self.contingency_pub.publish(config.LOCALIZATION_FAILURES[5])
                     self.active_monitoring = False
                     return
 
@@ -209,7 +209,7 @@ class LocalizationMonitoring:
             if x_avg > config.NOT_MOVING_ANG_VELO_UB or y_avg > config.NOT_MOVING_ANG_VELO_UB or z_avg > config.NOT_MOVING_ANG_VELO_UB:
                 rospy.loginfo("CONTINGENCY..... IMU angular velocity too high for passive state")
                 rospy.loginfo("ang velo: %s, %s, %s", x_avg, y_avg, z_avg)
-                self.contingency_pub.publish(config.LOCALIZATION_FAILURE_SEVEN)
+                self.contingency_pub.publish(config.LOCALIZATION_FAILURES[6])
                 self.active_monitoring = False
 
             #rospy.loginfo("passive, active, total: %s, %s, %s", len(passive_imu_copy), len(active_imu_copy), config.IMU_ENTRIES)
@@ -227,7 +227,7 @@ class LocalizationMonitoring:
                         if self.lin_acc_passive_history[i] > config.NOT_MOVING_LIN_ACC_UB:
                             rospy.loginfo("mbf status: %s", self.mbf_status)
                             rospy.loginfo("CONTINGENCY..... linear acceleration too high for passive state: %s",self.lin_acc_passive_history[i])
-                            self.contingency_pub.publish(config.LOCALIZATION_FAILURE_EIGHT)
+                            self.contingency_pub.publish(config.LOCALIZATION_FAILURES[7])
                             self.active_monitoring = False
                 avg_ratio /= config.COVARIANCE_HISTORY_LENGTH
 
@@ -236,7 +236,7 @@ class LocalizationMonitoring:
                     and avg_ratio < config.ACTIVE_PASSIVE_FACTOR_LB:
 
                     rospy.loginfo("CONTINGENCY: linear acceleration during movement not considerably higher compared to standing still")
-                    self.contingency_pub.publish(config.LOCALIZATION_FAILURE_NINE)
+                    self.contingency_pub.publish(config.LOCALIZATION_FAILURES[8])
                     self.active_monitoring = False
                     rospy.loginfo("active values: %s", self.lin_acc_active_history)
                     rospy.loginfo("passive values: %s", self.lin_acc_passive_history)
@@ -263,14 +263,14 @@ class LocalizationMonitoring:
                     or abs(odom_data.twist.twist.linear.z) > config.NOT_MOVING_LINEAR_TWIST_UB:
                         rospy.loginfo("%s CONTINGENCY DETECTED ###################################", name)
                         rospy.loginfo("not moving, but linear twist: %s", odom_data.twist.twist.linear)
-                        self.contingency_pub.publish(config.LOCALIZATION_FAILURE_TEN)
+                        self.contingency_pub.publish(config.LOCALIZATION_FAILURES[9])
                         self.active_monitoring = False
                 if abs(odom_data.twist.twist.angular.x) > config.NOT_MOVING_ANGULAR_TWIST_UB \
                     or abs(odom_data.twist.twist.angular.y) > config.NOT_MOVING_ANGULAR_TWIST_UB \
                     or abs(odom_data.twist.twist.angular.z) > config.NOT_MOVING_ANGULAR_TWIST_UB:
                         rospy.loginfo("%s CONTINGENCY DETECTED ###################################", name)
                         rospy.loginfo("not moving, but angular twist: %s", odom_data.twist.twist.angular)
-                        self.contingency_pub.publish(config.LOCALIZATION_FAILURE_ELEVEN)
+                        self.contingency_pub.publish(config.LOCALIZATION_FAILURES[10])
                         self.active_monitoring = False
 
             # POSE + TWIST COVARIANCE (6x6 matrices (x, y, z, rot_x, rot_y, rot_z))
@@ -280,14 +280,14 @@ class LocalizationMonitoring:
                 for i in range(0, len(odom_data.pose.covariance), 7):
                     if math.sqrt(odom_data.pose.covariance[i]) > config.ODOM_POSE_STD_DEV_UB:
                         rospy.loginfo("CONTINGENCY: %s -> pose standard deviation", name)
-                        self.contingency_pub.publish(config.LOCALIZATION_FAILURE_TWELVE)
+                        self.contingency_pub.publish(config.LOCALIZATION_FAILURES[11])
                         self.active_monitoring = False
                         break
                 # velocity in free space with uncertainty
                 for i in range(0, len(odom_data.twist.covariance), 7):
                     if math.sqrt(odom_data.twist.covariance[i]) > config.ODOM_TWIST_STD_DEV_UB:
                         rospy.loginfo("CONTINGENCY: %s -> twist standard deviation", name)
-                        self.contingency_pub.publish(config.LOCALIZATION_FAILURE_THIRTEEN)
+                        self.contingency_pub.publish(config.LOCALIZATION_FAILURES[12])
                         self.active_monitoring = False
                         break
 

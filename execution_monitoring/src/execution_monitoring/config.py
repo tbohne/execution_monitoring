@@ -186,19 +186,23 @@ ODOM_TWIST_STD_DEV_UB = 3
 LOCALIZATION_MON_FREQ = 0.5
 
 # LOCALIZATION FAILURES / INFOS
-LOCALIZATION_FAILURE_ONE = "GNSS (initial-current) and odometry (initial-current) distances are diverging quite heavily -> indicator for localization issue"
-LOCALIZATION_FAILURE_TWO = "GNSS (initial-current) and odometry (initial-current) distances are diverging quite a bit -> indicator for localization issue"
-LOCALIZATION_FAILURE_THREE = "GNSS (initial-current) and odometry (initial-current) distances are slightly diverging -> indicator for minor localization issue"
-LOCALIZATION_FAILURE_FOUR = "yaw diff between GNSS interpolation and IMU too high"
-LOCALIZATION_FAILURE_FIVE = "yaw diff between GNSS interpolation and filtered odometry too high"
-LOCALIZATION_FAILURE_SIX = "IMU standard deviations too high"
-LOCALIZATION_FAILURE_SEVEN = "IMU angular velocity too high for passive state"
-LOCALIZATION_FAILURE_EIGHT = "linear acceleration too high for passive state"
-LOCALIZATION_FAILURE_NINE = "linear acceleration during movement not considerably higher compared to standing still"
-LOCALIZATION_FAILURE_TEN = "linear twist too high for passive state"
-LOCALIZATION_FAILURE_ELEVEN = "angular twist too high for passive state"
-LOCALIZATION_FAILURE_TWELVE = "odometry pose standard deviation too high"
-LOCALIZATION_FAILURE_THIRTEEN = "odometry twist standard deviation too high"
+
+LOCALIZATION_FAILURES = {
+    0: "GNSS (initial-current) and odometry (initial-current) distances are diverging quite heavily -> indicator for localization issue",
+    1: "GNSS (initial-current) and odometry (initial-current) distances are diverging quite a bit -> indicator for localization issue",
+    2: "GNSS (initial-current) and odometry (initial-current) distances are slightly diverging -> indicator for minor localization issue",
+    3: "yaw diff between GNSS interpolation and IMU too high",
+    4: "yaw diff between GNSS interpolation and filtered odometry too high",
+    5: "IMU standard deviations too high",
+    6: "IMU angular velocity too high for passive state",
+    7: "linear acceleration too high for passive state",
+    8: "linear acceleration during movement not considerably higher compared to standing still",
+    9: "linear twist too high for passive state",
+    10: "angular twist too high for passive state",
+    11: "odometry pose standard deviation too high",
+    12: "odometry twist standard deviation too high"
+}
+
 LOCALIZATION_CATA = "localization failure resolution not successful -- catastrophe"
 #############################################################################
 #############################################################################
