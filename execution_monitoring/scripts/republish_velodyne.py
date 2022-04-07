@@ -77,7 +77,7 @@ class RepublishVelodyne:
 
 def node():
     rospy.init_node('republish_velodyne')
-    rospy.wait_for_message('SMACH_runnning', String)
+    rospy.wait_for_message('SMACH_running', String)
     server = RepublishVelodyne()
     rospy.spin()
 

@@ -777,7 +777,7 @@ class ChargingFailureResolver(GeneralFailureResolver):
 
 def node():
     rospy.init_node('failure_resolver')
-    rospy.wait_for_message('SMACH_runnning', String)
+    rospy.wait_for_message('SMACH_running', String)
     SensorFailureResolver()
     ConnectionResolver()
     WeatherFailureResolver()

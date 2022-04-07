@@ -378,7 +378,7 @@ class WeatherMonitoring:
 
 def node():
     rospy.init_node('weather_monitoring')
-    rospy.wait_for_message('SMACH_runnning', String)
+    rospy.wait_for_message('SMACH_running', String)
     rospy.loginfo("launch weather monitoring..")
     # necessary to wait for actual start of operation -> should be removed later
     rospy.sleep(5)

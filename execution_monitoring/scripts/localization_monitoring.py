@@ -317,7 +317,7 @@ class LocalizationMonitoring:
 
 def node():
     rospy.init_node('localization_monitoring')
-    rospy.wait_for_message('SMACH_runnning', String)
+    rospy.wait_for_message('SMACH_running', String)
     rospy.loginfo("launch localization monitoring..")
     LocalizationMonitoring()
     rospy.spin()

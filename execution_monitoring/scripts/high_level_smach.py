@@ -368,7 +368,7 @@ def node():
 
     # wait to start and notify corresponding nodes
     for _ in range(3):
-        pub = rospy.Publisher('SMACH_runnning', String, queue_size=1)
+        pub = rospy.Publisher('SMACH_running', String, queue_size=1)
         pub.publish("execution monitoring SMACH runs")
         rospy.sleep(1)
 
