@@ -107,8 +107,12 @@ INFEASIBLE_PLAN_CODE = 2
 #############################################################################
 ######################## DATA MANAGEMENT MONITORING #########################
 #############################################################################
-DATA_MANAGEMENT_FAILURE_ONE = "full memory"
-DATA_MANAGEMENT_FAILURE_TWO = "scan not logged correctly"
+
+DATA_MANAGEMENT_FAILURES = {
+    0: "full memory",
+    1: "scan not logged correctly"
+}
+
 DATA_MANAGEMENT_CATA = "data management resolution failed -- catastrophe"
 
 # DATA MANAGEMENT SETTINGS

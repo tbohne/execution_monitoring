@@ -58,7 +58,7 @@ class DataMonitoring:
         scan_cnt_after = self.count_scan_entries()
         if scan_cnt_after != self.scan_cnt_before + 1:
             rospy.loginfo("data management error.. before: %s, after: %s", self.scan_cnt_before, scan_cnt_after)
-            self.contingency_pub.publish(config.DATA_MANAGEMENT_FAILURE_TWO)
+            self.contingency_pub.publish(config.DATA_MANAGEMENT_FAILURES[1])
         else:
             rospy.loginfo("data management OK - scan successfully logged..")
             self.logging_pub.publish("")
@@ -103,7 +103,7 @@ class DataMonitoring:
 
         if disk_use.percent > config.FULL_MEMORY_THRESH:
             rospy.loginfo("full memory - cannot save further scans")
-            self.contingency_pub.publish(config.DATA_MANAGEMENT_FAILURE_ONE)
+            self.contingency_pub.publish(config.DATA_MANAGEMENT_FAILURES[0])
         elif disk_use.percent > config.ALMOST_FULL_MEMORY_THRESH_TWO:
             rospy.loginfo("scans should be backed up externally soon")
             self.robot_info_pub.publish("scans should be backed up externally soon")

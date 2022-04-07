@@ -119,12 +119,12 @@ class DataManagementFailureResolver(GeneralFailureResolver):
         self.problem_resolved = False
 
         # different types of resolution are required based on the type of issue
-        if msg.data == config.DATA_MANAGEMENT_FAILURE_ONE:
-            self.resolve_type_one_failure(config.DATA_MANAGEMENT_FAILURE_ONE)
-        elif msg.data == config.DATA_MANAGEMENT_FAILURE_TWO:
-            self.resolve_type_two_failure(config.DATA_MANAGEMENT_FAILURE_TWO)
+        if msg.data == config.DATA_MANAGEMENT_FAILURES[0]:
+            self.resolve_type_one_failure(msg.data)
+        elif msg.data == config.DATA_MANAGEMENT_FAILURES[1]:
+            self.resolve_type_two_failure(msg.data)
         elif msg.data == config.DATA_MANAGEMENT_CATA:
-            self.resolve_catastrophe(config.DATA_MANAGEMENT_CATA)
+            self.resolve_catastrophe(msg.data)
 
         if self.problem_resolved:
             self.resolution_pub.publish("problem resolved")

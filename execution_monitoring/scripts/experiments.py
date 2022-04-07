@@ -13,7 +13,7 @@ import math
 
 CATA_TOPIC_MSG_MAPPING = {
     # prerequisite: prepare full USB flash drive + mount it under config.FULL_DRIVE, e.g., "/mnt/usb"
-    "/sim_full_disk_failure": config.DATA_MANAGEMENT_FAILURE_ONE,
+    "/sim_full_disk_failure": config.DATA_MANAGEMENT_FAILURES[0],
     "/spawn_robot_prison": [config.NAV_FAILURE_ONE, config.NAV_FAILURE_THREE],
     "/sim_docking_failure_raised_ramp": config.CHARGING_FAILURE_ONE,
     "/sim_undocking_failure": config.CHARGING_FAILURE_TWO,
@@ -45,7 +45,7 @@ CONT_TOPIC_MSG_MAPPING = {
     "/toggle_low_temp_sim": config.WEATHER_FAILURE_TWELVE,
     "/toggle_thunderstorm_sim": config.WEATHER_FAILURE_THIRTEEN,
     "/toggle_sunset_sim": config.WEATHER_FAILURE_SEVENTEEN,
-    "/toggle_simulated_scan_logging_failure": config.DATA_MANAGEMENT_FAILURE_TWO,
+    "/toggle_simulated_scan_logging_failure": config.DATA_MANAGEMENT_FAILURES[1],
     "/wheel_movement_without_pos_change": [config.LOCALIZATION_FAILURE_ONE, config.LOCALIZATION_FAILURE_TWO],
     "/pos_change_without_wheel_movement": [config.LOCALIZATION_FAILURE_ONE, config.LOCALIZATION_FAILURE_TWO],
     "/yaw_divergence": [config.LOCALIZATION_FAILURE_FOUR, config.LOCALIZATION_FAILURE_FIVE],
