@@ -17,6 +17,8 @@ DOCKING = True
 
 MISSION_IDLE_LIMIT = 900
 
+EXPERIMENTS_CHECK_FREQ = 120
+
 EXP_PATH = "/home/docker/catkin_ws/src/execution_monitoring/execution_monitoring/experiments/"
 
 MISSION_FAIL_MSG =  "MISSION FAIL: exceeded idle time limit during plan execution"

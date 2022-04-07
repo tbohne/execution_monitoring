@@ -68,7 +68,6 @@ SEED = 42  # for random failure selection
 EXPERIMENT_DURATION = 18000  # 5 hours
 IDX = 0  # to identify the experiment run (e.g. in a set of runs)
 PLAN_LENGTH = 34  # length of the plan that defines one mission (number of tasks)
-
 SIM_FAILURES = True  # whether there should be random failure simulation every n seconds
 TF_BUFFER = None  # transformation buffer
 
@@ -78,29 +77,30 @@ class Experiment:
     def __init__(self):
         global SEED
         random.seed(SEED)
-        self.expected_contingency_cnt = 0
-        self.false_positive_contingency = 0
-        self.issue_expected_without_contingy_and_fulfilled = 0
-        self.false_negative_contingency = 0
+        self.correct_contingency_cnt = 0
+        self.correct_no_contingency_cnt = 0
+        self.false_positive_cnt = 0
+        self.false_negative_cnt = 0
         self.unexpected_contingency_cnt = 0
         self.catastrophe_cnt = 0
-        self.completed_goals = 0
-        self.total_goals_current_mission = 0
-        self.operation_mode = None
+        self.simulated_problems = 0
+
+        self.expected_contingency = None
+        self.sim_launched = True
+
+        self.completed_tasks = 0
         self.operation_time = 0
         self.battery_charge = 0
         self.battery_charging_cycle = 1
         self.mission_cycle = 0
         self.sim_fail_time = datetime.now()
-        self.expected_contingency = None
-        self.sim_launched = True
         self.mode_times = {'traversing': 0, 'scanning': 0, 'waiting': 0, 'catastrophe': 0, 'contingency': 0,
                            'charging': 0, 'docking': 0, 'undocking': 0}
+        self.operation_mode = None
         self.prev_mode = None
         self.prev_start = None
         self.prev_pose = None
         self.arox_total_dist = 0
-        self.simulated_problems = 0
 
         rospy.Subscriber("/contingency_preemption", String, self.contingency_callback)
         rospy.Subscriber("/catastrophe_preemption", String, self.catastrophe_callback)
@@ -113,64 +113,91 @@ class Experiment:
         self.run_experiment()
 
     def robot_info_callback(self, msg):
+        """
+        Called whenever new robot status updates arrive.
+        Used to recognize SHUTDOWN situations.
+
+        @param msg: robot info message
+        """
         if msg.data == "catastrophe processed, shutting down":
             self.catastrophe_cnt += 1
 
     def filtered_odom_callback(self, msg):
+        """
+        Called whenever new odometry data arrives. Used to track the total distance traveled by the AROX.
+
+        @param msg: odometry data
+        """
         curr_pose = PoseStamped()
         curr_pose.header.frame_id = msg.header.frame_id
         curr_pose.pose.position.x = msg.pose.pose.position.x
         curr_pose.pose.position.y = msg.pose.pose.position.y
         curr_pose.pose.orientation.z = msg.pose.pose.orientation.z
         curr_pose.pose.orientation.w = msg.pose.pose.orientation.w
-
         try:
             curr_pose_map = util.transform_pose(TF_BUFFER, curr_pose, 'map')
-
             if not self.prev_pose:
                 self.prev_pose = curr_pose_map
             else:
                 dist = math.sqrt((self.prev_pose.pose.position.x - curr_pose_map.pose.position.x) ** 2
                                  + (self.prev_pose.pose.position.y - curr_pose_map.pose.position.y) ** 2)
-
                 self.arox_total_dist += dist
                 self.prev_pose = curr_pose_map
-
         except Exception as e:
             rospy.loginfo("ERROR: %s", e)
 
     def sim_info_callback(self, msg):
-        # by this, we know when there is a msg on a fail sim topic and thus when a contingency is expected
-        rospy.loginfo("SIM LAUNCHED --------------------------")
+        """
+        Called when failure situation is simulated.
+
+        @param msg: failure simulation message
+        """
+        rospy.loginfo("failure simulation launched..")
         self.simulated_problems += 1
         self.sim_launched = True
-        # reset timer -- sim only launched now -- next shouldn't follow immediately, e.g. docking
+        # reset timer -- sim only launched now -- next sim shouldn't follow immediately, e.g., docking
         self.sim_fail_time = datetime.now()
 
     def operation_callback(self, msg):
+        """
+        Called when new information about operational parameters arrive.
+        Used to track the robot's mode times, i.e., the time it spends in each mode, and the mission cycles.
+
+        @param msg: operational parameters
+        """
         self.operation_mode = msg.operation_mode
 
         if self.operation_mode != self.prev_mode:
             if self.prev_mode:
                 self.mode_times[self.prev_mode] += (datetime.now() - self.prev_start).total_seconds()
-            if not self.operation_mode in self.mode_times.keys():
+            if self.operation_mode not in self.mode_times.keys():
                 self.mode_times[self.operation_mode] = 0
             self.prev_mode = self.operation_mode
             self.prev_start = datetime.now()
-        self.completed_goals = msg.rewards_gained
+        self.completed_tasks = msg.rewards_gained
 
         # new mission
         if msg.total_tasks == PLAN_LENGTH:
             self.mission_cycle += 1
 
     def battery_callback(self, msg):
+        """
+        Called whenever new information about the robot's battery parameters arrive.
+
+        @param msg: battery parameters
+        """
         self.battery_charge = msg.charge
         self.battery_charging_cycle = msg.charging_cycle
         self.operation_time = msg.operation_time
 
     def contingency_callback(self, msg):
+        """
+        Called in contingency situations.
+
+        @param msg: reason for contingency
+        """
         rospy.loginfo("------------------------------------------------")
-        rospy.loginfo("CONTINIGENCY: %s", msg.data)
+        rospy.loginfo("CONTINGENCY: %s", msg.data)
         rospy.loginfo("EXPECTED: %s", self.expected_contingency)
         rospy.loginfo("------------------------------------------------")
 
@@ -178,7 +205,7 @@ class Experiment:
         if isinstance(self.expected_contingency, list):
             if msg.data in self.expected_contingency:
                 self.expected_contingency = None
-                self.expected_contingency_cnt += 1
+                self.correct_contingency_cnt += 1
             # expected a contingency, but not the present one
             else:
                 # keep the expected one - could still come
@@ -186,25 +213,34 @@ class Experiment:
         elif self.expected_contingency is not None:
             if msg.data == self.expected_contingency:
                 self.expected_contingency = None
-                self.expected_contingency_cnt += 1
+                self.correct_contingency_cnt += 1
             # expected a contingency, but not the present one
             else:
                 # keep the expected one - could still come
                 self.unexpected_contingency_cnt += 1
         elif self.expected_contingency is None:
-            # false positive -- contingency although no failure sim
-            self.false_positive_contingency += 1
+            # false positive -- contingency, although no failure sim
+            self.false_positive_cnt += 1
 
         self.log_info()
 
     def catastrophe_callback(self, msg):
+        """
+        Called in catastrophe situations.
+
+        @param msg: reason for contingency
+        @return:
+        """
         self.catastrophe_cnt += 1
 
     def simulate_random_failure(self):
+        """
+        Initiates the simulation of a random LTA failure.
+        """
         global CONT_TOPIC_MSG_MAPPING
-        # shouldn't simulate any new failures during docking or when last sim has not even started
+        # shouldn't simulate any new failures during docking or when the last sim has not even started
         if self.operation_mode == "docking" or not self.sim_launched:
-            rospy.loginfo("NOT SIMULATING DUE TO DOCKING / NOT SIM LAUNCHED ------------------")
+            rospy.loginfo("not initiating new random failure simulation (docking / previous sim not completed)")
             return
 
         rand = random.randint(0, len(CONT_TOPIC_MSG_MAPPING.keys()) - 1)
@@ -219,98 +255,107 @@ class Experiment:
             self.sim_fail_time = datetime.now()
             self.sim_launched = False
             rospy.loginfo("###################################################################")
-            rospy.loginfo("###################################################################")
             rospy.loginfo("init random failure: %s", random_topic)
 
-            if self.expected_contingency == []:
-                self.issue_expected_without_contingy_and_fulfilled += 1
+            if not self.expected_contingency:
+                self.correct_no_contingency_cnt += 1
                 self.expected_contingency = None
 
             # previously expected contingency was not detected -> false negative
             if self.expected_contingency is not None:
-                self.false_negative_contingency += 1
+                self.false_negative_cnt += 1
 
             self.expected_contingency = CONT_TOPIC_MSG_MAPPING[random_topic]
             rospy.loginfo("expected contingency: %s", self.expected_contingency)
             rospy.loginfo("###################################################################")
-            rospy.loginfo("###################################################################")
             pub = rospy.Publisher(random_topic, String, queue_size=1)
-            # needs a moment to init the publisher
+            # takes a moment to init the publisher
             rospy.sleep(3)
             pub.publish("sim fail")
 
     def run_experiment(self):
-
+        """
+        Runs an LTA experiment.
+        """
+        global SIM_FAILURES, EXPERIMENT_DURATION, RANDOM_FAIL_FREQUENCY
         start_time = datetime.now()
 
         while not rospy.is_shutdown() and self.catastrophe_cnt == 0 and (
                 datetime.now() - start_time).total_seconds() < EXPERIMENT_DURATION:
 
-            # assumption -- there is enough time to complete all the simulated failures, e.g. docking fail
-            #       - docking does not occur every 2 minutes, it can take a while to get in this situation
-            #       - thus, docking shouldn't be entirely random, but only when the last docking is 
-            # elegant way to avoid these issues: wait until sim is actually launched, not until sim launch is "prepared"
-            if SIM_FAILURES and (
-                    datetime.now() - self.sim_fail_time).total_seconds() >= RANDOM_FAIL_FREQUENCY and self.sim_launched:  # and self.expected_contingency is None:
+            cooldown_satisfied = (datetime.now() - self.sim_fail_time).total_seconds() >= RANDOM_FAIL_FREQUENCY
+            # only initiate new failure simulation after a certain time has passed + the previous one is completed
+            if SIM_FAILURES and cooldown_satisfied and self.sim_launched:
                 self.simulate_random_failure()
 
-            if SIM_FAILURES:
+            if SIM_FAILURES and config.VERBOSE_LOGGING:
                 rospy.loginfo("time since last fail sim: %s", (datetime.now() - self.sim_fail_time).total_seconds())
-
-            rospy.sleep(120)
+            rospy.sleep(config.EXPERIMENTS_CHECK_FREQ)
 
         self.save_results((datetime.now() - start_time).total_seconds() / 60 / 60)
 
     def save_results(self, duration):
-        name = str(RANDOM_FAIL_FREQUENCY) + "_" + str(SEED) + "_" + str(IDX)
-        completed = duration >= 4 and self.catastrophe_cnt == 0
+        """
+        Saves the results of the LTA experiment.
+
+        @param duration: experiment duration
+        """
+        global RANDOM_FAIL_FREQUENCY, SEED, IDX, EXPERIMENT_DURATION
+        name = str(RANDOM_FAIL_FREQUENCY) + "_" + str(SEED) + "_" + str(IDX)  # notation (frequency_seed_idx)
+        completed = duration >= (EXPERIMENT_DURATION / 60 / 60) and self.catastrophe_cnt == 0
         try:
             with open(config.EXP_PATH + "results.csv", 'a') as out_file:
-                if IDX == 0:
-                    out_file.write(
-                        "experiment,duration,correct_contingencies,false_positives,false_negatives,correct_no_contingency,unexpected_contingencies,completed,completed_tasks,charge_cycles,mission_cycles,total_dist,simulated_problems,traverse_time,scan_time,wait_time,cata_time,cont_time,charge_time,dock_time,undock_time\n")
-                out_file.write(name + "," + str(duration) + "," + str(self.expected_contingency_cnt) + "," + str(
-                    self.false_positive_contingency) + "," + str(self.false_negative_contingency)
-                               + "," + str(self.issue_expected_without_contingy_and_fulfilled) + "," + str(
-                    self.unexpected_contingency_cnt) + "," + str(completed) + "," + str(self.completed_goals)
-                               + "," + str(self.battery_charging_cycle + 1) + "," + str(self.mission_cycle) + "," + str(
-                    self.arox_total_dist) + "," + str(self.simulated_problems) + ","
-                               + str(self.mode_times['traversing']) + "," + str(
-                    self.mode_times['scanning']) + "," + str(self.mode_times['waiting']) + "," + str(
-                    self.mode_times['catastrophe']) + ","
-                               + str(self.mode_times['contingency']) + "," + str(
-                    self.mode_times['charging']) + "," + str(self.mode_times['docking']) + "," + str(
-                    self.mode_times['undocking']) + "\n")
+                if IDX == 0:  # first entry --> write CSV header
+                    out_file.write("experiment,duration,correct_contingencies,false_positives,false_negatives,"
+                                   + "correct_no_contingency,unexpected_contingencies,completed,completed_tasks,"
+                                   + "charge_cycles,mission_cycles,total_dist,simulated_problems,traverse_time,"
+                                   + "scan_time,wait_time,cata_time,cont_time,charge_time,dock_time,undock_time\n")
+
+                out_file.write(name + "," + str(duration) + "," + str(self.correct_contingency_cnt) + ","
+                               + str(self.false_positive_cnt) + "," + str(self.false_negative_cnt) + ","
+                               + str(self.correct_no_contingency_cnt) + "," + str(self.unexpected_contingency_cnt) + ","
+                               + str(completed) + "," + str(self.completed_tasks) + ","
+                               + str(self.battery_charging_cycle + 1) + "," + str(self.mission_cycle) + ","
+                               + str(self.arox_total_dist) + "," + str(self.simulated_problems) + ","
+                               + str(self.mode_times['traversing']) + "," + str(self.mode_times['scanning']) + ","
+                               + str(self.mode_times['waiting']) + "," + str(self.mode_times['catastrophe']) + ","
+                               + str(self.mode_times['contingency']) + "," + str(self.mode_times['charging']) + ","
+                               + str(self.mode_times['docking']) + "," + str(self.mode_times['undocking']) + "\n")
         except Exception as e:
             rospy.loginfo("EXCEPTION during storage of experiment results: %s", e)
 
     def log_info(self):
+        """
+        Logs information about the current state of the LTA experiment to the console.
+        """
         rospy.loginfo("###########################################################")
-        rospy.loginfo("contingency cnt: %s", self.expected_contingency_cnt)
-        rospy.loginfo("false positives: %s", self.false_positive_contingency)
-        rospy.loginfo("false negatives: %s", self.false_negative_contingency)
-        rospy.loginfo("postively handled issue without CONT: %s", self.issue_expected_without_contingy_and_fulfilled)
-        rospy.loginfo("unexpected contingency: %s", self.unexpected_contingency_cnt)
+        rospy.loginfo("corr. contingency cnt: %s", self.correct_contingency_cnt)
+        rospy.loginfo("false positives: %s", self.false_positive_cnt)
+        rospy.loginfo("false negatives: %s", self.false_negative_cnt)
+        rospy.loginfo("corr. NO-contingency cnt: %s", self.correct_no_contingency_cnt)
+        rospy.loginfo("unexpected contingency cnt: %s", self.unexpected_contingency_cnt)
+        rospy.loginfo("simulated problems: %s", self.simulated_problems)
         rospy.loginfo("catastrophe cnt: %s", self.catastrophe_cnt)
         rospy.loginfo("operation mode: %s", self.operation_mode)
         rospy.loginfo("operation time: %s", self.operation_time)
-        rospy.loginfo("completed goals: %s", self.completed_goals)
+        rospy.loginfo("completed tasks: %s", self.completed_tasks)
         rospy.loginfo("battery charge: %s, cycle: %s", self.battery_charge, self.battery_charging_cycle + 1)
         rospy.loginfo("mission cycle: %s", self.mission_cycle)
         rospy.loginfo("total distance: %sm", self.arox_total_dist)
-        rospy.loginfo("simulated problems: %s", self.simulated_problems)
+
         for i in self.mode_times.keys():
             rospy.loginfo("time in '%s' mode: %ss", i, self.mode_times[i])
         rospy.loginfo("###########################################################")
 
 
 def node():
-    rospy.init_node('experiments')
-
+    """
+    LTA experiments node.
+    """
     global TF_BUFFER
+    rospy.init_node('experiments')
     TF_BUFFER = tf2_ros.Buffer()
     tf2_ros.TransformListener(TF_BUFFER)
-
     Experiment()
     rospy.loginfo("launch experiments node..")
     rospy.spin()
