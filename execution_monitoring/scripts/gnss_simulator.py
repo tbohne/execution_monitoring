@@ -7,7 +7,7 @@ from std_msgs.msg import String
 
 class GNSSSimulator:
     """
-    Acts as a “man-in-the-middle” to enrich the simulated data coming from GazeboRosGps (`libhector_gazebo_ros_gps`).
+    Acts as a "man-in-the-middle" to enrich the simulated data coming from GazeboRosGps (`libhector_gazebo_ros_gps`).
     For this purpose, it receives the `NavSatFix` message from the /fix_plugin topic and enriches it with
     user-configurable service, status and covariance information.
     """
