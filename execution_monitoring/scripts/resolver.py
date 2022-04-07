@@ -187,18 +187,15 @@ class ConnectionResolver(GeneralFailureResolver):
             self.fail_cnt = 0
 
         # wifi failures
-        if msg.data in [config.CONNECTION_FAILURE_ONE, config.CONNECTION_FAILURE_TWO, config.CONNECTION_FAILURE_THREE, config.CONNECTION_FAILURE_FOUR, config.CONNECTION_FAILURE_NINE]:
+        if msg.data in config.WIFI_FAILURES.values():
             self.resolve_wifi_failure(msg.data)
 
         # internet failures
-        elif msg.data in [config.CONNECTION_FAILURE_FIVE, config.CONNECTION_FAILURE_SIX, config.CONNECTION_FAILURE_SEVEN, config.CONNECTION_FAILURE_TEN]:
+        elif msg.data in config.INTERNET_FAILURES.values():
             self.resolve_internet_failure(msg.data)
 
         # gnss failures
-        elif msg.data in [config.CONNECTION_FAILURE_EIGHT, config.CONNECTION_FAILURE_ELEVEN, config.CONNECTION_FAILURE_TWELVE, config.CONNECTION_FAILURE_THIRTEEN,
-            config.CONNECTION_FAILURE_FOURTEEN, config.CONNECTION_FAILURE_FIFTEEN, config.CONNECTION_FAILURE_SIXTEEN, config.CONNECTION_FAILURE_SEVENTEEN,
-            config.CONNECTION_FAILURE_EIGHTEEN, config.CONNECTION_FAILURE_NINETEEN, config.CONNECTION_FAILURE_TWENTY]:
-
+        elif msg.data in config.GNSS_FAILURES.values():
             self.resolve_gnss_failure(msg.data)
 
         elif msg.data == config.CONNECTION_CATA:

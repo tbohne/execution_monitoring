@@ -49,7 +49,7 @@ class ConnectionMonitoring:
                     time_since_update = (now - self.last_gnss_msg_time).total_seconds()
                     if time_since_update > config.GPS_TIMEOUT:
                         rospy.loginfo("detected GNSS timeout - no new update since %s s", time_since_update)
-                        self.contingency_pub.publish(config.CONNECTION_FAILURE_EIGHT)
+                        self.contingency_pub.publish(config.GNSS_FAILURES[0])
                         self.active_monitoring = False
                         self.last_gnss_msg_time = datetime.now()
 
@@ -57,14 +57,14 @@ class ConnectionMonitoring:
                     time_since_update = (now - self.last_wifi_msg_time).total_seconds()
                     if time_since_update > config.WIFI_TIMEOUT:
                         rospy.loginfo("detected wifi timeout - no new update since %s s", time_since_update)
-                        self.contingency_pub.publish(config.CONNECTION_FAILURE_NINE)
+                        self.contingency_pub.publish(config.WIFI_FAILURES[4])
                         self.active_monitoring = False
 
                 if self.last_internet_msg_time:
                     time_since_update = (now - self.last_internet_msg_time).total_seconds()
                     if time_since_update > config.INTERNET_TIMEOUT:
                         rospy.loginfo("detected internet timeout - no new update since %s s", time_since_update)
-                        self.contingency_pub.publish(config.CONNECTION_FAILURE_TEN)
+                        self.contingency_pub.publish(config.INTERNET_FAILURES[3])
                         self.active_monitoring = False
 
             rospy.sleep(config.TIMEOUT_MON_FREQ)
@@ -123,11 +123,11 @@ class ConnectionMonitoring:
         """
         if nav_sat_fix.status.status not in [config.GNSS_STATUS_NO_FIX, config.GNSS_STATUS_FIX,
                                              config.GNSS_STATUS_SBAS_FIX, config.GNSS_STATUS_GBAS_FIX]:
-            self.contingency_pub.publish(config.CONNECTION_FAILURE_ELEVEN)
+            self.contingency_pub.publish(config.GNSS_FAILURES[1])
         elif nav_sat_fix.status.status == config.GNSS_STATUS_NO_FIX:
-            self.contingency_pub.publish(config.CONNECTION_FAILURE_TWELVE)
+            self.contingency_pub.publish(config.GNSS_FAILURES[2])
         elif nav_sat_fix.status.status == config.GNSS_STATUS_FIX:
-            self.robot_info_pub.publish(config.CONNECTION_FAILURE_THIRTEEN)
+            self.robot_info_pub.publish(config.GNSS_FAILURES[3])
 
     def service_monitoring(self, nav_sat_fix):
         """
@@ -137,7 +137,7 @@ class ConnectionMonitoring:
         """
         if nav_sat_fix.status.service not in [config.GNSS_SERVICE_GPS, config.GNSS_SERVICE_GLONASS,
                                               config.GNSS_SERVICE_COMPASS, config.GNSS_SERVICE_GALILEO]:
-            self.robot_info_pub.publish(config.CONNECTION_FAILURE_FOURTEEN)
+            self.robot_info_pub.publish(config.GNSS_FAILURES[4])
 
     def belief_state_monitoring(self, nav_sat_fix):
         """
@@ -147,10 +147,10 @@ class ConnectionMonitoring:
         """
         if nav_sat_fix.latitude < config.LAT_LB or nav_sat_fix.latitude > config.LAT_UB:
             # lat (degrees): pos -> north of equator, neg -> south of equator
-            self.contingency_pub.publish(config.CONNECTION_FAILURE_FIFTEEN)
+            self.contingency_pub.publish(config.GNSS_FAILURES[5])
         elif nav_sat_fix.longitude < config.LNG_LB or nav_sat_fix.longitude > config.LNG_UB:
             # lng (degrees): pos -> east of prime meridian, neg -> west of prime meridian
-            self.contingency_pub.publish(config.CONNECTION_FAILURE_SIXTEEN)
+            self.contingency_pub.publish(config.GNSS_FAILURES[6])
 
     def covariance_monitoring(self, nav_sat_fix):
         """
@@ -172,7 +172,7 @@ class ConnectionMonitoring:
                                                         config.GNSS_COVARIANCE_TYPE_APPROXIMATED,
                                                         config.GNSS_COVARIANCE_TYPE_DIAGONAL_KNOWN,
                                                         config.GNSS_COVARIANCE_TYPE_KNOWN]:
-            self.robot_info_pub.publish(config.CONNECTION_FAILURE_SEVENTEEN)
+            self.robot_info_pub.publish(config.GNSS_FAILURES[7])
 
         # only monitoring the progression for the diagonal, as these are the most important values
         # --> appending to history when >= DIAGONAL_KNOWN
@@ -185,11 +185,11 @@ class ConnectionMonitoring:
                 # GNSS receiver provides at least the variance of each measurement
                 # -> diagonal can be used for quality assessment
                 if not self.feasible_standard_deviations(nav_sat_fix):
-                    self.contingency_pub.publish(config.CONNECTION_FAILURE_EIGHTEEN)
+                    self.contingency_pub.publish(config.GNSS_FAILURES[8])
             elif nav_sat_fix.position_covariance_type == config.GNSS_COVARIANCE_TYPE_APPROXIMATED:
                 # can be considered, but with caution, without putting too much weight on it -> only approximated
                 if not self.feasible_standard_deviations(nav_sat_fix):
-                    self.robot_info_pub.publish(config.CONNECTION_FAILURE_NINETEEN)
+                    self.robot_info_pub.publish(config.GNSS_FAILURES[9])
 
     def gnss_callback(self, nav_sat_fix):
         """
@@ -268,7 +268,7 @@ class ConnectionMonitoring:
                 up_deviations) > config.SIGNIFICANT_DEVIATION_INCREASE)
 
             if east_fail or north_fail or up_fail:
-                self.contingency_pub.publish(config.CONNECTION_FAILURE_TWENTY)
+                self.contingency_pub.publish(config.GNSS_FAILURES[10])
                 return False
         return True
 
@@ -298,7 +298,7 @@ class ConnectionMonitoring:
         """
         if wifi_info.link_quality == wifi_info.signal_level == wifi_info.bit_rate == 0:
             rospy.loginfo("detected wifi disconnect..")
-            self.contingency_pub.publish(config.CONNECTION_FAILURE_FOUR)
+            self.contingency_pub.publish(config.WIFI_FAILURES[3])
             self.active_monitoring = False
             return True
         return False
@@ -312,7 +312,7 @@ class ConnectionMonitoring:
         """
         if internet_info.download == internet_info.upload == 0:
             rospy.loginfo("detected internet disconnect..")
-            self.contingency_pub.publish(config.CONNECTION_FAILURE_FIVE)
+            self.contingency_pub.publish(config.INTERNET_FAILURES[0])
             self.active_monitoring = False
             return True
         return False
@@ -325,7 +325,7 @@ class ConnectionMonitoring:
         """
         if link_quality < config.CRITICALLY_BAD_WIFI_LINK_THRESH:
             rospy.loginfo("detected critically bad wifi link of %s%% - should be fixed..", link_quality)
-            self.contingency_pub.publish(config.CONNECTION_FAILURE_ONE)
+            self.contingency_pub.publish(config.WIFI_FAILURES[0])
             self.active_monitoring = False
         elif link_quality < config.BAD_WIFI_LINK_THRESH:
             rospy.loginfo("detected bad wifi link of %s%%..", link_quality)
@@ -342,7 +342,7 @@ class ConnectionMonitoring:
         """
         if signal_level <= config.CRITICALLY_BAD_WIFI_SIGNAL_THRESH:
             rospy.loginfo("detected critically bad wifi signal level of %s dBm - no signal..", signal_level)
-            self.contingency_pub.publish(config.CONNECTION_FAILURE_TWO)
+            self.contingency_pub.publish(config.WIFI_FAILURES[1])
             self.active_monitoring = False
         elif signal_level <= config.VERY_LOW_WIFI_SIGNAL_THRESH:
             rospy.loginfo("detected very low wifi signal level of %s dBm", signal_level)
@@ -359,7 +359,7 @@ class ConnectionMonitoring:
         """
         if bit_rate < config.CRITICALLY_BAD_WIFI_BIT_RATE_THRESH:
             rospy.loginfo("detected critically bad wifi bit rate of %s Mb/s", bit_rate)
-            self.contingency_pub.publish(config.CONNECTION_FAILURE_THREE)
+            self.contingency_pub.publish(config.WIFI_FAILURES[2])
             self.active_monitoring = False
         elif bit_rate < config.RATHER_LOW_WIFI_BIT_RATE_THRESH:
             rospy.loginfo("detected rather low wifi bit rate of %s Mb/s", bit_rate)
@@ -390,7 +390,7 @@ class ConnectionMonitoring:
         """
         if download < config.CRITICALLY_BAD_DOWNLOAD_SPEED_THRESH:
             rospy.loginfo("detected critically bad download speed: %s Mb/s", download)
-            self.contingency_pub.publish(config.CONNECTION_FAILURE_SIX)
+            self.contingency_pub.publish(config.INTERNET_FAILURES[1])
             self.active_monitoring = False
         elif download < config.RATHER_LOW_DOWNLOAD_SPEED_THRESH:
             rospy.loginfo("detected rather low download speed: %s Mb/s", download)
@@ -404,7 +404,7 @@ class ConnectionMonitoring:
         """
         if upload < config.CRITICALLY_BAD_UPLOAD_SPEED_THRESH:
             rospy.loginfo("detected critically bad upload speed: %s Mb/s", upload)
-            self.contingency_pub.publish(config.CONNECTION_FAILURE_SEVEN)
+            self.contingency_pub.publish(config.INTERNET_FAILURES[2])
             self.active_monitoring = False
         elif upload < config.RATHER_LOW_UPLOAD_SPEED:
             rospy.loginfo("detected rather low upload speed: %s Mb/s", upload)

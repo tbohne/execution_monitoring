@@ -82,51 +82,17 @@ class Contingency(smach.State):
 
         if self.interrupt_reason in config.SENSOR_FAILURES.values():
             self.sensor_failure_resolver_pub.publish(self.interrupt_reason)
+        if self.interrupt_reason in config.WIFI_FAILURES.values():
+            self.wifi_failure_resolver_pub.publish(self.interrupt_reason)
+        if self.interrupt_reason in config.INTERNET_FAILURES.values():
+            self.internet_failure_resolver_pub.publish(self.interrupt_reason)
+        if self.interrupt_reason in config.GNSS_FAILURES.values():
+            self.gnss_failure_resolver_pub.publish(self.interrupt_reason)
 
-        elif self.interrupt_reason == config.CONNECTION_FAILURE_ONE:
-            self.wifi_failure_resolver_pub.publish(config.CONNECTION_FAILURE_ONE)
-        elif self.interrupt_reason == config.CONNECTION_FAILURE_TWO:
-            self.wifi_failure_resolver_pub.publish(config.CONNECTION_FAILURE_TWO)
-        elif self.interrupt_reason == config.CONNECTION_FAILURE_THREE:
-            self.wifi_failure_resolver_pub.publish(config.CONNECTION_FAILURE_THREE)
-        elif self.interrupt_reason == config.CONNECTION_FAILURE_FOUR:
-            self.wifi_failure_resolver_pub.publish(config.CONNECTION_FAILURE_FOUR)
         elif self.interrupt_reason == config.DATA_MANAGEMENT_FAILURE_ONE:
             self.data_failure_resolver_pub.publish(config.DATA_MANAGEMENT_FAILURE_ONE)
         elif self.interrupt_reason == config.DATA_MANAGEMENT_FAILURE_TWO:
             self.data_failure_resolver_pub.publish(config.DATA_MANAGEMENT_FAILURE_TWO)
-        elif self.interrupt_reason == config.CONNECTION_FAILURE_FIVE:
-            self.internet_failure_resolver_pub.publish(config.CONNECTION_FAILURE_FIVE)
-        elif self.interrupt_reason == config.CONNECTION_FAILURE_SIX:
-            self.internet_failure_resolver_pub.publish(config.CONNECTION_FAILURE_SIX)
-        elif self.interrupt_reason == config.CONNECTION_FAILURE_SEVEN:
-            self.internet_failure_resolver_pub.publish(config.CONNECTION_FAILURE_SEVEN)
-        elif self.interrupt_reason == config.CONNECTION_FAILURE_EIGHT:
-            self.gnss_failure_resolver_pub.publish(config.CONNECTION_FAILURE_EIGHT)
-        elif self.interrupt_reason == config.CONNECTION_FAILURE_NINE:
-            self.wifi_failure_resolver_pub.publish(config.CONNECTION_FAILURE_NINE)
-        elif self.interrupt_reason == config.CONNECTION_FAILURE_TEN:
-            self.internet_failure_resolver_pub.publish(config.CONNECTION_FAILURE_TEN)
-        elif self.interrupt_reason == config.CONNECTION_FAILURE_ELEVEN:
-            self.gnss_failure_resolver_pub.publish(config.CONNECTION_FAILURE_ELEVEN)
-        elif self.interrupt_reason == config.CONNECTION_FAILURE_TWELVE:
-            self.gnss_failure_resolver_pub.publish(config.CONNECTION_FAILURE_TWELVE)
-        elif self.interrupt_reason == config.CONNECTION_FAILURE_THIRTEEN:
-            self.gnss_failure_resolver_pub.publish(config.CONNECTION_FAILURE_THIRTEEN)
-        elif self.interrupt_reason == config.CONNECTION_FAILURE_FOURTEEN:
-            self.gnss_failure_resolver_pub.publish(config.CONNECTION_FAILURE_FOURTEEN)
-        elif self.interrupt_reason == config.CONNECTION_FAILURE_FIFTEEN:
-            self.gnss_failure_resolver_pub.publish(config.CONNECTION_FAILURE_FIFTEEN)
-        elif self.interrupt_reason == config.CONNECTION_FAILURE_SIXTEEN:
-            self.gnss_failure_resolver_pub.publish(config.CONNECTION_FAILURE_SIXTEEN)
-        elif self.interrupt_reason == config.CONNECTION_FAILURE_SEVENTEEN:
-            self.gnss_failure_resolver_pub.publish(config.CONNECTION_FAILURE_SEVENTEEN)
-        elif self.interrupt_reason == config.CONNECTION_FAILURE_EIGHTEEN:
-            self.gnss_failure_resolver_pub.publish(config.CONNECTION_FAILURE_EIGHTEEN)
-        elif self.interrupt_reason == config.CONNECTION_FAILURE_NINETEEN:
-            self.gnss_failure_resolver_pub.publish(config.CONNECTION_FAILURE_NINETEEN)
-        elif self.interrupt_reason == config.CONNECTION_FAILURE_TWENTY:
-            self.gnss_failure_resolver_pub.publish(config.CONNECTION_FAILURE_TWENTY)
         elif self.interrupt_reason == config.WEATHER_FAILURE_TWO:
             self.weather_failure_resolver_pub.publish(config.WEATHER_FAILURE_TWO)
         elif self.interrupt_reason == config.WEATHER_FAILURE_FIVE:

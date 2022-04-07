@@ -297,29 +297,37 @@ OVERCAST_CLOUDS = 804
 #############################################################################
 TIMEOUT_MON_FREQ = 5
 
-CONNECTION_FAILURE_ONE = "bad wifi link"
-CONNECTION_FAILURE_TWO = "bad wifi signal"
-CONNECTION_FAILURE_THREE = "bad wifi bitrate"
-CONNECTION_FAILURE_FOUR = "wifi disconnect"
-CONNECTION_FAILURE_FIVE = "internet disconnect"
-CONNECTION_FAILURE_SIX = "internet connection: bad download speed"
-CONNECTION_FAILURE_SEVEN = "internet connection: bad upload speed"
-CONNECTION_FAILURE_EIGHT = "GNSS timeout"
-CONNECTION_FAILURE_NINE = "wifi timeout"
-CONNECTION_FAILURE_TEN = "internet timeout"
-CONNECTION_FAILURE_ELEVEN = "unknown GNSS status"
-CONNECTION_FAILURE_TWELVE = "GNSS unable to find position - no fix"
-CONNECTION_FAILURE_THIRTEEN = "using pure GNSS, no RTK available"
-CONNECTION_FAILURE_FOURTEEN = "unknown GNSS service"
-CONNECTION_FAILURE_FIFTEEN = "GNSS - latitude not present or infeasible"
-CONNECTION_FAILURE_SIXTEEN = "GNSS - longitude not present or infeasible"
-CONNECTION_FAILURE_SEVENTEEN = "GNSS - unknown covariance type"
-CONNECTION_FAILURE_EIGHTEEN = "GNSS - critically high standard deviations"
-CONNECTION_FAILURE_NINETEEN = "GNSS - critically high approximated standard deviations"
-CONNECTION_FAILURE_TWENTY = "GNSS - standard deviation progression issue (increasingly higher)"
+WIFI_FAILURES = {
+    0: "bad wifi link",
+    1: "bad wifi signal",
+    2: "bad wifi bitrate",
+    3: "wifi disconnect",
+    4: "wifi timeout"
+}
+
+INTERNET_FAILURES = {
+    0: "internet disconnect",
+    1: "internet connection: bad download speed",
+    2: "internet connection: bad upload speed",
+    3: "internet timeout"
+}
+
+GNSS_FAILURES = {
+    0: "GNSS timeout",
+    1: "unknown GNSS status",
+    2: "GNSS unable to find position - no fix",
+    3: "using pure GNSS, no RTK available",
+    4: "unknown GNSS service",
+    5: "GNSS - latitude not present or infeasible",
+    6: "GNSS - longitude not present or infeasible",
+    7: "GNSS - unknown covariance type",
+    8: "GNSS - critically high standard deviations",
+    9: "GNSS - critically high approximated standard deviations",
+    10: "GNSS - standard deviation progression issue (increasingly higher)"
+}
+
 CONNECTION_CATA = "connection resolution failed -- catastrophe"
 BAD_WIFI_LINK_QUALITY = 2
-
 CRITICALLY_BAD_WIFI_LINK_THRESH = 5
 BAD_WIFI_LINK_THRESH = 25
 BELOW_AVG_WIFI_LINK = 50

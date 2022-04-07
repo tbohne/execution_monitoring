@@ -54,7 +54,7 @@ class GNSSSimulator:
 
         @param msg: reason for contingency
         """
-        if msg.data == config.CONNECTION_FAILURE_EIGHT:
+        if msg.data == config.GNSS_FAILURES[0]:
             self.timeout_fail_successful = True
 
     def toggle_sim_teleport_callback(self, msg):
