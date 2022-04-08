@@ -32,8 +32,8 @@ class PowerManagementMonitoring:
     def watchdog_callback(self, msg):
         if self.active_contingency_monitoring and msg.data == config.CONTINGENCY_MSG:
             rospy.loginfo("battery watchdog module signals contingency -- initiate contigency")
-            rospy.loginfo(config.POWER_MANAGEMENT_FAILURE_ONE)
-            self.contingency_pub.publish(config.POWER_MANAGEMENT_FAILURE_ONE)
+            rospy.loginfo(config.POWER_MANAGEMENT_FAILURES[0])
+            self.contingency_pub.publish(config.POWER_MANAGEMENT_FAILURES[0])
             self.active_contingency_monitoring = False
         elif self.active_catastrophe_monitoring and msg.data == config.CATASTROPHE_MSG:
             rospy.loginfo("battery watchdog module signals catastrophe -- initiate catastrophe")

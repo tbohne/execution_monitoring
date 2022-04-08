@@ -275,8 +275,8 @@ class PowerManagementFailureResolver(GeneralFailureResolver):
         self.problem_resolved = False
 
         # different types of resolution are required based on the type of issue
-        if msg.data == config.POWER_MANAGEMENT_FAILURE_ONE:
-            self.resolve_contingency(config.POWER_MANAGEMENT_FAILURE_ONE)
+        if msg.data in config.POWER_MANAGEMENT_FAILURES.values():
+            self.resolve_contingency(msg.data)
         elif msg.data == config.POWER_MANAGEMENT_CATA:
             self.resolve_catastrophe(config.POWER_MANAGEMENT_CATA)
 

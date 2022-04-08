@@ -60,7 +60,7 @@ CONT_TOPIC_MSG_MAPPING = {
     "/trigger_nav_fail": config.NAVIGATION_FAILURES[0],
     "/sim_docking_failure_base_pose": config.CHARGING_FAILURES[0],
     "/sim_charging_failure": config.CHARGING_FAILURES[2],
-    "/sim_power_management_contingency": config.POWER_MANAGEMENT_FAILURE_ONE
+    "/sim_power_management_contingency": config.POWER_MANAGEMENT_FAILURES[0]
 }
 
 RANDOM_FAIL_FREQUENCY = 250  # random fail every 250s (lower bound + depends on RTF)

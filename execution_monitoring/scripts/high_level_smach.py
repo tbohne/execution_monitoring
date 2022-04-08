@@ -100,10 +100,8 @@ class Contingency(smach.State):
             self.navigation_failure_resolver_pub.publish(self.interrupt_reason)
         if self.interrupt_reason in config.CHARGING_FAILURES.values():
             self.charging_failure_resolver_pub.publish(self.interrupt_reason)
-
-
-        elif self.interrupt_reason == config.POWER_MANAGEMENT_FAILURE_ONE:
-            self.power_failure_resolver_pub.publish(config.POWER_MANAGEMENT_FAILURE_ONE)
+        if self.interrupt_reason in config.POWER_MANAGEMENT_FAILURES.values():
+            self.power_failure_resolver_pub.publish(self.interrupt_reason)
         else:
             rospy.loginfo("unkonwn interrupt reason: %s", self.interrupt_reason)
             self.robot_info_pub.publish("unkonwn interrupt reason: " + self.interrupt_reason)

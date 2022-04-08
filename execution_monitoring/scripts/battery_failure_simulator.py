@@ -24,7 +24,7 @@ class BatteryFailureSimulator:
 
         @param msg: callback message - type of power management failure
         """
-        if msg.data == config.POWER_MANAGEMENT_FAILURE_ONE and self.sim_contingency:
+        if msg.data == config.POWER_MANAGEMENT_FAILURES[0] and self.sim_contingency:
             rospy.loginfo("resetting discharge rate after contingency (back to normal)..")
             self.sim_contingency = False
             self.client.update_configuration({"discharge_rate": config.NORMAL_DISCHARGE_RATE})

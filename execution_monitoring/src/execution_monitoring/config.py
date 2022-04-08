@@ -36,7 +36,10 @@ NORMAL_DISCHARGE_RATE = 0.03
 CONTINGENCY_DISCHARGE_RATE = 0.35
 CATASTROPHE_DISCHARGE_RATE = 0.59
 
-POWER_MANAGEMENT_FAILURE_ONE = "immediate return to the base station required in order to still be able to reach it"
+POWER_MANAGEMENT_FAILURES = {
+    0: "immediate return to the base station required in order to still be able to reach it"
+}
+
 POWER_MANAGEMENT_CATA = "no longer possible to reach the base station based on battery charge level"
 #############################################################################
 #############################################################################
