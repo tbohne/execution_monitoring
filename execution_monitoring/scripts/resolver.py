@@ -439,14 +439,14 @@ class PlanDeploymentFailureResolver(GeneralFailureResolver):
         self.problem_resolved = False
 
         # different types of resolution are required based on the type of issue
-        if msg.data == config.PLAN_DEPLOYMENT_FAILURE_TWO:
-            self.resolve_type_two_failure(config.PLAN_DEPLOYMENT_FAILURE_TWO)
-        elif msg.data in [config.PLAN_DEPLOYMENT_FAILURE_THREE, config.PLAN_DEPLOYMENT_FAILURE_FIVE]:
-            self.resolve_type_three_failure(config.PLAN_DEPLOYMENT_FAILURE_THREE)
-        elif msg.data == config.PLAN_DEPLOYMENT_FAILURE_FOUR:
-            self.resolve_type_four_failure(config.PLAN_DEPLOYMENT_FAILURE_FOUR)
+        if msg.data == config.PLAN_DEPLOYMENT_FAILURES[1]:
+            self.resolve_type_two_failure(msg.data)
+        elif msg.data in [config.PLAN_DEPLOYMENT_FAILURES[2], config.PLAN_DEPLOYMENT_FAILURES[4]]:
+            self.resolve_type_three_failure(msg.data)
+        elif msg.data == config.PLAN_DEPLOYMENT_FAILURES[3]:
+            self.resolve_type_four_failure(msg.data)
         elif msg.data == config.PLAN_DEPLOYMENT_CATA:
-            self.resolve_catastrophe(config.PLAN_DEPLOYMENT_CATA)
+            self.resolve_catastrophe(msg.data)
 
         if self.problem_resolved:
             self.resolution_pub.publish("problem resolved")

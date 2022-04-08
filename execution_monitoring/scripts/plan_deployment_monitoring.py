@@ -31,7 +31,7 @@ class PlanDeploymentMonitor:
             if time_since_last_op > config.IDLE_THRESH:
                 rospy.loginfo("time since last op: %.2f s", round(time_since_last_op, 2))
                 # extended idle time -- worth an operator notification
-                self.robot_info_pub.publish(config.PLAN_DEPLOYMENT_FAILURE_ONE)
+                self.robot_info_pub.publish(config.PLAN_DEPLOYMENT_FAILURES[0])
             rospy.sleep(config.MON_FREQ)
 
     def operation_callback(self, operation_state):
@@ -42,17 +42,17 @@ class PlanDeploymentMonitor:
         if msg.data == 0:
             rospy.loginfo("plan retrieval service timeout: %s", msg.data)
             rospy.sleep(1) # need a delay for some reason
-            self.contingency_pub.publish(config.PLAN_DEPLOYMENT_FAILURE_TWO)
+            self.contingency_pub.publish(config.PLAN_DEPLOYMENT_FAILURES[1])
         elif msg.data == 1:
             rospy.loginfo("empty plan: %s", msg.data)
             rospy.sleep(1) # need a delay for some reason
-            self.contingency_pub.publish(config.PLAN_DEPLOYMENT_FAILURE_THREE)
+            self.contingency_pub.publish(config.PLAN_DEPLOYMENT_FAILURES[2])
         elif msg.data == 2:
             rospy.loginfo("corrupted / infeasible plan: %s", msg.data)
-            self.contingency_pub.publish(config.PLAN_DEPLOYMENT_FAILURE_FOUR)
+            self.contingency_pub.publish(config.PLAN_DEPLOYMENT_FAILURES[3])
         else:
             rospy.loginfo("unknown plan fail code: %s", msg.data)
-            self.contingency_pub.publish(config.PLAN_DEPLOYMENT_FAILURE_FIVE)
+            self.contingency_pub.publish(config.PLAN_DEPLOYMENT_FAILURES[4])
 
 
 def node():

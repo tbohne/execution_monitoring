@@ -94,17 +94,10 @@ class Contingency(smach.State):
             self.weather_failure_resolver_pub.publish(self.interrupt_reason)
         if self.interrupt_reason in config.LOCALIZATION_FAILURES.values():
             self.localization_failure_resolver_pub.publish(self.interrupt_reason)
+        if self.interrupt_reason in config.PLAN_DEPLOYMENT_FAILURES.values():
+            self.plan_failure_resolver_pub.publish(self.interrupt_reason)
 
-        elif self.interrupt_reason == config.PLAN_DEPLOYMENT_FAILURE_ONE:
-            self.plan_failure_resolver_pub.publish(config.PLAN_DEPLOYMENT_FAILURE_ONE)
-        elif self.interrupt_reason == config.PLAN_DEPLOYMENT_FAILURE_TWO:
-            self.plan_failure_resolver_pub.publish(config.PLAN_DEPLOYMENT_FAILURE_TWO)
-        elif self.interrupt_reason == config.PLAN_DEPLOYMENT_FAILURE_THREE:
-            self.plan_failure_resolver_pub.publish(config.PLAN_DEPLOYMENT_FAILURE_THREE)
-        elif self.interrupt_reason == config.PLAN_DEPLOYMENT_FAILURE_FOUR:
-            self.plan_failure_resolver_pub.publish(config.PLAN_DEPLOYMENT_FAILURE_FOUR)
-        elif self.interrupt_reason == config.PLAN_DEPLOYMENT_FAILURE_FIVE:
-            self.plan_failure_resolver_pub.publish(config.PLAN_DEPLOYMENT_FAILURE_FIVE)
+
         elif self.interrupt_reason == config.NAV_FAILURE_ONE:
             self.navigation_failure_resolver_pub.publish(config.NAV_FAILURE_ONE)
         elif self.interrupt_reason == config.NAV_FAILURE_THREE:

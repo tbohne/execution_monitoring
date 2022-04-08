@@ -88,11 +88,14 @@ MON_FREQ = 10
 IDLE_THRESH = 300
 OPERATION_TOPIC = "arox/ongoing_operation"
 
-PLAN_DEPLOYMENT_FAILURE_ONE = "robot idle for an extended period of time"
-PLAN_DEPLOYMENT_FAILURE_TWO = "plan retrieval service unavailable"
-PLAN_DEPLOYMENT_FAILURE_THREE = "deployed plan empty"
-PLAN_DEPLOYMENT_FAILURE_FOUR = "deployed plan corrupted / infeasible"
-PLAN_DEPLOYMENT_FAILURE_FIVE = "unspecified plan deployment failure"
+PLAN_DEPLOYMENT_FAILURES = {
+    0: "robot idle for an extended period of time",
+    1: "plan retrieval service unavailable",
+    2: "deployed plan empty",
+    3: "deployed plan corrupted / infeasible",
+    4: "unspecified plan deployment failure"
+}
+
 PLAN_DEPLOYMENT_CATA = "plan deployment resolution failed -- catastrophe"
 
 FEASIBLE_ACTIONS = ["drive_to", "return_to_base", "charge", "scan"]
