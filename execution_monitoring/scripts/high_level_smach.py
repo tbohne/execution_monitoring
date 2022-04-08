@@ -82,29 +82,29 @@ class Contingency(smach.State):
 
         if self.interrupt_reason in config.SENSOR_FAILURES.values():
             self.sensor_failure_resolver_pub.publish(self.interrupt_reason)
-        if self.interrupt_reason in config.WIFI_FAILURES.values():
+        elif self.interrupt_reason in config.WIFI_FAILURES.values():
             self.wifi_failure_resolver_pub.publish(self.interrupt_reason)
-        if self.interrupt_reason in config.INTERNET_FAILURES.values():
+        elif self.interrupt_reason in config.INTERNET_FAILURES.values():
             self.internet_failure_resolver_pub.publish(self.interrupt_reason)
-        if self.interrupt_reason in config.GNSS_FAILURES.values():
+        elif self.interrupt_reason in config.GNSS_FAILURES.values():
             self.gnss_failure_resolver_pub.publish(self.interrupt_reason)
-        if self.interrupt_reason in config.DATA_MANAGEMENT_FAILURES.values():
+        elif self.interrupt_reason in config.DATA_MANAGEMENT_FAILURES.values():
             self.data_failure_resolver_pub.publish(self.interrupt_reason)
-        if self.interrupt_reason in config.WEATHER_FAILURES.values():
+        elif self.interrupt_reason in config.WEATHER_FAILURES.values():
             self.weather_failure_resolver_pub.publish(self.interrupt_reason)
-        if self.interrupt_reason in config.LOCALIZATION_FAILURES.values():
+        elif self.interrupt_reason in config.LOCALIZATION_FAILURES.values():
             self.localization_failure_resolver_pub.publish(self.interrupt_reason)
-        if self.interrupt_reason in config.PLAN_DEPLOYMENT_FAILURES.values():
+        elif self.interrupt_reason in config.PLAN_DEPLOYMENT_FAILURES.values():
             self.plan_failure_resolver_pub.publish(self.interrupt_reason)
-        if self.interrupt_reason in config.NAVIGATION_FAILURES.values():
+        elif self.interrupt_reason in config.NAVIGATION_FAILURES.values():
             self.navigation_failure_resolver_pub.publish(self.interrupt_reason)
-        if self.interrupt_reason in config.CHARGING_FAILURES.values():
+        elif self.interrupt_reason in config.CHARGING_FAILURES.values():
             self.charging_failure_resolver_pub.publish(self.interrupt_reason)
-        if self.interrupt_reason in config.POWER_MANAGEMENT_FAILURES.values():
+        elif self.interrupt_reason in config.POWER_MANAGEMENT_FAILURES.values():
             self.power_failure_resolver_pub.publish(self.interrupt_reason)
         else:
-            rospy.loginfo("unkonwn interrupt reason: %s", self.interrupt_reason)
-            self.robot_info_pub.publish("unkonwn interrupt reason: " + self.interrupt_reason)
+            rospy.loginfo("unknown interrupt reason: %s", self.interrupt_reason)
+            self.robot_info_pub.publish("unknown interrupt reason: " + self.interrupt_reason)
 
         while not self.successfully_resolved and not self.aggravate:
             rospy.sleep(5)
