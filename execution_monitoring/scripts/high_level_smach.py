@@ -98,14 +98,10 @@ class Contingency(smach.State):
             self.plan_failure_resolver_pub.publish(self.interrupt_reason)
         if self.interrupt_reason in config.NAVIGATION_FAILURES.values():
             self.navigation_failure_resolver_pub.publish(self.interrupt_reason)
+        if self.interrupt_reason in config.CHARGING_FAILURES.values():
+            self.charging_failure_resolver_pub.publish(self.interrupt_reason)
 
 
-        elif self.interrupt_reason == config.CHARGING_FAILURE_ONE:
-            self.charging_failure_resolver_pub.publish(config.CHARGING_FAILURE_ONE)
-        elif self.interrupt_reason == config.CHARGING_FAILURE_TWO:
-            self.charging_failure_resolver_pub.publish(config.CHARGING_FAILURE_TWO)
-        elif self.interrupt_reason == config.CHARGING_FAILURE_THREE:
-            self.charging_failure_resolver_pub.publish(config.CHARGING_FAILURE_THREE)
         elif self.interrupt_reason == config.POWER_MANAGEMENT_FAILURE_ONE:
             self.power_failure_resolver_pub.publish(config.POWER_MANAGEMENT_FAILURE_ONE)
         else:

@@ -637,11 +637,11 @@ class ChargingFailureResolver(GeneralFailureResolver):
         self.resolution_pub.publish("launch charging failure resolver -- type of charging failure: " + msg.data)
         self.problem_resolved = False
 
-        if msg.data == config.CHARGING_FAILURE_ONE:
+        if msg.data == config.CHARGING_FAILURES[0]:
             self.resolve_docking_failure()
-        elif msg.data == config.CHARGING_FAILURE_TWO:
+        elif msg.data == config.CHARGING_FAILURES[1]:
             self.resolve_undocking_failure()
-        elif msg.data == config.CHARGING_FAILURE_THREE:
+        elif msg.data == config.CHARGING_FAILURES[2]:
             self.resolve_charging_failure()
         elif msg.data == config.CHARGING_CATA:
             self.resolve_catastrophe(config.CHARGING_CATA)

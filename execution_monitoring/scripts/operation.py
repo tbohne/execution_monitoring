@@ -360,12 +360,12 @@ class ExecutePlan(smach.State):
                 return True
             else:
                 rospy.loginfo("docking failure..")
-                self.charge_fail_pub.publish(config.CHARGING_FAILURE_ONE)
+                self.charge_fail_pub.publish(config.CHARGING_FAILURES[0])
                 # sleep to let monitoring detect the problem
                 rospy.sleep(5)
         else:
             rospy.loginfo("SMACH execution failed: %s", self.docking_client.get_goal_status_text())
-            self.charge_fail_pub.publish(config.CHARGING_FAILURE_ONE)
+            self.charge_fail_pub.publish(config.CHARGING_FAILURES[0])
             # sleep to let monitoring detect the problem
             rospy.sleep(5)
         return False
@@ -398,11 +398,11 @@ class ExecutePlan(smach.State):
                 return True
             else:
                 rospy.loginfo("undocking failed..")
-                self.charge_fail_pub.publish(config.CHARGING_FAILURE_TWO)
+                self.charge_fail_pub.publish(config.CHARGING_FAILURES[1])
                 rospy.sleep(5)
         else:
             rospy.loginfo("SMACH execution failed: %s", self.undocking_client.get_goal_status_text())
-            self.charge_fail_pub.publish(config.CHARGING_FAILURE_TWO)
+            self.charge_fail_pub.publish(config.CHARGING_FAILURES[1])
             rospy.sleep(5)
         return False
 

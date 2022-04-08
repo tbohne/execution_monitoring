@@ -76,9 +76,12 @@ DOCKING_BASE_POSE_FAIL = [52.32059819361085, 8.153113603063638, 90]
 
 CHARGING_FAILURE_TIME = 10
 
-CHARGING_FAILURE_ONE = "docking failure - explicit docking smach failure"
-CHARGING_FAILURE_TWO = "undocking failure - explicit undocking smach failure"
-CHARGING_FAILURE_THREE = "battery not charging although docked"
+CHARGING_FAILURES = {
+    0: "docking failure - explicit docking smach failure",
+    1: "undocking failure - explicit undocking smach failure",
+    2: "battery not charging although docked"
+}
+
 CHARGING_CATA = "charging resolution failed -- catastrophe"
 #############################################################################
 #############################################################################

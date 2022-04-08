@@ -15,8 +15,8 @@ CATA_TOPIC_MSG_MAPPING = {
     # prerequisite: prepare full USB flash drive + mount it under config.FULL_DRIVE, e.g., "/mnt/usb"
     "/sim_full_disk_failure": config.DATA_MANAGEMENT_FAILURES[0],
     "/spawn_robot_prison": [config.NAVIGATION_FAILURES[0], config.NAVIGATION_FAILURES[2]],
-    "/sim_docking_failure_raised_ramp": config.CHARGING_FAILURE_ONE,
-    "/sim_undocking_failure": config.CHARGING_FAILURE_TWO,
+    "/sim_docking_failure_raised_ramp": config.CHARGING_FAILURES[0],
+    "/sim_undocking_failure": config.CHARGING_FAILURES[1],
     "/sim_power_management_catastrophe": config.POWER_MANAGEMENT_CATA
 }
 
@@ -58,8 +58,8 @@ CONT_TOPIC_MSG_MAPPING = {
     "/spawn_static_obstacles": [],
     "/toggle_simulated_unknown_service": [],
     "/trigger_nav_fail": config.NAVIGATION_FAILURES[0],
-    "/sim_docking_failure_base_pose": config.CHARGING_FAILURE_ONE,
-    "/sim_charging_failure": config.CHARGING_FAILURE_THREE,
+    "/sim_docking_failure_base_pose": config.CHARGING_FAILURES[0],
+    "/sim_charging_failure": config.CHARGING_FAILURES[2],
     "/sim_power_management_contingency": config.POWER_MANAGEMENT_FAILURE_ONE
 }
 

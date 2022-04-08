@@ -50,7 +50,7 @@ class ChargingFailureMonitoring:
         rospy.sleep(config.CHARGING_FAILURE_TIME)
         if self.latest_charge_level <= start_charge:
             rospy.loginfo("CONTINGENCY: the level of charge does not increase, although it should..")
-            self.contingency_pub.publish(config.CHARGING_FAILURE_THREE)
+            self.contingency_pub.publish(config.CHARGING_FAILURES[2])
 
     def explicit_failure_callback(self, msg):
         """
