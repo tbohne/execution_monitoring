@@ -320,6 +320,7 @@ OVERCAST_CLOUDS = 804
 ########################### CONNECTION MONITORING ###########################
 #############################################################################
 TIMEOUT_MON_FREQ = 5
+INTERNET_MON_FREQ = 10
 
 WIFI_FAILURES = {
     0: "bad wifi link",
