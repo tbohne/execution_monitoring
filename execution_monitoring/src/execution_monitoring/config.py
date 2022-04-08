@@ -51,6 +51,10 @@ POWER_MANAGEMENT_CATA = "no longer possible to reach the base station based on b
 RECOVERY_LIMIT = 30
 GOAL_STATUS_TOPIC = "/move_base_flex/exe_path/status"
 
+RECOVERY_PROGRESS_MIN_DIST_THRESH = 0.001
+
+NAV_MON_FREQ = 5
+
 GOAL_STATUS_ACTIVE = 1
 GOAL_STATUS_PREEMPTED = 2
 GOAL_STATUS_SUCCEEDED = 3
