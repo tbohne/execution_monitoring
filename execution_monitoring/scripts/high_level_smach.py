@@ -46,7 +46,7 @@ class Contingency(smach.State):
 
     def aggravate_callback(self, msg):
         """
-        Aggravation callback - problem couldn't be resolved.
+        Aggravation callback - problem couldn't be resolved by the robot.
 
         @param msg: callback message
         """
@@ -70,9 +70,10 @@ class Contingency(smach.State):
 
     def execute(self, userdata):
         """
-        Execution of 'CONTINGENCY' state - initiation of problem resolution based on reason for interruption.
+        Execution of 'CONTINGENCY' state - initiation of problem resolution based on the reason for the interruption.
 
         @param userdata: input of state
+        @return: outcome of the state ("solved" or "aggravated")
         """
         rospy.loginfo("executing CONTINGENCY state..")
         rospy.loginfo("reason for contingency: %s", self.interrupt_reason)
@@ -107,90 +108,102 @@ class Contingency(smach.State):
             self.robot_info_pub.publish("unknown interrupt reason: " + self.interrupt_reason)
 
         while not self.successfully_resolved and not self.aggravate:
+            # waiting for resolution / aggravation
             rospy.sleep(5)
 
         if self.successfully_resolved:
             rospy.loginfo("contingency solved, continuing normal operation..")
             self.robot_info_pub.publish("contingency solved, continuing normal operation")
             return "solved"
-
-        if self.aggravate:
+        elif self.aggravate:
             rospy.loginfo("issue couldn't be handled / something went wrong")
             self.robot_info_pub.publish("issue couldn't be handled / something went wrong")
             return "aggravated"
 
 
 class Catastrophe(smach.State):
+    """
+    State in the high-level SMACH that represents situations in which the robot recognizes a problem, is unable to
+    solve it, and calls an operator for help.
+    """
 
     def __init__(self):
         smach.State.__init__(self, outcomes=['damage_control_performed'])
         self.interrupt_reason = ""
         self.successfully_resolved = False
-        rospy.Subscriber('/interrupt_reason', String, self.interrupt_reason_callback, queue_size=1)
-        rospy.Subscriber('/resolve_sensor_failure_success', Bool, self.resolve_failure_success_callback, queue_size=1)
-        rospy.Subscriber('/resolve_connection_failure_success', Bool, self.resolve_failure_success_callback,
-                         queue_size=1)
-        rospy.Subscriber('/resolve_data_management_failure_success', Bool, self.resolve_failure_success_callback,
-                         queue_size=1)
-        rospy.Subscriber('/resolve_weather_failure_success', Bool, self.resolve_failure_success_callback, queue_size=1)
-        rospy.Subscriber('/resolve_localization_failure_success', Bool, self.resolve_failure_success_callback,
-                         queue_size=1)
-        rospy.Subscriber('/resolve_plan_deployment_failure_success', Bool, self.resolve_failure_success_callback,
-                         queue_size=1)
-        rospy.Subscriber('/resolve_navigation_failure_success', Bool, self.resolve_failure_success_callback,
-                         queue_size=1)
-        rospy.Subscriber('/resolve_charging_failure_success', Bool, self.resolve_failure_success_callback, queue_size=1)
-        rospy.Subscriber('/resolve_power_management_failure_success', Bool, self.resolve_failure_success_callback,
-                         queue_size=1)
+
         self.robot_info_pub = rospy.Publisher('/robot_info', String, queue_size=1)
-        self.power_management_failure_resolver_pub = rospy.Publisher('/resolve_power_management_failure', String,
-                                                                     queue_size=1)
+        self.power_failure_resolver_pub = rospy.Publisher('/resolve_power_management_failure', String, queue_size=1)
         self.sensor_failure_resolver_pub = rospy.Publisher('/resolve_sensor_failure', String, queue_size=1)
         self.internet_failure_resolver_pub = rospy.Publisher('/resolve_internet_failure', String, queue_size=1)
-        self.data_management_failure_resolver_pub = rospy.Publisher('/resolve_data_management_failure', String,
-                                                                    queue_size=1)
+        self.data_failure_resolver_pub = rospy.Publisher('/resolve_data_management_failure', String, queue_size=1)
         self.weather_failure_resolver_pub = rospy.Publisher('/resolve_weather_failure', String, queue_size=1)
         self.localization_failure_resolver_pub = rospy.Publisher('/resolve_localization_failure', String, queue_size=1)
-        self.plan_deployment_failure_resolver_pub = rospy.Publisher('/resolve_plan_deployment_failure', String,
-                                                                    queue_size=1)
+        self.plan_failure_resolver_pub = rospy.Publisher('/resolve_plan_deployment_failure', String, queue_size=1)
         self.navigation_failure_resolver_pub = rospy.Publisher('/resolve_navigation_failure', String, queue_size=1)
         self.charging_failure_resolver_pub = rospy.Publisher('/resolve_charging_failure', String, queue_size=1)
 
+        rospy.Subscriber('/interrupt_reason', String, self.interrupt_reason_callback, queue_size=1)
+        rospy.Subscriber('/resolve_sensor_failure_success', Bool, self.resolve_callback, queue_size=1)
+        rospy.Subscriber('/resolve_connection_failure_success', Bool, self.resolve_callback, queue_size=1)
+        rospy.Subscriber('/resolve_data_management_failure_success', Bool, self.resolve_callback, queue_size=1)
+        rospy.Subscriber('/resolve_weather_failure_success', Bool, self.resolve_callback, queue_size=1)
+        rospy.Subscriber('/resolve_localization_failure_success', Bool, self.resolve_callback, queue_size=1)
+        rospy.Subscriber('/resolve_plan_deployment_failure_success', Bool, self.resolve_callback, queue_size=1)
+        rospy.Subscriber('/resolve_navigation_failure_success', Bool, self.resolve_callback, queue_size=1)
+        rospy.Subscriber('/resolve_charging_failure_success', Bool, self.resolve_callback, queue_size=1)
+        rospy.Subscriber('/resolve_power_management_failure_success', Bool, self.resolve_callback, queue_size=1)
+
     def interrupt_reason_callback(self, reason):
+        """
+        Communicates the reason of an interruption.
+
+        @param reason: callback message - reason for interruption
+        """
         self.interrupt_reason = reason.data
 
-    def resolve_failure_success_callback(self, res):
+    def resolve_callback(self, res):
+        """
+        Resolution method communicates result of resolution, i.e., whether it was successful.
+
+        @param res: callback message - whether resolution was successful
+        """
         self.successfully_resolved = res.data
 
     def execute(self, userdata):
+        """
+        Execution of 'CATASTROPHE' state - initiation of problem handling based on the reason for the interruption.
+
+        @param userdata: input of state
+        @return: outcome of the state ("damage_control_performed")
+        """
         rospy.loginfo("executing CATASTROPHE state..")
         rospy.loginfo("reason for catastrophe: %s", self.interrupt_reason)
         self.robot_info_pub.publish("executing CATASTROPHE state -- reason for catastrophe: " + self.interrupt_reason)
 
-        # do everything that is still possible:
-        #   - communicate problem
-        #   - save state
-        #   - ...
         if self.interrupt_reason == config.POWER_MANAGEMENT_CATA:
-            self.power_management_failure_resolver_pub.publish(config.POWER_MANAGEMENT_CATA)
+            self.power_failure_resolver_pub.publish(self.interrupt_reason)
         elif self.interrupt_reason == config.NAV_CATA:
-            self.navigation_failure_resolver_pub.publish(config.NAV_CATA)
+            self.navigation_failure_resolver_pub.publish(self.interrupt_reason)
         elif self.interrupt_reason == config.CHARGING_CATA:
-            self.charging_failure_resolver_pub.publish(config.CHARGING_CATA)
+            self.charging_failure_resolver_pub.publish(self.interrupt_reason)
         elif self.interrupt_reason == config.PLAN_DEPLOYMENT_CATA:
-            self.plan_deployment_failure_resolver_pub.publish(config.PLAN_DEPLOYMENT_CATA)
+            self.plan_failure_resolver_pub.publish(self.interrupt_reason)
         elif self.interrupt_reason == config.DATA_MANAGEMENT_CATA:
-            self.data_management_failure_resolver_pub.publish(config.DATA_MANAGEMENT_CATA)
+            self.data_failure_resolver_pub.publish(self.interrupt_reason)
         elif self.interrupt_reason == config.SENSOR_CATA:
-            self.sensor_failure_resolver_pub.publish(config.SENSOR_CATA)
+            self.sensor_failure_resolver_pub.publish(self.interrupt_reason)
         elif self.interrupt_reason == config.LOCALIZATION_CATA:
-            self.localization_failure_resolver_pub.publish(config.LOCALIZATION_CATA)
+            self.localization_failure_resolver_pub.publish(self.interrupt_reason)
         elif self.interrupt_reason == config.WEATHER_CATA:
-            self.weather_failure_resolver_pub.publish(config.WEATHER_CATA)
+            self.weather_failure_resolver_pub.publish(self.interrupt_reason)
         elif self.interrupt_reason == config.CONNECTION_CATA:
-            self.internet_failure_resolver_pub.publish(config.CONNECTION_CATA)
+            self.internet_failure_resolver_pub.publish(self.interrupt_reason)
+        else:
+            rospy.loginfo("unknown reason for catastrophe: %s", self.interrupt_reason)
 
         while not self.successfully_resolved:
+            # waiting for handling of catastrophe situation
             rospy.sleep(5)
 
         rospy.loginfo("catastrophe processed, shutting down..")
@@ -199,12 +212,22 @@ class Catastrophe(smach.State):
 
 
 class Shutdown(smach.State):
+    """
+    State in the high-level SMACH representing the end of an LTA episode in which the system is shut down.
+    """
+
     def __init__(self):
         smach.State.__init__(self, outcomes=['data_management_completed'])
         self.pub = rospy.Publisher('/arox/shutdown_trigger', String, queue_size=1)
         self.robot_info_pub = rospy.Publisher('/robot_info', String, queue_size=1)
 
     def execute(self, userdata):
+        """
+        Execution of 'SHUTDOWN' state - initiation of system deactivation.
+
+        @param userdata: input of state
+        @return: outcome of the state ("data_management_completed")
+        """
         rospy.loginfo("executing SHUTDOWN state..")
         rospy.loginfo("system shuts down..")
         self.robot_info_pub.publish("executing SHUTDOWN state -- system shuts down")
@@ -213,6 +236,10 @@ class Shutdown(smach.State):
 
 
 class ExecutionMonitoringStateMachine(smach.StateMachine):
+    """
+    High-level hierarchically structured state machine responsible for plan execution as well as robot operation
+    monitoring.
+    """
 
     def __init__(self):
         super(ExecutionMonitoringStateMachine, self).__init__(
@@ -220,16 +247,17 @@ class ExecutionMonitoringStateMachine(smach.StateMachine):
             input_keys=[],
             output_keys=[]
         )
-
         self.interrupt_reason_pub = rospy.Publisher('/interrupt_reason', String, queue_size=1)
         self.interrupt_active_goals_pub = rospy.Publisher('/interrupt_active_goals', String, queue_size=1)
 
+        # concurrence container that enables parallel running of operation and monitoring
         operation_monitoring = smach.Concurrence(
             outcomes=['minor_complication', 'critical_complication', 'end_of_episode'],
             default_outcome='end_of_episode',
             child_termination_cb=self.child_termination_callback,
-            outcome_cb=self.out_callback)
-
+            outcome_cb=self.out_callback
+        )
+        # defines the three components running in parallel (low-level SMACH + two monitoring components)
         with operation_monitoring:
             smach.Concurrence.add('OPERATION', OperationStateMachine())
             smach.Concurrence.add('CONTINGENCY_MONITORING',
@@ -237,6 +265,7 @@ class ExecutionMonitoringStateMachine(smach.StateMachine):
             smach.Concurrence.add('CATASTROPHE_MONITORING',
                                   smach_ros.MonitorState("/catastrophe_preemption", String, self.monitoring_callback))
 
+        # defines states and transitions of the high-level execution monitoring SMACH
         with self:
             self.add('NORMAL_OPERATION', operation_monitoring,
                      transitions={'minor_complication': 'CONTINGENCY',
@@ -253,12 +282,15 @@ class ExecutionMonitoringStateMachine(smach.StateMachine):
             self.add('SHUTDOWN', Shutdown(),
                      transitions={'data_management_completed': 'system_deactivated'})
 
-    def child_termination_callback(self, outcome_map):
+    @staticmethod
+    def child_termination_callback(outcome_map):
         """
-        Called every time one of the child states terminates.
+        Called whenever one of the child states terminates.
+        (policy for determination of overall outcome based on child outcomes)
 
-        @return False: state machine should keep running
-                True:  preempt all remaining running states
+        @param outcome_map: dictionary with parallel running components as keys and outcomes as values
+        @return: False: state machine should keep running
+                 True:  preempt all remaining running states
         """
         if outcome_map['OPERATION'] in ['minor_complication', 'critical_complication', 'end_of_episode', 'preempted']:
             return True
@@ -267,10 +299,12 @@ class ExecutionMonitoringStateMachine(smach.StateMachine):
         else:
             return False
 
-    def out_callback(self, outcome_map):
+    @staticmethod
+    def out_callback(outcome_map):
         """
         Called once when the last child state terminates.
 
+        @param outcome_map: dictionary with parallel running components as keys and outcomes as values
         @return outcome of the concurrence state machine
         """
         if outcome_map['OPERATION'] == 'minor_complication' or outcome_map['CONTINGENCY_MONITORING'] == 'invalid':
@@ -282,7 +316,12 @@ class ExecutionMonitoringStateMachine(smach.StateMachine):
 
     def monitoring_callback(self, userdata, msg):
         """
+        Called in contingency and catastrophe preemption situations.
         Needs to return False when we want the monitoring state to terminate.
+
+        @param userdata: SMACH userdata
+        @param msg: reason for interruption
+        @return: False such that the monitoring state terminates
         """
         self.interrupt_reason_pub.publish(msg)
         self.interrupt_active_goals_pub.publish("interrupt all running goals..")
@@ -304,14 +343,6 @@ def node():
         pub = rospy.Publisher('SMACH_running', String, queue_size=1)
         pub.publish("execution monitoring SMACH runs")
         rospy.sleep(1)
-
-    # # if the docking is activated - open container front
-    # if config.DOCKING:
-    #     rospy.loginfo("sending command to open container front..")
-    #     container_pub = rospy.Publisher('/container/rampB_position_controller/command', Float64, queue_size=1)
-    #     for _ in range(3):
-    #         container_pub.publish(2.0)
-    #         rospy.sleep(0.5)
 
     outcome = sm.execute()
     rospy.loginfo("outcome: %s", outcome)
