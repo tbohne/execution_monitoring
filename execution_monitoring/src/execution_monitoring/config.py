@@ -53,9 +53,12 @@ GOAL_STATUS_PREEMPTED = 2
 GOAL_STATUS_SUCCEEDED = 3
 GOAL_STATUS_ABORTED = 4
 
-NAV_FAILURE_ONE = "sustained recovery - mbf cannot recover"
-NAV_FAILURE_TWO = "sustained recover - but still making progress - continuing for now"
-NAV_FAILURE_THREE = "explicit nav failure reported by low-level operation state machine"
+NAVIGATION_FAILURES = {
+    0: "sustained recovery - mbf cannot recover",
+    1: "sustained recover - but still making progress - continuing for now",
+    2: "explicit nav failure reported by low-level operation state machine"
+}
+
 NAV_CATA = "nav resolution failed -- catastrophe"
 
 RECOVERY_POINT_ONE = [52.32056824755535, 8.153337579568582, 270]

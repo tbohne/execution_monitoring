@@ -30,8 +30,8 @@ class NavigationMonitoring:
         self.navigation_monitoring()
 
     def explicit_fail_callback(self, msg):
-        rospy.loginfo("CONTINGENCY: detected navigation failure -- SUSTAINED RECOVERY")
-        self.contingency_pub.publish(config.NAV_FAILURE_THREE)
+        rospy.loginfo("CONTINGENCY: detected navigation failure -- EXPLICIT NAV FAIL")
+        self.contingency_pub.publish(config.NAVIGATION_FAILURES[2])
         self.active_monitoring = False
 
     def resolved_callback(self, msg):
@@ -54,12 +54,12 @@ class NavigationMonitoring:
                     # reached limit of recovery attempts without making progress -> < 1m
                     if distance.distance(self.robot_pos, self.robot_pos_when_started_recovery).km <= 0.001:
                         rospy.loginfo("CONTINGENCY: detected navigation failure -- SUSTAINED RECOVERY")
-                        self.contingency_pub.publish(config.NAV_FAILURE_ONE)
+                        self.contingency_pub.publish(config.NAVIGATION_FAILURES[0])
                         self.active_monitoring = False
                     else:
                         # made some progress, should reconsider from here on
                         rospy.loginfo("detected navigation failure -- SUSTAINED RECOVERY, but made some progress during recoveries -- continuing recovery")
-                        self.robot_info_pub.publish(config.NAV_FAILURE_TWO)
+                        self.robot_info_pub.publish(config.NAVIGATION_FAILURES[1])
                         self.recovery_cnt = 1
                         self.robot_pos_when_started_recovery = self.robot_pos
             else:

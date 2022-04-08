@@ -96,12 +96,10 @@ class Contingency(smach.State):
             self.localization_failure_resolver_pub.publish(self.interrupt_reason)
         if self.interrupt_reason in config.PLAN_DEPLOYMENT_FAILURES.values():
             self.plan_failure_resolver_pub.publish(self.interrupt_reason)
+        if self.interrupt_reason in config.NAVIGATION_FAILURES.values():
+            self.navigation_failure_resolver_pub.publish(self.interrupt_reason)
 
 
-        elif self.interrupt_reason == config.NAV_FAILURE_ONE:
-            self.navigation_failure_resolver_pub.publish(config.NAV_FAILURE_ONE)
-        elif self.interrupt_reason == config.NAV_FAILURE_THREE:
-            self.navigation_failure_resolver_pub.publish(config.NAV_FAILURE_THREE)
         elif self.interrupt_reason == config.CHARGING_FAILURE_ONE:
             self.charging_failure_resolver_pub.publish(config.CHARGING_FAILURE_ONE)
         elif self.interrupt_reason == config.CHARGING_FAILURE_TWO:

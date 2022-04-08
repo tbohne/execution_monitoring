@@ -14,7 +14,7 @@ import math
 CATA_TOPIC_MSG_MAPPING = {
     # prerequisite: prepare full USB flash drive + mount it under config.FULL_DRIVE, e.g., "/mnt/usb"
     "/sim_full_disk_failure": config.DATA_MANAGEMENT_FAILURES[0],
-    "/spawn_robot_prison": [config.NAV_FAILURE_ONE, config.NAV_FAILURE_THREE],
+    "/spawn_robot_prison": [config.NAVIGATION_FAILURES[0], config.NAVIGATION_FAILURES[2]],
     "/sim_docking_failure_raised_ramp": config.CHARGING_FAILURE_ONE,
     "/sim_undocking_failure": config.CHARGING_FAILURE_TWO,
     "/sim_power_management_catastrophe": config.POWER_MANAGEMENT_CATA
@@ -57,7 +57,7 @@ CONT_TOPIC_MSG_MAPPING = {
     "/sim_infeasible_plan": config.PLAN_DEPLOYMENT_FAILURES[3],
     "/spawn_static_obstacles": [],
     "/toggle_simulated_unknown_service": [],
-    "/trigger_nav_fail": config.NAV_FAILURE_ONE,
+    "/trigger_nav_fail": config.NAVIGATION_FAILURES[0],
     "/sim_docking_failure_base_pose": config.CHARGING_FAILURE_ONE,
     "/sim_charging_failure": config.CHARGING_FAILURE_THREE,
     "/sim_power_management_contingency": config.POWER_MANAGEMENT_FAILURE_ONE

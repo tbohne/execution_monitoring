@@ -529,8 +529,8 @@ class NavigationFailureResolver(GeneralFailureResolver):
         self.resolution_pub.publish("launch navigation failure resolver -- type of navigation failure: " + msg.data)
         self.problem_resolved = False
 
-        if msg.data == config.NAV_FAILURE_ONE or msg.data == config.NAV_FAILURE_THREE:
-            self.resolve_nav_failure(config.NAV_FAILURE_ONE)
+        if msg.data in config.NAVIGATION_FAILURES.values():
+            self.resolve_nav_failure(msg.data)
         elif msg.data == config.NAV_CATA:
             self.resolve_catastrophe(config.NAV_CATA)
         else:
