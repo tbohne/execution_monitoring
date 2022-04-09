@@ -2,9 +2,11 @@
 import rospy
 from std_msgs.msg import String
 
+
 class OperatorCommunication:
     """
-    Implements different communication channels with human operator.
+    Class for communication with a human operator, i.e., notifying a human operator that a problem has occurred that
+    requires human intervention, or providing useful information about the state of the robot or mission.
     """
 
     def __init__(self):
@@ -15,25 +17,36 @@ class OperatorCommunication:
 
     def request_help_callback(self, msg):
         """
-        Robot requests help of human operator - not able to solve the problem itself.
+        Robot requests help of human operator - not able to solve a problem itself.
+
+        @param msg: callback message - help request of the robot
         """
         rospy.loginfo("############ CATASTROPHE CASE ############")
         rospy.loginfo("human intervention required")
         self.op_comm_pub.publish("operator comm.: catastrophe -- human intervention required")
         rospy.loginfo("msg from robot: %s", msg.data)
 
-    def robot_info_callback(self, msg):
+    @staticmethod
+    def robot_info_callback(msg):
         """
-        Doesn't require immediate action, but good to know, e.g. memory usage 90%.
+        Robot communicates minor problems or tasks that do not require immediate action, but are good to know and
+        tackle soon, e.g., a memory usage of 90%. Yet it is also used for simple status updates on the robot or its
+        environment, such as weather conditions.
+
+        @param msg: callback message - status information provided by the robot
         """
         rospy.loginfo("############ INFORMATION ############")
         rospy.loginfo("msg from robot: %s", msg.data)
 
+
 def node():
+    """
+    Robot-human communication node.
+    """
     rospy.init_node('operator_communication')
-    #rospy.wait_for_message('SMACH_running', String)
     OperatorCommunication()
     rospy.spin()
+
 
 if __name__ == '__main__':
     try:
