@@ -123,8 +123,9 @@ class LocalizationMonitoring:
         - GNSS     -> position + interpolated orientation (absolute)
         """
         while self.active_monitoring:
-            if self.status_switch_time:
-                time_since_switch = (datetime.now() - self.status_switch_time).total_seconds()
+            time_since_switch = (datetime.now() - self.status_switch_time).total_seconds() \
+                if self.status_switch_time else None
+
             if time_since_switch and time_since_switch > config.STATUS_SWITCH_DELAY:
                 self.monitor_imu()
                 self.monitor_odom(True)
@@ -373,10 +374,12 @@ class LocalizationMonitoring:
         """
         name = "odometry" if not filtered else "filtered odometry"
         odom_data = self.odom_data if not filtered else self.odom_filtered_data
-        if self.status_switch_time:
-            time_since_switch = (datetime.now() - self.status_switch_time).total_seconds()
+
+        time_since_switch = (datetime.now() - self.status_switch_time).total_seconds() \
+            if self.status_switch_time else None
         if time_since_switch is None or time_since_switch < config.STATUS_SWITCH_DELAY:
             return
+
         if self.odom_data:
             self.odometry_twist_monitoring(odom_data, name)
             if not filtered:
@@ -418,8 +421,9 @@ class LocalizationMonitoring:
         """
         if self.active_monitoring:
             self.imu_latest = imu
-            if self.status_switch_time:
-                switch_time = (datetime.now() - self.status_switch_time).total_seconds()
+            switch_time = (datetime.now() - self.status_switch_time).total_seconds() \
+                if self.status_switch_time else None
+
             if switch_time and switch_time > config.STATUS_SWITCH_DELAY:
                 # aborted state should not be recorded at all
                 if self.mbf_status == GoalStatus.SUCCEEDED:
