@@ -19,6 +19,13 @@ MISSION_IDLE_LIMIT = 900
 
 EXPERIMENTS_CHECK_FREQ = 120
 
+ERROR_SLEEP_TIME = 5
+PREEMPTION_SLEEP_TIME = 10
+
+WAIT_SLEEP_TIME = 5
+
+PLAN_CHECK_FREQ = 10
+
 EXP_PATH = "/home/docker/catkin_ws/src/execution_monitoring/execution_monitoring/experiments/"
 
 MISSION_FAIL_MSG =  "MISSION FAIL: exceeded idle time limit during plan execution"
@@ -41,6 +48,9 @@ DIST_TO_ROBOT = 2.0
 #############################################################################
 CONTINGENCY_MSG = "CONT"
 CATASTROPHE_MSG = "CATO"
+
+CHARGE_SLEEP_TIME = 2
+ALREADY_CHARGED_THRESH = 95
 
 NORMAL_DISCHARGE_RATE = 0.03
 CONTINGENCY_DISCHARGE_RATE = 0.35
