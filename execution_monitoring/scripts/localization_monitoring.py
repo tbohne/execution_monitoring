@@ -123,8 +123,9 @@ class LocalizationMonitoring:
         - GNSS     -> position + interpolated orientation (absolute)
         """
         while self.active_monitoring:
-            time_since_switch = (datetime.now() - self.status_switch_time).total_seconds()
-            if self.status_switch_time and time_since_switch > config.STATUS_SWITCH_DELAY:
+            if self.status_switch_time:
+                time_since_switch = (datetime.now() - self.status_switch_time).total_seconds()
+            if time_since_switch and time_since_switch > config.STATUS_SWITCH_DELAY:
                 self.monitor_imu()
                 self.monitor_odom(True)
                 self.monitor_odom(False)
@@ -372,9 +373,9 @@ class LocalizationMonitoring:
         """
         name = "odometry" if not filtered else "filtered odometry"
         odom_data = self.odom_data if not filtered else self.odom_filtered_data
-        time_since_switch = (datetime.now() - self.status_switch_time).total_seconds()
-
-        if self.status_switch_time is None or time_since_switch < config.STATUS_SWITCH_DELAY:
+        if self.status_switch_time:
+            time_since_switch = (datetime.now() - self.status_switch_time).total_seconds()
+        if time_since_switch is None or time_since_switch < config.STATUS_SWITCH_DELAY:
             return
         if self.odom_data:
             self.odometry_twist_monitoring(odom_data, name)
@@ -417,9 +418,9 @@ class LocalizationMonitoring:
         """
         if self.active_monitoring:
             self.imu_latest = imu
-            switch_time = (datetime.now() - self.status_switch_time).total_seconds()
-
-            if self.status_switch_time and switch_time > config.STATUS_SWITCH_DELAY:
+            if self.status_switch_time:
+                switch_time = (datetime.now() - self.status_switch_time).total_seconds()
+            if switch_time and switch_time > config.STATUS_SWITCH_DELAY:
                 # aborted state should not be recorded at all
                 if self.mbf_status == GoalStatus.SUCCEEDED:
                     self.passive_imu_data.appendleft(imu)
