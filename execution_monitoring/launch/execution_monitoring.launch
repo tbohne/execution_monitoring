@@ -113,7 +113,7 @@
         <param name="angle_max" value="4.712"/>
 
         <remap from="scan" to="/RIEGL"/>
-        <remap from="cloud_in" to="/velodyne_points"/>
+        <remap from="cloud_in" to="/cloud_input"/>
     </node>
     <!--#############################################################################################################-->
 
