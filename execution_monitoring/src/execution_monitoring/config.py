@@ -6,6 +6,9 @@
 
 VERBOSE_LOGGING = False
 
+RESOLUTION_CHECK_FREQ = 5
+FAIL_OUTDATED_THRESH = 300
+
 BASE_POSE = [52.3203191407, 8.153625154949, 270]
 DOCKING_BASE_POSE = [52.3203930281, 8.15361381961, 180]
 
@@ -103,6 +106,9 @@ FIELD = [52.32042638488258,  8.153084460244127, 270]
 #############################################################################
 DOCKING_BASE_POSE_FAIL = [52.32059819361085, 8.153113603063638, 90]
 
+DOCKING_FAIL_THRESH = 1
+UNDOCKING_FAIL_THRESH = 1
+
 CHARGING_FAILURE_TIME = 10
 
 CHARGING_FAILURES = {
@@ -122,6 +128,9 @@ CHARGING_CATA = "charging resolution failed -- catastrophe"
 MON_FREQ = 10
 IDLE_THRESH = 300
 OPERATION_TOPIC = "arox/ongoing_operation"
+
+UNAVAIL_PLAN_SERVICE_THRESH = 1
+INVALID_PLAN_THRESH = 1
 
 PLAN_DEPLOYMENT_FAILURES = {
     0: "robot idle for an extended period of time",
@@ -152,6 +161,8 @@ DATA_MANAGEMENT_FAILURES = {
 }
 
 DATA_MANAGEMENT_CATA = "data management resolution failed -- catastrophe"
+
+REPEAT_SCAN_THRESH = 1
 
 # DATA MANAGEMENT SETTINGS
 FULL_MEMORY_THRESH = 99.0
@@ -351,6 +362,7 @@ OVERCAST_CLOUDS = 804
 #############################################################################
 TIMEOUT_MON_FREQ = 5
 INTERNET_MON_FREQ = 10
+REPEAT_CONNECTION_CHECK_THRESH = 1
 
 WIFI_FAILURES = {
     0: "bad wifi link",
