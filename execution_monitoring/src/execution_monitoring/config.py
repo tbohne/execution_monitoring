@@ -266,6 +266,10 @@ LOCALIZATION_CATA = "localization failure resolution not successful -- catastrop
 #############################################################################
 # WEATHER FAILURES / INFOS
 
+FEASIBLE_MAX_TEMP = 40
+FEASIBLE_MIN_TEMP = -5
+MIN_DIST_TO_SUNSET = 15
+
 WEATHER_FAILURES = {
     0: "moderate rain - continuing work",
     1: "heavy rain - interrupting work, seeking shelter",
