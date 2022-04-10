@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 import rospy
-from sensor_msgs.msg import LaserScan
+from sensor_msgs.msg import LaserScan, PointCloud2
 from std_msgs.msg import String, Bool
 from execution_monitoring import config, util
 import hashlib
@@ -64,8 +64,12 @@ class SensorMonitoring:
         rospy.loginfo("start sensor monitoring..")
         scan = None
         try:
-            # create a new subscription to the topic, receive one message, then unsubscribe
-            scan = rospy.wait_for_message(config.SCAN_TOPIC, LaserScan, timeout=config.SCAN_TIME_LIMIT)
+            if config.USE_LASER_SCAN:
+                # create a new subscription to the topic, receive one message, then unsubscribe
+                scan = rospy.wait_for_message(config.SCAN_TOPIC, LaserScan, timeout=config.SCAN_TIME_LIMIT)
+            else:
+                # expecting PointCloud2 data instead of LaserScan
+                scan = rospy.wait_for_message(config.CLOUD_TOPIC, PointCloud2, timeout=config.SCAN_TIME_LIMIT)
         except rospy.ROSException as e:
             rospy.loginfo("error: %s", e)
             rospy.loginfo("sensor failure detected: %s", config.SENSOR_FAILURES[0])
