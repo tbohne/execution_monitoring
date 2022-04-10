@@ -164,28 +164,28 @@ include_directories(
 catkin_install_python(PROGRAMS
   scripts/high_level_smach.py
   scripts/operation.py
-  scripts/dummy_scanner.py
-  scripts/sensor_monitoring.py
-  scripts/data_monitoring.py
-  scripts/connection_monitoring.py
-  scripts/resolver.py
-  scripts/republish_velodyne.py
-  scripts/operator_communication.py
-  scripts/internet_monitoring.py
-  scripts/weather_monitoring.py
-  scripts/localization_monitoring.py
-  scripts/gnss_simulator.py
-  scripts/os_specific/wifi_monitor.py
-  scripts/experiments.py
-  scripts/plan_deployment_monitoring.py
-  scripts/navigation_monitoring.py
-  scripts/obstacle_spawner.py
-  scripts/charging_failure_monitoring.py
-  scripts/data_accumulator.py
-  scripts/power_management_monitoring.py
-  scripts/battery_failure_simulator.py
-  scripts/mission_monitoring.py
-  scripts/charging_failure_simulator.py
+  scripts/scanning/dummy_scanner.py
+  scripts/monitoring/sensor_monitoring.py
+  scripts/monitoring/data_monitoring.py
+  scripts/monitoring/connection_monitoring.py
+  scripts/resolution/resolver.py
+  scripts/scanning/republish_velodyne.py
+  scripts/monitoring/operator_communication.py
+  scripts/monitoring/internet_monitoring.py
+  scripts/monitoring/weather_monitoring.py
+  scripts/monitoring/localization_monitoring.py
+  scripts/simulation/gnss_simulator.py
+  scripts/monitoring/os_specific/wifi_monitor.py
+  scripts/experiments/experiments.py
+  scripts/monitoring/plan_deployment_monitoring.py
+  scripts/monitoring/navigation_monitoring.py
+  scripts/simulation/obstacle_spawner.py
+  scripts/monitoring/charging_failure_monitoring.py
+  scripts/experiments/data_accumulator.py
+  scripts/monitoring/power_management_monitoring.py
+  scripts/simulation/battery_failure_simulator.py
+  scripts/monitoring/mission_monitoring.py
+  scripts/simulation/charging_failure_simulator.py
   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
 
