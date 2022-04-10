@@ -3,4 +3,3 @@
 *.pyc
 scans/
 execution_monitoring/src/execution_monitoring/secret_config.py
-experiments/
