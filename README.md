@@ -105,42 +105,31 @@ $ rosrun teleop_twist_keyboard teleop_twist_keyboard.py
 $ rostopic pub -1 /container/rampA_position_controller/command std_msgs/Float64 "data: 1.57"
 ```
 
-## Clear Costmaps
+## Clear Costmaps (`move_base_flex`)
 
 ```
 $ rosservice call /move_base_flex/clear_costmaps "{}"
 ```
 
-## Usage
+## Robot-Human Communication Module
 
-- **manual:**
-    - run high-level execution monitoring state machine: `rosrun execution_monitoring high_level_smach.py`
-    - run action server providing the dummy scanner: `rosrun execution_monitoring dummy_scanner.py`
-    - run fake RIEGL publisher republishes Velodyne scans): `rosrun execution_monitoring republish_velodyne.py`
-    - run monitoring node: `rosrun execution_monitoring monitoring.py`
-    - run resolver node: `rosrun execution_monitoring resolver.py`
-    - run battery model (energy consumption): `rosrun arox_engine arox_battery.py`
-        - configurable via `rosrun rqt_reconfigure rqt_reconfigure`
-- **with launch file (including plan generation)**:
-    - `rosrun execution_monitoring gps_simulator.py`
-    - `roslaunch execution_monitoring execution_monitoring.launch`
-- OS-specific WiFi monitoring node (Ubuntu version):
-    - `rosrun execution_monitoring wifi_monitor.py `
-
-## Communication with Human Operator
-
-- robot-human communication module: `rosrun execution_monitoring operator_communication.py`
-- human operator indicates that the problem is solved: `rostopic pub -1 /problem_solved std_msgs/String solved`
+```
+$ rosrun execution_monitoring operator_communication.py
+```
 
 ## Monitoring States
 
-- manually trigger *CONTINGENCY* or *CATASTROPHE*:
-    - **contingency detected**: `rostopic pub -1 "/contingency_preemption" std_msgs/String contingency`
-    - **catastrophe detected**: `rostopic pub -1 "/catastrophe_preemption" std_msgs/String catastrophe`
+Manually trigger *CONTINGENCY* or *CATASTROPHE*:
+```
+$ rostopic pub -1 "/contingency_preemption" std_msgs/String contingency
+$ rostopic pub -1 "/catastrophe_preemption" std_msgs/String catastrophe
+```
 
 ## Visualize State of Hierarchical SMACH (Introspection Server)
 
-`rosrun smach_viewer smach_viewer.py`
+```
+$ rosrun smach_viewer smach_viewer.py
+```
 
 ## Architecture
 
