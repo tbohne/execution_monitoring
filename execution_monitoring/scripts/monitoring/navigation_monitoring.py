@@ -1,10 +1,11 @@
 #!/usr/bin/env python
 import rospy
-from std_msgs.msg import String, Bool
 from actionlib_msgs.msg import GoalStatusArray, GoalStatus
-from execution_monitoring import config, util
-from sensor_msgs.msg import NavSatFix
 from geopy import distance
+from sensor_msgs.msg import NavSatFix
+from std_msgs.msg import String, Bool
+
+from execution_monitoring import config
 
 
 class NavigationMonitoring:

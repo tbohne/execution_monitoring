@@ -1,19 +1,20 @@
 #!/usr/bin/env python
+import actionlib
+import numpy as np
 import rospy
+from actionlib_msgs.msg import GoalStatusArray, GoalStatus
+from arox_navigation_flex.msg import drive_to_goalAction
+from arox_performance_parameters.msg import arox_operational_param
 from gazebo_msgs.msg import ODEPhysics
 from gazebo_msgs.srv import SetPhysicsProperties, SetPhysicsPropertiesRequest
-from std_msgs.msg import Float64, String
 from geometry_msgs.msg import Vector3, Twist
-from std_srvs.srv import Empty
-from actionlib_msgs.msg import GoalStatusArray, GoalStatus
-import actionlib
-from arox_navigation_flex.msg import drive_to_goalAction
-from execution_monitoring import config, util
 from sensor_msgs.msg import Imu
-from tf.transformations import euler_from_quaternion
-from arox_performance_parameters.msg import arox_operational_param
-import numpy as np
 from sensor_msgs.msg import NavSatFix
+from std_msgs.msg import Float64, String
+from std_srvs.srv import Empty
+from tf.transformations import euler_from_quaternion
+
+from execution_monitoring import config
 
 
 class PhysicsController:

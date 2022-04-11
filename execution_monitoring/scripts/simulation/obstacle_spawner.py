@@ -1,15 +1,17 @@
 #!/usr/bin/env python
+import math
+
 import rospy
-from std_msgs.msg import String
 from actionlib_msgs.msg import GoalStatusArray, GoalStatus
-from execution_monitoring import config, util
 from gazebo_msgs.srv import SpawnModel, DeleteModel
-from geometry_msgs.msg import Pose, Point, PoseStamped
-from tf.transformations import quaternion_from_euler, euler_from_quaternion
+from geometry_msgs.msg import Pose
+from geopy import distance
 from nav_msgs.msg import Odometry
 from sensor_msgs.msg import NavSatFix
-import math
-from geopy import distance
+from std_msgs.msg import String
+from tf.transformations import quaternion_from_euler, euler_from_quaternion
+
+from execution_monitoring import config
 
 STOP_SIGN_POSES_SCENE_ONE = [
     [30.702585, -23.646406, 0.671698, 0.0, 0.0, 0.619839],

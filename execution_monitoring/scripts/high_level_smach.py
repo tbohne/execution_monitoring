@@ -2,9 +2,10 @@
 import rospy
 import smach
 import smach_ros
-from std_msgs.msg import String, Bool, Float64
-from operation import OperationStateMachine
+from std_msgs.msg import String, Bool
+
 from execution_monitoring import config
+from operation import OperationStateMachine
 
 
 class Contingency(smach.State):

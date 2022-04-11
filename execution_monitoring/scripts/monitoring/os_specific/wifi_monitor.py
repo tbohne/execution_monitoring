@@ -1,11 +1,13 @@
 #!/usr/bin/env python
-import rospy
-import subprocess
-import re
 import datetime
-from execution_monitoring.msg import WiFi
-from execution_monitoring import config
+import re
+import subprocess
+
+import rospy
 from std_msgs.msg import String
+
+from execution_monitoring import config
+from execution_monitoring.msg import WiFi
 
 
 class WiFiMonitor:

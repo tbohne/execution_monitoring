@@ -1,11 +1,11 @@
 #!/usr/bin/env python
+import numpy as np
+import rospy
+import tf2_geometry_msgs
+import tf2_ros
 from arox_navigation_flex.msg import drive_to_goalGoal as dtg_Goal
 from osgeo import osr
 from tf.transformations import quaternion_from_euler
-import numpy as np
-import tf2_geometry_msgs
-import tf2_ros
-import rospy
 
 
 def parse_mission_name(mission_name):

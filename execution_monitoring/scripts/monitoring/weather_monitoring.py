@@ -1,11 +1,13 @@
 #!/usr/bin/env python
-import rospy
-from std_msgs.msg import String, Bool
-from execution_monitoring import util, config, secret_config
-from arox_performance_parameters.msg import arox_operational_param
 from datetime import datetime
-from sensor_msgs.msg import NavSatFix
+
+import rospy
+from arox_performance_parameters.msg import arox_operational_param
 from pyowm import OWM
+from sensor_msgs.msg import NavSatFix
+from std_msgs.msg import String, Bool
+
+from execution_monitoring import config, secret_config
 
 
 class WeatherData:

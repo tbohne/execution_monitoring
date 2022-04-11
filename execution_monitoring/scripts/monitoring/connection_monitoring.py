@@ -1,12 +1,14 @@
 #!/usr/bin/env python
-import rospy
 import collections
-from datetime import datetime
-from std_msgs.msg import String, Bool
-from execution_monitoring.msg import WiFi, Internet
-from sensor_msgs.msg import NavSatFix
-from execution_monitoring import config
 import math
+from datetime import datetime
+
+import rospy
+from sensor_msgs.msg import NavSatFix
+from std_msgs.msg import String, Bool
+
+from execution_monitoring import config
+from execution_monitoring.msg import WiFi, Internet
 
 
 class ConnectionMonitoring:

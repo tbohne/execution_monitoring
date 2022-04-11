@@ -1,9 +1,11 @@
 #!/usr/bin/env python
-import rospy
-from sensor_msgs.msg import LaserScan, PointCloud2
-from std_msgs.msg import String, Bool
-from execution_monitoring import config, util
 import hashlib
+
+import rospy
+from sensor_msgs.msg import LaserScan
+from std_msgs.msg import String, Bool
+
+from execution_monitoring import config
 
 
 class SensorMonitoring:

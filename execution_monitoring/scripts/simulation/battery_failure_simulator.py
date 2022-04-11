@@ -1,8 +1,9 @@
 #!/usr/bin/env python
-import rospy
-from std_msgs.msg import String, Float64, Bool
-from execution_monitoring import config
 import dynamic_reconfigure.client
+import rospy
+from std_msgs.msg import String
+
+from execution_monitoring import config
 
 
 class BatteryFailureSimulator:

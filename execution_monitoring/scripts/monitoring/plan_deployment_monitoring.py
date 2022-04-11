@@ -1,9 +1,11 @@
 #!/usr/bin/env python
-import rospy
-from execution_monitoring import config
-from std_msgs.msg import String, UInt16, Bool
-from arox_performance_parameters.msg import arox_operational_param
 from datetime import datetime
+
+import rospy
+from arox_performance_parameters.msg import arox_operational_param
+from std_msgs.msg import String, UInt16, Bool
+
+from execution_monitoring import config
 
 
 class PlanDeploymentMonitor:

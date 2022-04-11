@@ -1,10 +1,11 @@
 #!/usr/bin/env python
-import rospy
 import actionlib
-from execution_monitoring.msg import ScanAction, ScanResult
+import rospy
 from sensor_msgs.msg import LaserScan
 from std_msgs.msg import String
+
 from execution_monitoring import util, config
+from execution_monitoring.msg import ScanAction, ScanResult
 
 
 class DummyScanner:

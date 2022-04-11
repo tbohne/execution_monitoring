@@ -1,16 +1,18 @@
 #!/usr/bin/env python
-import rospy
+import collections
+import copy
 import math
-from execution_monitoring import config
 from datetime import datetime
-from std_msgs.msg import String, Bool
-from sensor_msgs.msg import Imu
-from nav_msgs.msg import Odometry
+
+import numpy as np
+import rospy
 import tf
 from actionlib_msgs.msg import GoalStatusArray, GoalStatus
-import collections
-import numpy as np
-import copy
+from nav_msgs.msg import Odometry
+from sensor_msgs.msg import Imu
+from std_msgs.msg import String, Bool
+
+from execution_monitoring import config
 
 
 class LocalizationMonitoring:

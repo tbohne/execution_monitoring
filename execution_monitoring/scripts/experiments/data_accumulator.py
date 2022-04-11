@@ -1,13 +1,15 @@
 #!/usr/bin/env python
+import errno
+import json
 from datetime import datetime
+from signal import signal, SIGPIPE, SIG_DFL
+
 import rospy
-from mongodb_store.message_store import MessageStoreProxy
 from arox_performance_parameters.msg import arox_operational_param, arox_battery_params
+from mongodb_store.message_store import MessageStoreProxy
 from sensor_msgs.msg import NavSatFix
 from std_msgs.msg import String
-import json
-import errno
-from signal import signal, SIGPIPE, SIG_DFL
+
 from execution_monitoring import config
 
 

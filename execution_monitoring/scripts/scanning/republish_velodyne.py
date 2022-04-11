@@ -2,6 +2,7 @@
 import rospy
 from sensor_msgs.msg import LaserScan
 from std_msgs.msg import String
+
 from execution_monitoring import config
 
 

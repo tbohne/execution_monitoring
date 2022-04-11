@@ -1,15 +1,17 @@
 #!/usr/bin/env python
-import rospy
-from datetime import datetime
-import random
-from std_msgs.msg import String
-from execution_monitoring import config, util
-from arox_performance_parameters.msg import arox_operational_param
-from arox_performance_parameters.msg import arox_battery_params
-from nav_msgs.msg import Odometry
-from geometry_msgs.msg import PoseStamped
-import tf2_ros
 import math
+import random
+from datetime import datetime
+
+import rospy
+import tf2_ros
+from arox_performance_parameters.msg import arox_battery_params
+from arox_performance_parameters.msg import arox_operational_param
+from geometry_msgs.msg import PoseStamped
+from nav_msgs.msg import Odometry
+from std_msgs.msg import String
+
+from execution_monitoring import config, util
 
 CATA_TOPIC_MSG_MAPPING = {
     # prerequisite: prepare full USB flash drive + mount it under config.FULL_DRIVE, e.g., "/mnt/usb"

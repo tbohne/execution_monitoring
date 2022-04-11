@@ -1,16 +1,18 @@
 #!/usr/bin/env python
-import rospy
-from std_msgs.msg import String, Bool, Float64
-import actionlib
 from datetime import datetime
-from arox_navigation_flex.msg import drive_to_goalAction
-from execution_monitoring import config, util
-from geometry_msgs.msg import Twist
-from arox_performance_parameters.msg import arox_operational_param
-from mbf_msgs.msg import RecoveryAction, RecoveryGoal
-from std_srvs.srv import Empty
-from arox_performance_parameters.msg import arox_battery_params
+
+import actionlib
+import rospy
 from actionlib_msgs.msg import GoalStatusArray, GoalStatus
+from arox_navigation_flex.msg import drive_to_goalAction
+from arox_performance_parameters.msg import arox_battery_params
+from arox_performance_parameters.msg import arox_operational_param
+from geometry_msgs.msg import Twist
+from mbf_msgs.msg import RecoveryAction, RecoveryGoal
+from std_msgs.msg import String, Bool, Float64
+from std_srvs.srv import Empty
+
+from execution_monitoring import config, util
 
 
 class FallbackResolver:

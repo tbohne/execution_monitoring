@@ -1,8 +1,10 @@
 #!/usr/bin/env python
-import rospy
-import psutil
-from std_msgs.msg import String, Bool
 from pathlib import Path
+
+import psutil
+import rospy
+from std_msgs.msg import String, Bool
+
 from execution_monitoring import util, config
 
 

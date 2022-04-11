@@ -1,9 +1,11 @@
 #!/usr/bin/env python
+from datetime import datetime
+
 import rospy
 from arox_performance_parameters.msg import arox_operational_param
-from datetime import datetime
-from execution_monitoring import config
 from std_msgs.msg import String
+
+from execution_monitoring import config
 
 
 class MissionMonitor:

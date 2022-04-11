@@ -1,10 +1,12 @@
 #!/usr/bin/env python
+import datetime
+
 import rospy
 import speedtest
-import datetime
-from execution_monitoring.msg import Internet
 from std_msgs.msg import String
+
 from execution_monitoring import config
+from execution_monitoring.msg import Internet
 
 
 class InternetConnectionMonitor:

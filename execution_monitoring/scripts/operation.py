@@ -1,22 +1,24 @@
 #!/usr/bin/env python
-import smach
+from datetime import datetime
+
 import actionlib
 import rospy
-from plan_generation.srv import get_plan
+import smach
 from actionlib_msgs.msg import GoalStatus
-from geometry_msgs.msg import PoseStamped
-from arox_navigation_flex.msg import drive_to_goalAction
-from execution_monitoring.msg import ScanAction, ScanGoal
-from arox_performance_parameters.msg import arox_operational_param
-from arox_performance_parameters.msg import arox_battery_params
 from arox_docking.msg import DockAction, UndockAction, UndockGoal, DockGoal
-from std_msgs.msg import String, UInt16, Bool
-from datetime import datetime
-from execution_monitoring import config, util
-from plan_generation.msg import plan, action
+from arox_navigation_flex.msg import drive_to_goalAction
+from arox_performance_parameters.msg import arox_battery_params
+from arox_performance_parameters.msg import arox_operational_param
+from geometry_msgs.msg import PoseStamped
 from mbf_msgs.msg import RecoveryAction, RecoveryGoal
-from std_srvs.srv import Empty
 from nav_msgs.msg import Odometry
+from plan_generation.msg import action
+from plan_generation.srv import get_plan
+from std_msgs.msg import String, UInt16, Bool
+from std_srvs.srv import Empty
+
+from execution_monitoring import config, util
+from execution_monitoring.msg import ScanAction, ScanGoal
 
 
 class Idle(smach.State):

@@ -1,8 +1,9 @@
 #!/usr/bin/env python
 import rospy
-from execution_monitoring import config
 from sensor_msgs.msg import NavSatFix
 from std_msgs.msg import String
+
+from execution_monitoring import config
 
 
 class GNSSSimulator:
