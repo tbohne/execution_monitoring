@@ -110,14 +110,14 @@ class NavigationMonitoring:
             # the last element in the list is the latest (most recent)
             self.nav_status = nav_status.status_list[-1].status
             if self.nav_status != self.status_before:
-                if self.status_before == config.GOAL_STATUS_ACTIVE and self.nav_status == config.GOAL_STATUS_ABORTED:
+                if self.status_before == GoalStatus.ACTIVE and self.nav_status == GoalStatus.ABORTED:
                     # transition from ACTIVE to ABORTED -> recovery
                     if self.active_monitoring:
                         self.recovery_cnt += 1
                     # currently in resolution mode
                     else:
                         self.recovery_attempts += 1
-                elif self.nav_status == config.GOAL_STATUS_SUCCEEDED:
+                elif self.nav_status == GoalStatus.SUCCEEDED:
                     # SUCCESS resets recovery counter
                     self.recovery_cnt = 0
                     self.robot_pos_when_started_recovery = None

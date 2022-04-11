@@ -91,7 +91,7 @@ class ObstacleSpawner:
         """
         if len(nav_status.status_list) > 0:
             # the last element in the list is the latest (most recent)
-            if self.nav_status == config.GOAL_STATUS_ACTIVE and nav_status.status_list[-1].status != self.nav_status \
+            if self.nav_status == GoalStatus.ACTIVE and nav_status.status_list[-1].status != self.nav_status \
                     and self.sim_prison_retarded:
                 self.nav_status = nav_status.status_list[-1].status
                 self.spawn_robot_prison("")
@@ -138,7 +138,7 @@ class ObstacleSpawner:
 
         @param msg: callback message
         """
-        if self.nav_status == config.GOAL_STATUS_SUCCEEDED or self.nav_status == config.GOAL_STATUS_ABORTED:
+        if self.nav_status == GoalStatus.SUCCEEDED or self.nav_status == GoalStatus.ABORTED:
             rospy.wait_for_service("/gazebo/spawn_sdf_model")
             rospy.loginfo("spawning 'robot prison'")
             self.sim_info_pub.publish("obstacle spawner: spawning 'robot prison'")

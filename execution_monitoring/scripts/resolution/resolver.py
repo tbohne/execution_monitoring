@@ -755,7 +755,7 @@ class NavigationFailureResolver(GeneralFailureResolver):
         self.drive_to_goal_client.get_result()
 
         # navigation failure during resolution -- goal not reached
-        if self.drive_to_goal_client.get_state() == config.GOAL_STATUS_ABORTED:
+        if self.drive_to_goal_client.get_state() == GoalStatus.ABORTED:
             rospy.loginfo("nav failure during resolution -- notifying operator..")
             self.resolution_pub.publish("nav failure during resolution -- notifying operator")
             # initiate catastrophe
@@ -765,7 +765,7 @@ class NavigationFailureResolver(GeneralFailureResolver):
             # wait for obstacle removal before costmap clearance
             rospy.sleep(3)
             self.clear_costmaps()
-        elif self.drive_to_goal_client.get_state() == config.GOAL_STATUS_SUCCEEDED:
+        elif self.drive_to_goal_client.get_state() == GoalStatus.SUCCEEDED:
             self.problem_resolved = True
 
 
@@ -794,7 +794,7 @@ class ChargingFailureResolver(GeneralFailureResolver):
 
         @param nav_status: navigation status
         """
-        if len(nav_status.status_list) > 0 and nav_status.status_list[-1].status == config.GOAL_STATUS_SUCCEEDED:
+        if len(nav_status.status_list) > 0 and nav_status.status_list[-1].status == GoalStatus.SUCCEEDED:
             # undocking was obviously successful - reset fail cnt
             self.undocking_fail_cnt = 0
 

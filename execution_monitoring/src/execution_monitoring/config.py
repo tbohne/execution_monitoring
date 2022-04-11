@@ -80,11 +80,6 @@ RECOVERY_PROGRESS_MIN_DIST_THRESH = 0.001
 
 NAV_MON_FREQ = 5
 
-GOAL_STATUS_ACTIVE = 1
-GOAL_STATUS_PREEMPTED = 2
-GOAL_STATUS_SUCCEEDED = 3
-GOAL_STATUS_ABORTED = 4
-
 NAVIGATION_FAILURES = {
     0: "sustained recovery - mbf cannot recover",
     1: "sustained recover - but still making progress - continuing for now",

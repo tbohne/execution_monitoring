@@ -3,6 +3,7 @@ import smach
 import actionlib
 import rospy
 from plan_generation.srv import get_plan
+from actionlib_msgs.msg import GoalStatus
 from geometry_msgs.msg import PoseStamped
 from arox_navigation_flex.msg import drive_to_goalAction
 from execution_monitoring.msg import ScanAction, ScanGoal
@@ -311,12 +312,12 @@ class ExecutePlan(smach.State):
                       self.drive_to_goal_client.get_goal_status_text())
 
         # explicit navigation failure -- goal not reached -- trigger nav monitoring
-        if self.drive_to_goal_client.get_state() == config.GOAL_STATUS_ABORTED:
+        if self.drive_to_goal_client.get_state() == GoalStatus.ABORTED:
             rospy.loginfo("explicit nav failure -- reporting to nav monitoring..")
             self.nav_fail_pub.publish("")
             rospy.sleep(config.ERROR_SLEEP_TIME)
             return False
-        elif self.drive_to_goal_client.get_state() == config.GOAL_STATUS_PREEMPTED:
+        elif self.drive_to_goal_client.get_state() == GoalStatus.PREEMPTED:
             rospy.loginfo("DRIVE TO GOAL PREEMPTED..")
             # wait for external contingency to be executed
             rospy.sleep(config.PREEMPTION_SLEEP_TIME)
