@@ -285,7 +285,7 @@ class LocalizationMonitoring:
 
             if len(self.lin_acc_active_history) == config.COVARIANCE_HISTORY_LENGTH \
                     and len(self.lin_acc_passive_history) == config.COVARIANCE_HISTORY_LENGTH \
-                    and avg_ratio < config.ACTIVE_PASSIVE_FACTOR_LB:
+                    and avg_ratio < config.ACTIVE_PASSIVE_RATIO_LB:
                 rospy.loginfo("CONTINGENCY: lin. acc. during movement not considerably higher compared to standstill")
                 self.contingency_pub.publish(config.LOCALIZATION_FAILURES[8])
                 self.active_monitoring = False

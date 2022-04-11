@@ -3,35 +3,48 @@
 #############################################################################
 ################################### SETUP ###################################
 #############################################################################
-
 VERBOSE_LOGGING = False
+DOCKING = True  # otherwise the simplified charging patch scenario is used
 
-RESOLUTION_CHECK_FREQ = 5
-FAIL_OUTDATED_THRESH = 300
-
+# target pose (lat, lng, theta) on the charging patch
 BASE_POSE = [52.3203191407, 8.153625154949, 270]
+# target pose (lat, lng, theta) in front of the base station
 DOCKING_BASE_POSE = [52.3203930281, 8.15361381961, 180]
 
-
-MBF_FAILURE = 50
-MBF_PAT_EXCEEDED = 103
-
-DOCKING = True
-
+# maximum idle time without error in seconds
 MISSION_IDLE_LIMIT = 900
-
+# frequency at which new simulations are considered (sleep time in experiments loop)
 EXPERIMENTS_CHECK_FREQ = 120
-
-ERROR_SLEEP_TIME = 5
-PREEMPTION_SLEEP_TIME = 10
-
-WAIT_SLEEP_TIME = 5
-
-PLAN_CHECK_FREQ = 10
-
+# directory in which the experimental results are stored
 EXP_PATH = "/home/docker/catkin_ws/src/execution_monitoring/execution_monitoring/experiments/"
+MISSION_FAIL_MSG = "MISSION FAIL: exceeded idle time limit during plan execution"
 
-MISSION_FAIL_MSG =  "MISSION FAIL: exceeded idle time limit during plan execution"
+# crucial topics
+OPERATION_TOPIC = "arox/ongoing_operation"
+GOAL_STATUS_TOPIC = "/move_base_flex/exe_path/status"
+#############################################################################
+#############################################################################
+#############################################################################
+
+#############################################################################
+################################# RESOLUTION ################################
+#############################################################################
+# all in seconds
+# ----------------
+# frequency with which it is checked whether a problem has been solved
+RESOLUTION_CHECK_FREQ = 5
+# time after which a previous failure is considered independent of the new one
+# when counting failures in recovery procedures
+FAIL_OUTDATED_THRESH = 300
+# sleep time introduced to give the high-level monitoring the chance to detect
+# issues before the low-level SMACH
+ERROR_SLEEP_TIME = 5
+# sleep time introduced to not transition to a new state before a contingency
+# is launched and initiated
+PREEMPTION_SLEEP_TIME = 10
+# frequency with which it is checked whether the robot should stop waiting
+# in the shelter
+WAIT_SLEEP_TIME = 5
 #############################################################################
 #############################################################################
 #############################################################################
@@ -39,9 +52,12 @@ MISSION_FAIL_MSG =  "MISSION FAIL: exceeded idle time limit during plan executio
 #############################################################################
 ############################## OBSTACLE SPAWNER #############################
 #############################################################################
+# all in meters
+# ----------------
+# height of the barrier models to be spawned as static obstacles
 BARRIER_HEIGHT = 0.833558
+# distance of the barrier models to the robot
 DIST_TO_ROBOT = 2.0
-
 #############################################################################
 #############################################################################
 #############################################################################
@@ -49,22 +65,28 @@ DIST_TO_ROBOT = 2.0
 #############################################################################
 ####################### POWER MANAGEMENT MONITORING #########################
 #############################################################################
+# contingency and catastrophe signals expected from the battery watchdog
 CONTINGENCY_MSG = "CONT"
 CATASTROPHE_MSG = "CATO"
 
+# delay of the battery watchdog in seconds at startup of the system
+# -- not really reliable at startup
 INITIAL_SLEEP_TIME = 30
-
+# frequency with which the charge level is checked during charging (in seconds)
 CHARGE_SLEEP_TIME = 2
+# battery charge percentage that is considered sufficient for skipping a
+# charge action
 ALREADY_CHARGED_THRESH = 95
-
+# default discharge rate of the robot's battery
 NORMAL_DISCHARGE_RATE = 0.03
+# increased discharge rate used to trigger contingencies
 CONTINGENCY_DISCHARGE_RATE = 0.35
+# increased discharge rate used to trigger catastrophes
 CATASTROPHE_DISCHARGE_RATE = 0.59
 
 POWER_MANAGEMENT_FAILURES = {
     0: "immediate return to the base station required in order to still be able to reach it"
 }
-
 POWER_MANAGEMENT_CATA = "no longer possible to reach the base station based on battery charge level"
 #############################################################################
 #############################################################################
@@ -73,25 +95,24 @@ POWER_MANAGEMENT_CATA = "no longer possible to reach the base station based on b
 #############################################################################
 ########################## NAVIGATION MONITORING ############################
 #############################################################################
+# max number of repeated recoveries without causing a sustained recovery case
 RECOVERY_LIMIT = 30
-GOAL_STATUS_TOPIC = "/move_base_flex/exe_path/status"
-
+# minimum distance (km) to be traveled during recovery to be considered progress
 RECOVERY_PROGRESS_MIN_DIST_THRESH = 0.001
-
+# frequency in seconds with which the monitoring for navigation failures takes place
 NAV_MON_FREQ = 5
 
 NAVIGATION_FAILURES = {
-    0: "sustained recovery - mbf cannot recover",
-    1: "sustained recover - but still making progress - continuing for now",
+    0: "sustained recovery - navigation cannot recover",
+    1: "sustained recovery - but still making progress - continuing for now",
     2: "explicit nav failure reported by low-level operation state machine"
 }
-
 NAV_CATA = "nav resolution failed -- catastrophe"
 
+# scenario-specific waypoints
 RECOVERY_POINT_ONE = [52.32056824755535, 8.153337579568582, 270]
-
 STREET = [52.320786493558508, 8.153624127240558, 270]
-FIELD = [52.32042638488258,  8.153084460244127, 270]
+FIELD = [52.32042638488258, 8.153084460244127, 270]
 #############################################################################
 #############################################################################
 #############################################################################
@@ -99,11 +120,14 @@ FIELD = [52.32042638488258,  8.153084460244127, 270]
 #############################################################################
 ###################### CHARGING FAILURE MONITORING ##########################
 #############################################################################
+# invalid base pose to simulate docking failures
 DOCKING_BASE_POSE_FAIL = [52.32059819361085, 8.153113603063638, 90]
 
+# thresholds for (un)docking repetitions before calling human operator
 DOCKING_FAIL_THRESH = 1
 UNDOCKING_FAIL_THRESH = 1
-
+# time in seconds after which charging without an increase in the charge level
+# is considered a failure
 CHARGING_FAILURE_TIME = 10
 
 CHARGING_FAILURES = {
@@ -111,7 +135,6 @@ CHARGING_FAILURES = {
     1: "undocking failure - explicit undocking smach failure",
     2: "battery not charging although docked"
 }
-
 CHARGING_CATA = "charging resolution failed -- catastrophe"
 #############################################################################
 #############################################################################
@@ -120,10 +143,14 @@ CHARGING_CATA = "charging resolution failed -- catastrophe"
 #############################################################################
 ######################## PLAN DEPLOYMENT MONITORING #########################
 #############################################################################
-MON_FREQ = 10
+# frequency in seconds with which the monitoring for plan failures takes place
+PLAN_MON_FREQ = 10
+# max time without executing an action that does not lead to a contingency
 IDLE_THRESH = 300
-OPERATION_TOPIC = "arox/ongoing_operation"
+# frequency in seconds with which plans are requested in idle state
+PLAN_CHECK_FREQ = 10
 
+# thresholds for plan retrieval repetitions before calling human operator
 UNAVAIL_PLAN_SERVICE_THRESH = 1
 INVALID_PLAN_THRESH = 1
 
@@ -134,11 +161,12 @@ PLAN_DEPLOYMENT_FAILURES = {
     3: "deployed plan corrupted / infeasible",
     4: "unspecified plan deployment failure"
 }
-
 PLAN_DEPLOYMENT_CATA = "plan deployment resolution failed -- catastrophe"
 
+# list of feasible actions in the considered scenario
 FEASIBLE_ACTIONS = ["drive_to", "return_to_base", "charge", "scan"]
 
+# plan deployment error codes
 PLAN_RETRIEVAL_TIMEOUT_CODE = 0
 EMPTY_PLAN_CODE = 1
 INFEASIBLE_PLAN_CODE = 2
@@ -149,24 +177,28 @@ INFEASIBLE_PLAN_CODE = 2
 #############################################################################
 ######################## DATA MANAGEMENT MONITORING #########################
 #############################################################################
+# threshold for scan repetitions before calling human operator
+REPEAT_SCAN_THRESH = 1
+
+# contingency case
+FULL_MEMORY_THRESH = 99.0
+# info cases
+ALMOST_FULL_MEMORY_THRESH_ONE = 90.0
+ALMOST_FULL_MEMORY_THRESH_TWO = 95.0
+
+# drive to be monitored
+MONITOR_DRIVE = "/"
+# path under which a full USB drive should be mounted during experiments
+FULL_DRIVE = "/mnt/usb"
+# whether only general capacity monitoring should take place
+# (or also specific scan checks)
+ENABLE_SPECIFIC_LASER_SCAN_CHECK = True
 
 DATA_MANAGEMENT_FAILURES = {
     0: "full memory",
     1: "scan not logged correctly"
 }
-
 DATA_MANAGEMENT_CATA = "data management resolution failed -- catastrophe"
-
-REPEAT_SCAN_THRESH = 1
-
-# DATA MANAGEMENT SETTINGS
-FULL_MEMORY_THRESH = 99.0
-ALMOST_FULL_MEMORY_THRESH_TWO = 95.0
-ALMOST_FULL_MEMORY_THRESH_ONE = 90.0
-
-MONITOR_DRIVE = "/"
-FULL_DRIVE = "/mnt/usb"
-ENABLE_SPECIFIC_LASER_SCAN_CHECK = True
 #############################################################################
 #############################################################################
 #############################################################################
@@ -174,6 +206,19 @@ ENABLE_SPECIFIC_LASER_SCAN_CHECK = True
 #############################################################################
 ############################# SENSOR MONITORING #############################
 #############################################################################
+# time it takes to generate a simulated scan (simulated scanning time)
+SCAN_TIME = 4
+# topic on which the simulated scans are expected to arrive
+SCAN_TOPIC = "/RIEGL"
+# path to the directory where the recorded scans should be saved
+SCAN_PATH = MONITOR_DRIVE + "home/docker/catkin_ws/src/execution_monitoring/execution_monitoring/scans/"
+# max scanning time without causing a contingency
+SCAN_TIME_LIMIT = 30
+# file extension of the saved scan logs
+SCAN_FILE_EXTENSION = ".txt"
+# minimum percentage of feasible range values in a recorded scan
+# without causing a contingency
+SCAN_VALUES_LB_PERCENTAGE = 5
 
 SENSOR_FAILURES = {
     0: "total sensor failure",
@@ -182,14 +227,6 @@ SENSOR_FAILURES = {
     3: "repeated scan"
 }
 SENSOR_CATA = "sensor resolution failed -- catastrophe"
-
-# SCAN SETTINGS
-SCAN_TIME = 4
-SCAN_TOPIC = "/RIEGL"
-SCAN_PATH = MONITOR_DRIVE + "home/docker/catkin_ws/src/execution_monitoring/execution_monitoring/scans/"
-SCAN_TIME_LIMIT = 30
-SCAN_FILE_EXTENSION = ".txt"
-SCAN_VALUES_LB_PERCENTAGE = 5
 #############################################################################
 #############################################################################
 #############################################################################
@@ -197,48 +234,67 @@ SCAN_VALUES_LB_PERCENTAGE = 5
 #############################################################################
 ########################## LOCALIZATION MONITORING ##########################
 #############################################################################
-
+# monitoring delay in seconds after a transition from one navigational status
+# to another (e.g. ACTIVE -> SUCCEEDED)
 STATUS_SWITCH_DELAY = 4
 
-ODOMETRY_GNSS_DIST_HEAVY_DIV_THRESH = 2.0
-ODOMETRY_GNSS_DIST_DIV_CONTINGENCY_THRESH = 1.5
-ODOMETRY_GNSS_DIST_SLIGHT_DIV_THRESH = 1.0
+# thresholds in meters for different categories of estimated distance
+# divergences between GNSS and odometry
+ODOMETRY_GNSS_DIST_HEAVY_DIV_THRESH = 2.0  # causing contingency
+ODOMETRY_GNSS_DIST_DIV_CONTINGENCY_THRESH = 1.5  # causing contingency
+ODOMETRY_GNSS_DIST_SLIGHT_DIV_THRESH = 1.0  # causing status info
 
-# TODO: should be checked - arbitrarily selected
+# maximum angular velocity in rad/sec at standstill
 NOT_MOVING_ANG_VELO_UB = 0.05
-# TODO: not sure -- check later
+# maximum linear acceleration in m/s^2 at standstill
 NOT_MOVING_LIN_ACC_UB = 3.5
 
-ACTIVE_PASSIVE_FACTOR_LB = 1.2
+# minimum factor between linear acceleration values recorded in active vs.
+# passive state (navigation) -> active / passive ratio
+ACTIVE_PASSIVE_RATIO_LB = 1.2
 
+# maximum linear twist at standstill
 NOT_MOVING_LINEAR_TWIST_UB = 0.5
+# maximum angular twist at standstill
 NOT_MOVING_ANGULAR_TWIST_UB = 0.5
+# minimum linear twist during movement
 MOVING_LINEAR_TWIST_LB = 0.3
 
+# minimum distance in meters between two consecutive GNSS
+# position estimates to allow yaw angle interpolation
 DIST_THRESH_FOR_INTERPOLATION_BETWEEN_GNSS_POS = 0.05
 
+# length of the list that keeps the latest linear acceleration values
 LIN_ACC_HISTORY_LEN = 30
 
+# maximum divergence between yaw angle (z component) estimates without contingency
 Z_COMP_DIFF_UB = 0.3
 
+# length of the list that keeps the latest IMU entries
 IMU_ENTRIES = 1500
+# fraction of the largest absolute linear acceleration values
+# of the IMU entries to be considered
 IMU_PERCENTAGE = .1
 
+# IMU standard deviation thresholds
 IMU_ORIENTATION_STD_DEV_UB = 10  # quaternion
 IMU_ANGULAR_VELO_STD_DEV_UB = 10  # rad/sec
 IMU_LIN_ACC_STD_DEV_UB = 10  # m/s^2
 
+# odometry standard deviation thresholds
 ODOM_POSE_STD_DEV_UB = 3
 ODOM_TWIST_STD_DEV_UB = 3
 
+# frequency at which localization monitoring takes place
 LOCALIZATION_MON_FREQ = 0.5
 
-# LOCALIZATION FAILURES / INFOS
-
 LOCALIZATION_FAILURES = {
-    0: "GNSS (initial-current) and odometry (initial-current) distances are diverging quite heavily -> indicator for localization issue",
-    1: "GNSS (initial-current) and odometry (initial-current) distances are diverging quite a bit -> indicator for localization issue",
-    2: "GNSS (initial-current) and odometry (initial-current) distances are slightly diverging -> indicator for minor localization issue",
+    0: "GNSS (initial-current) and odometry (initial-current) distances are diverging quite heavily "
+       + "-> indicator for localization issue",
+    1: "GNSS (initial-current) and odometry (initial-current) distances are diverging quite a bit "
+       + "-> indicator for localization issue",
+    2: "GNSS (initial-current) and odometry (initial-current) distances are slightly diverging "
+       + "-> indicator for minor localization issue",
     3: "yaw diff between GNSS interpolation and IMU too high",
     4: "yaw diff between GNSS interpolation and filtered odometry too high",
     5: "IMU standard deviations too high",
@@ -250,7 +306,6 @@ LOCALIZATION_FAILURES = {
     11: "odometry pose standard deviation too high",
     12: "odometry twist standard deviation too high"
 }
-
 LOCALIZATION_CATA = "localization failure resolution not successful -- catastrophe"
 #############################################################################
 #############################################################################
@@ -259,11 +314,10 @@ LOCALIZATION_CATA = "localization failure resolution not successful -- catastrop
 #############################################################################
 ############################ WEATHER MONITORING #############################
 #############################################################################
-# WEATHER FAILURES / INFOS
-
-FEASIBLE_MAX_TEMP = 40
-FEASIBLE_MIN_TEMP = -5
-MIN_DIST_TO_SUNSET = 15
+FEASIBLE_MAX_TEMP = 40  # in deg. C
+FEASIBLE_MIN_TEMP = -5  # in deg. C
+MIN_DIST_TO_SUNSET = 15  # in minutes
+WEATHER_MONITORING_FREQUENCY = 15  # in seconds
 
 WEATHER_FAILURES = {
     0: "moderate rain - continuing work",
@@ -271,12 +325,14 @@ WEATHER_FAILURES = {
     2: "moderate snow - continuing work",
     3: "heavy snow - interrupting work, seeking shelter",
     4: "strong breeze -> large branches in continuous motion etc. - continuing work",
-    5: "gale -> whole trees in motion; inconvenience felt when walking against the wind; wind breaks twigs and small branches - continuing work, but it begins getting critical",
+    5: "gale -> whole trees in motion; inconvenience felt when walking against the wind; wind breaks twigs and"
+       + " small branches - continuing work, but it begins getting critical",
     6: "strong gale -> risk for structural damage - interrupting work, seeking shelter",
-    7: "storm force -> very high risk for structural damage; larger trees blown over and uprooted - interrupting work, seeking shelter",
+    7: "storm force -> very high risk for structural damage; larger trees blown over and uprooted "
+       + "- interrupting work, seeking shelter",
     8: "hurricane -> very high risk for severe and extensive structural damage - interrupting work, seeking shelter",
-    9: "very high temperature (> 40 deg. C); sensor damage possible - interrupting work, seeking shelter",
-    10: "very low temperature (< -5 deg. C); battery and sensor damage expected - interrupting work, seeking shelter",
+    9: "very high temperature; sensor damage possible - interrupting work, seeking shelter",
+    10: "very low temperature; battery and sensor damage expected - interrupting work, seeking shelter",
     11: "thunderstorm - interrupting work, seeking shelter",
     12: "tornado - interrupting work, seeking shelter",
     13: "perception may be impaired by mist, smoke or fog - interrupting work, continuing later",
@@ -284,10 +340,7 @@ WEATHER_FAILURES = {
     15: "after sunset - interrupting work until sunrise",
     16: "sunset in a few minutes - interrupting work and driving back to base"
 }
-
 WEATHER_CATA = "drastic weather change resolution failed -- catastrophe"
-
-WEATHER_MONITORING_FREQUENCY = 15  # seconds
 
 # WEATHER CONDITION CODES
 # Group 2xx: Thunderstorm
@@ -359,8 +412,14 @@ OVERCAST_CLOUDS = 804
 #############################################################################
 ########################### CONNECTION MONITORING ###########################
 #############################################################################
+# identifier of the WiFi interface (e.g. available via `ifconfig`)
+WIFI_INTERFACE = "wlx3c1e045678a2"
+
+# frequency at which connection timeout monitoring takes place (in seconds)
 TIMEOUT_MON_FREQ = 5
+# frequency at which the internet connection is monitored (in seconds)
 INTERNET_MON_FREQ = 10
+# number of reconnections before calling a human operator for help
 REPEAT_CONNECTION_CHECK_THRESH = 1
 
 WIFI_FAILURES = {
@@ -370,14 +429,12 @@ WIFI_FAILURES = {
     3: "wifi disconnect",
     4: "wifi timeout"
 }
-
 INTERNET_FAILURES = {
     0: "internet disconnect",
     1: "internet connection: bad download speed",
     2: "internet connection: bad upload speed",
     3: "internet timeout"
 }
-
 GNSS_FAILURES = {
     0: "GNSS timeout",
     1: "unknown GNSS status",
@@ -391,42 +448,57 @@ GNSS_FAILURES = {
     9: "GNSS - critically high approximated standard deviations",
     10: "GNSS - standard deviation progression issue (increasingly higher)"
 }
-
 CONNECTION_CATA = "connection resolution failed -- catastrophe"
-BAD_WIFI_LINK_QUALITY = 2
-CRITICALLY_BAD_WIFI_LINK_THRESH = 5
-BAD_WIFI_LINK_THRESH = 25
-BELOW_AVG_WIFI_LINK = 50
 
-CRITICALLY_BAD_WIFI_SIGNAL_THRESH = -90
-VERY_LOW_WIFI_SIGNAL_THRESH = -80
-LOW_WIFI_SIGNAL_THRESH = -75
+# thresholds
+CRITICALLY_BAD_WIFI_LINK_THRESH = 5  # in percent
+BAD_WIFI_LINK_THRESH = 25  # in percent
+BELOW_AVG_WIFI_LINK = 50  # in percent
 
-CRITICALLY_BAD_WIFI_BIT_RATE_THRESH = 1
-RATHER_LOW_WIFI_BIT_RATE_THRESH = 20
+CRITICALLY_BAD_WIFI_SIGNAL_THRESH = -90  # in dBm
+VERY_LOW_WIFI_SIGNAL_THRESH = -80  # in dBm
+LOW_WIFI_SIGNAL_THRESH = -75  # in dBm
 
-CRITICALLY_BAD_DOWNLOAD_SPEED_THRESH = 1
-RATHER_LOW_DOWNLOAD_SPEED_THRESH = 10
+CRITICALLY_BAD_WIFI_BIT_RATE_THRESH = 1  # in Mb/s
+RATHER_LOW_WIFI_BIT_RATE_THRESH = 20  # in Mb/s
 
-CRITICALLY_BAD_UPLOAD_SPEED_THRESH = 1
-RATHER_LOW_UPLOAD_SPEED = 10
+CRITICALLY_BAD_DOWNLOAD_SPEED_THRESH = 1  # in Mb/s
+RATHER_LOW_DOWNLOAD_SPEED_THRESH = 10  # in Mb/s
 
-BAD_WIFI_SIGNAL_LEVEL = -90
-BAD_WIFI_BIT_RATE = 0.1
-WIFI_DISCONNECT = 0
-BAD_DOWNLOAD = 0.5
-BAD_UPLOAD = 0.5
-GPS_TIMEOUT = 30
-WIFI_TIMEOUT = 120
-WIFI_MONITORING_FREQ = 10
-WIFI_QUALITY_ESTIMATION_FREQ = 60
-INTERNET_TIMEOUT = 120
+CRITICALLY_BAD_UPLOAD_SPEED_THRESH = 1  # in Mb/s
+RATHER_LOW_UPLOAD_SPEED = 10  # in Mb/s
+
+# limits
+LAT_LB = -90  # latitude lower bound
+LAT_UB = 90  # latitude upper bound
+LNG_LB = -180  # longitude lower bound
+LNG_UB = 180  # longitude upper bound
+STD_DEVIATION_UB = 10  # standard deviations upper bound (in meters)
+COVARIANCE_HISTORY_LENGTH = 5  # number of tracked covariance matrices
+SIGNIFICANT_DEVIATION_INCREASE = 5  # what is considered a significant increase in meters
+
+# problematic values used in the simulation of error events
+BAD_WIFI_LINK_QUALITY = 2  # in percent
+BAD_WIFI_SIGNAL_LEVEL = -90  # in dBm
+BAD_WIFI_BIT_RATE = 0.1  # in Mb/s
+WIFI_DISCONNECT = 0  # in Mb/s
+BAD_DOWNLOAD = 0.5  # in Mb/s
+BAD_UPLOAD = 0.5  # in Mb/s
+
+# timeouts
+GPS_TIMEOUT = 30  # in s
+WIFI_TIMEOUT = 120  # in s
+INTERNET_TIMEOUT = 120  # in s
+
+# monitoring frequencies
+WIFI_MONITORING_FREQ = 10  # in s
+WIFI_QUALITY_ESTIMATION_FREQ = 60  # in s
 
 # GNSS STATUS OPTIONS
 GNSS_STATUS_NO_FIX = -1  # unable to find position
-GNSS_STATUS_FIX = 0      # unaugmented fix - found a location, using solely GPS/GLONASS/etc.
-GNSS_STATUS_SBAS_FIX = 1 # with satellite-based augmentation - fix with assistance of such networks as StarFire
-GNSS_STATUS_GBAS_FIX = 2 # with ground-based augmentation - fix with assistance of such networks as DGPS or GBAS
+GNSS_STATUS_FIX = 0  # unaugmented fix - found a location, using solely GPS/GLONASS/etc.
+GNSS_STATUS_SBAS_FIX = 1  # with satellite-based augmentation - fix with assistance of such networks as StarFire
+GNSS_STATUS_GBAS_FIX = 2  # with ground-based augmentation - fix with assistance of such networks as DGPS or GBAS
 # GNSS SERVICE OPTIONS
 GNSS_SERVICE_INVALID = 0
 GNSS_SERVICE_GPS = 1
@@ -438,18 +510,6 @@ GNSS_COVARIANCE_TYPE_UNKNOWN = 0
 GNSS_COVARIANCE_TYPE_APPROXIMATED = 1
 GNSS_COVARIANCE_TYPE_DIAGONAL_KNOWN = 2
 GNSS_COVARIANCE_TYPE_KNOWN = 3
-# other GNSS conf
-LAT_LB = -90
-LAT_UB = 90
-LNG_LB = -180
-LNG_UB = 180
-# GNSS covariance config
-STD_DEVIATION_UB = 10
-COVARIANCE_HISTORY_LENGTH = 5
-SIGNIFICANT_DEVIATION_INCREASE = 5
-
-# WIFI MONITORING
-WIFI_INTERFACE = "wlx3c1e045678a2"
 #############################################################################
 #############################################################################
 #############################################################################

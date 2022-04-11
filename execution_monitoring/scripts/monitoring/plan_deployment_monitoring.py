@@ -46,7 +46,7 @@ class PlanDeploymentMonitor:
                 rospy.loginfo("time since last op: %.2f s", round(time_since_last_op, 2))
                 # extended idle time -- worth an operator notification
                 self.robot_info_pub.publish(config.PLAN_DEPLOYMENT_FAILURES[0])
-            rospy.sleep(config.MON_FREQ)
+            rospy.sleep(config.PLAN_MON_FREQ)
 
     def operation_callback(self, operation_state):
         """
