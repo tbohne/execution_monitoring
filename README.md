@@ -54,17 +54,18 @@ Launch complete framework:
 ```
 $ roslaunch execution_monitoring execution_monitoring.launch
 ```
-### Components that can be (de)activated in the launch file:
+### <u>Components that can be (de)activated in the launch file:</u>
+
 - plan generation
 - autonomous (un)docking
-- `MongoDB` logging
+- database logging
 - dummy scanner
 - failure resolution
 - failure simulation
 - monitoring nodes (individually)
 - energy consumption model
 - LTA experiments
-- `pointcloud-to-laserscan`
+- pointcloud to laserscan converter
 
 ## Exploration GUI
 
@@ -144,93 +145,67 @@ $ rosrun smach_viewer smach_viewer.py
 
 ## Experiments - Simulation of LTA Challenges
 
-### Sensor Failures
+Each failure can be simulated by publishing on the respective topic, e.g., `rostopic pub -1 /toggle_simulated_total_sensor_failure std_msgs/String fail`.
 
-- **total sensor failure:** `rostopic pub -1 /toggle_simulated_total_sensor_failure std_msgs/String fail`
-- **empty list of range values:** `rostopic pub -1 /toggle_simulated_empty_ranges std_msgs/String fail`
-- **predominantly impermissible values:** `rostopic pub -1 /toggle_simulated_impermissible_ranges std_msgs/String fail`
-- **repeated scan:** `rostopic pub -1 /toggle_simulated_scan_repetition std_msgs/String fail`
+|Category                   | Failure                                                 | Topic                                                                   |
+|---------------------------|---------------------------------------------------------|-------------------------------------------------------------------------|
+| Sensor Failures           | **total sensor failure**                                | `/toggle_simulated_total_sensor_failure`                                |
+| Sensor Failures           | **empty list of range values**                          | `/toggle_simulated_empty_ranges`                                        |
+| Sensor Failures           | **predominantly impermissible values**                  | `/toggle_simulated_impermissible_ranges`                                |
+| Sensor Failures           | **repeated scan**                                       | `/toggle_simulated_scan_repetition`                                     |
+| WiFi Failures             | **poor link quality**                                   | `/toggle_simulated_bad_wifi_link`                                       |
+| WiFi Failures             | **poor signal**                                         | `/toggle_simulated_bad_wifi_signal`                                     |
+| WiFi Failures             | **poor bit rate**                                       | `/toggle_simulated_bad_wifi_bit_rate`                                   |
+| WiFi Failures             | **disconnect**                                          | `/toggle_simulated_wifi_disconnect`                                     |
+| Internet Failures         | **disconnect**                                          | `/sim_internet_connection_failure`                                      |
+| Internet Failures         | **bad download**                                        | `/toggle_simulated_bad_download`                                        |
+| Internet Failures         | **bad upload**                                          | `/toggle_simulated_bad_upload`                                          |
+| GNSS Failures             | **disconnect / timeout**                                | `/toggle_simulated_timeout_failure`                                     |
+| GNSS Failures             | **good quality**                                        | `/set_simulated_good_quality`                                           |
+| GNSS Failures             | **medium quality**                                      | `/set_simulated_med_quality`                                            |
+| GNSS Failures             | **low quality**                                         | `/set_simulated_low_quality`                                            |
+| GNSS Failures             | **unknown status**                                      | `/set_simulated_unknown_status`                                         |
+| GNSS Failures             | **no fix**                                              | `/set_simulated_no_fix`                                                 |
+| GNSS Failures             | **no RTK**                                              | `/set_simulated_no_rtk`                                                 |
+| GNSS Failures             | **unknown service**                                     | `/toggle_simulated_unknown_service`                                     |
+| GNSS Failures             | **infeasible lat / lng**                                | `/toggle_simulated_infeasible_lat_lng`                                  |
+| GNSS Failures             | **variance history failure**                            | `/toggle_simulated_variance_history_failure`                            |
+| GNSS Failures             | **high deviation**                                      | `/toggle_simulated_high_deviation`                                      |
+| Drastic Weather Changes   | **heavy rain**                                          | `/toggle_rain_sim`                                                      |
+| Drastic Weather Changes   | **heavy snow**                                          | `/toggle_snow_sim`                                                      |
+| Drastic Weather Changes   | **gale**                                                | `/toggle_wind_sim`                                                      |
+| Drastic Weather Changes   | **low temperature**                                     | `/toggle_low_temp_sim`                                                  |
+| Drastic Weather Changes   | **thunderstorm**                                        | `/toggle_thuderstorm_sim`                                               |
+| Drastic Weather Changes   | **sunset**                                              | `/toggle_sunset_sim`                                                    |
+| Data Management Failures  | **full memory**                                         | `/sim_full_disk_failure`                                                |
+| Data Management Failures  | **scan logging failure**                                | `/toggle_simulated_scan_logging_failure`                                |
+| Localization Failures     | **odometry-GNSS distance divergence (type 1)**          | `/wheel_movement_without_pos_change`                                    |
+| Localization Failures     | **odometry-GNSS distance divergence (type 2)**          | `/pos_change_without_wheel_movement`                                    |
+| Localization Failures     | **interpolated GNSS and IMU / odometry yaw divergence** | `/yaw_divergence`                                                       |
+| Localization Failures     | **IMU acceleration although no active nav goal**        | `/moving_although_standing_still_imu`                                   |
+| Localization Failures     | **odometry twist although no active nav goal**          | `/moving_although_standing_still_odom`                                  |
+| Plan Deployment Failures  | **extended idle time**                                  | `/sim_extended_idle_time`                                               |
+| Plan Deployment Failures  | **unavailable plan service**                            | `/toggle_unavailable_plan_service`                                      |
+| Plan Deployment Failures  | **empty plan**                                          | `/sim_empty_plan`                                                       |
+| Plan Deployment Failures  | **infeasible plan**                                     | `/sim_infeasible_plan`                                                  |
+| Navigation Failures       | **static obstacles**                                    | `/spawn_static_obstacles std_msgs/String scene_[one, two, three, four]` |
+| Navigation Failures       | **robot prison**                                        | `/spawn_robot_prison`                                                   |
+| Navigation Failures       | **navigation failure**                                  | `/trigger_nav_fail`                                                     |
+| Charging Failures         | **undocking failure (raised ramp)**                     | `/sim_undocking_failure`                                                |
+| Charging Failures         | **docking failure (raised ramp)**                       | `/sim_docking_failure_raised_ramp`                                      |
+| Charging Failures         | **docking failure (wrong base pose)**                   | `/sim_docking_failure_base_pose`                                        |
+| Charging Failures         | **charging failure**                                    | `/sim_charging_failure`                                                 |
+| Power Management Failures | **contingency**                                         | `/sim_power_management_contingency`                                     |
+| Power Management Failures | **catastrophe**                                         | `/sim_power_management_catastrophe`                                     |
 
-### Connection Failures
-
-#### WiFi Failures
-
-- **poor link quality:** `rostopic pub -1 /toggle_simulated_bad_wifi_link std_msgs/String fail`
-- **poor signal:** `rostopic pub -1 /toggle_simulated_bad_wifi_signal std_msgs/String fail`
-- **poor bit rate:** `rostopic pub -1 /toggle_simulated_bad_wifi_bit_rate std_msgs/String fail`
-- **disconnect:** `rostopic pub -1 /toggle_simulated_wifi_disconnect std_msgs/String fail`
-
-#### Internet Failures
-
-- **disconnect:** `rostopic pub -1 /sim_internet_connection_failure std_msgs/String fail`
-- **bad download:** `rostopic pub -1 /toggle_simulated_bad_download std_msgs/String fail`
-- **bad upload:** `rostopic pub -1 /toggle_simulated_bad_upload std_msgs/String fail`
-
-#### GNSS Failures / Options
-
-- **disconnect / timeout:** `rostopic pub -1 /toggle_simulated_timeout_failure std_msgs/String fail`
-- **good quality** `rostopic pub -1 /set_simulated_good_quality std_msgs/String fail`
-- **medium quality:** `rostopic pub -1 /set_simulated_med_quality std_msgs/String fail`
-- **low quality:** `rostopic pub -1 /set_simulated_low_quality std_msgs/String fail`
-- **unknown status:** `rostopic pub -1 /set_simulated_unknown_status std_msgs/String fail`
-- **no fix:** `rostopic pub -1 /set_simulated_no_fix std_msgs/String fail`
-- **no RTK:** `rostopic pub -1 /set_simulated_no_rtk std_msgs/String fail`
-- **unknown service:** `rostopic pub -1 /toggle_simulated_unknown_service std_msgs/String fail`
-- **infeasible lat / lng:** `rostopic pub -1 /toggle_simulated_infeasible_lat_lng std_msgs/String fail`
-- **variance history failure:** `rostopic pub -1 /toggle_simulated_variance_history_failure std_msgs/String fail`
-- **high deviation:** `rostopic pub -1 /toggle_simulated_high_deviation std_msgs/String fail`
-
-### Drastic Weather Changes
-
-- **heavy rain:** `rostopic pub -1 /toggle_rain_sim std_msgs/String fail`
-- **heavy snow:** `rostopic pub -1 /toggle_snow_sim std_msgs/String fail`
-- **gale:** `rostopic pub -1 /toggle_wind_sim std_msgs/String fail`
-- **low temp.:** `rostopic pub -1 /toggle_low_temp_sim std_msgs/String fail`
-- **thunderstorm:** `rostopic pub -1 /toggle_thuderstorm_sim std_msgs/String fail`
-- **sunset:** `rostopic pub -1 /toggle_sunset_sim std_msgs/String fail`
-
-### Data Management Failures
-
-- **full memory:** prepare full USB flash drive
+<u>Requirements:</u>
+- **IMU acceleration although no active nav goal**:
+    - only working if both the active and passive history is complete (e.g. 1500)
+- **full memory**: 
+    -  prepare full USB flash drive
     - find out device: `fdisk -l`, e.g. `/dev/sdd1`
         - if necessary: `lsblk -f`
         - `umount /dev/sdd1 MOUNTPOINT`
     - create directory for flash drive: `mkdir /mnt/usb`
     - mount flash drive: `mount /dev/sdd1 /mnt/usb`
     - set `MONITOR_DRIVE` to `/mnt/usb`
-    - then `rostopic pub -1 /sim_full_disk_failure std_msgs/String fail`
-- **scan logging failure:** `rostopic pub -1 /toggle_simulated_scan_logging_failure std_msgs/String fail`
-
-### Localization Failures
-
-- **odometry-GNSS distance divergence (type 1):** `rostopic pub -1 /wheel_movement_without_pos_change std_msgs/String fail`
-- **odometry-GNSS distance divergence (type 2):**  `rostopic pub -1 /pos_change_without_wheel_movement std_msgs/String fail`
-- **interpolated GNSS and IMU / odometry yaw divergence:** `rostopic pub -1 /yaw_divergence std_msgs/String fail`
-- **IMU acceleration although no active nav goal:** `rostopic pub -1 /moving_although_standing_still_imu std_msgs/String fail`
-    - *note: only working if both the active and passive history is complete (e.g. 1500)*
-- **odometry twist although no active nav goal:** `rostopic pub -1 /moving_although_standing_still_odom std_msgs/String fail`
-
-### Plan Deployment Failures
-
-- **extended idle time:** `rostopic pub -1 /sim_extended_idle_time std_msgs/String fail`
-- **unavailable plan service:** `rostopic pub -1 /toggle_unavailable_plan_service std_msgs/String fail`
-- **empty plan:** `rostopic pub -1 /sim_empty_plan std_msgs/String fail`
-- **infeasible plan:** `rostopic pub -1 /sim_infeasible_plan std_msgs/String fail`
-
-### Navigation Failures
-
-- **static obstacles:** `rostopic pub -1 /spawn_static_obstacles std_msgs/String scene_[one, two, three, four]`
-- **robot prison:** `rostopic pub -1 /spawn_robot_prison std_msgs/String fail`
-- **navigation failure:** `rostopic pub -1 /trigger_nav_fail std_msgs/String fail`
-
-### Charging Failures
-
-- **undocking failure (raised ramp):** `rostopic pub -1 /sim_undocking_failure std_msgs/String fail`
-- **docking failure (raised ramp):** `rostopic pub -1 /sim_docking_failure_raised_ramp std_msgs/String fail`
-- **docking failure (wrong base pose):** `rostopic pub -1 /sim_docking_failure_base_pose std_msgs/String fail`
-- **charging failure:** `rostopic pub -1 /sim_charging_failure std_msgs/String fail`
-
-### Power Management Failures
-
-- **contingency:** `rostopic pub -1 /sim_power_management_contingency std_msgs/String fail`
-- **catastrophe:** `rostopic pub -1 /sim_power_management_catastrophe std_msgs/String fail`
