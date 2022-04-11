@@ -249,8 +249,8 @@ class ConnectionResolver(GeneralFailureResolver):
         self.problem_resolved = False
 
         # fail count outdated -> reset
-        time_since_fail = (datetime.now() - self.fail_cnt_update).total_seconds()
-        if self.fail_cnt_update and time_since_fail > config.FAIL_OUTDATED_THRESH:
+        time_since_fail = (datetime.now() - self.fail_cnt_update).total_seconds() if self.fail_cnt_update else None
+        if time_since_fail and time_since_fail > config.FAIL_OUTDATED_THRESH:
             self.fail_cnt = 0
 
         # wifi failures
@@ -429,8 +429,8 @@ class SensorFailureResolver(GeneralFailureResolver):
         self.problem_resolved = False
 
         # reset outdated fail count
-        time_since_fail = (datetime.now() - self.fail_cnt_update).total_seconds()
-        if self.fail_cnt_update and time_since_fail > config.FAIL_OUTDATED_THRESH:
+        time_since_fail = (datetime.now() - self.fail_cnt_update).total_seconds() if self.fail_cnt_update else None
+        if time_since_fail and time_since_fail > config.FAIL_OUTDATED_THRESH:
             self.fail_cnt = 0
 
         if msg.data in config.SENSOR_FAILURES.values():
