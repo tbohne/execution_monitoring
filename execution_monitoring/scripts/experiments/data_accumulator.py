@@ -289,21 +289,20 @@ class DataAccumulator:
 
         @param msg: callback message - specifying category to be displayed
         """
-
         # no category specified -> query entire database
-        if msg.data == "":
+        if msg.data == "-":
             rospy.loginfo("showing database entries:")
             entries = self.msg_store.query(String._type)
         # query database with the specified category
         else:
             rospy.loginfo("showing database entries for category: %s", msg.data)
-            entries = self.msg_store.query_named(msg.data, String._type)
-
+            entries = self.msg_store.query(String._type)
         for entry in entries:
             data, meta = entry
-            rospy.loginfo("data: %s", data.data)
-            rospy.loginfo("name: %s, inserted_at: %s", meta['name'], meta['inserted_at'])
-            rospy.loginfo("------------------------------")
+            if meta['name'] == msg.data:
+                rospy.loginfo("data: %s", data.data)
+                rospy.loginfo("name: %s, inserted_at: %s", meta['name'], meta['inserted_at'])
+                rospy.loginfo("------------------------------")
 
 
 def node():
