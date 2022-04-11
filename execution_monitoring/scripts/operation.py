@@ -33,11 +33,21 @@ class Idle(smach.State):
                              input_keys=['input_plan'],
                              output_keys=['output_plan'])
 
+        self.end_of_episode = False
         self.mission_name_pub = rospy.Publisher('/mission_name', String, queue_size=1)
         self.exception_pub = rospy.Publisher('/plan_retrieval_failure', UInt16, queue_size=1)
         self.action_info_pub = rospy.Publisher('/action_info', String, queue_size=1)
         self.robot_info_pub = rospy.Publisher('/robot_info', String, queue_size=1)
         self.operation_pub = rospy.Publisher('arox/ongoing_operation', arox_operational_param, queue_size=1)
+        rospy.Subscriber("/end_of_episode", String, self.end_of_episode_callback, queue_size=1)
+
+    def end_of_episode_callback(self, msg):
+        """
+        Callback that indicates an end of episode.
+
+        @param msg: callback message
+        """
+        self.end_of_episode = True
 
     def publish_state_of_ongoing_operation(self, mode):
         """
@@ -79,6 +89,9 @@ class Idle(smach.State):
         rospy.loginfo("executing IDLE state..")
         self.action_info_pub.publish("executing IDLE state..")
         self.publish_state_of_ongoing_operation("waiting")
+
+        if self.end_of_episode:
+            return 'end_of_episode_signal'
 
         if self.preempt_requested():
             rospy.loginfo("external problem detected by monitoring procedures - preempting normal operation..")
