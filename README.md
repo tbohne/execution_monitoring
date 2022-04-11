@@ -2,7 +2,13 @@
 
 **Fully integrated plan execution, monitoring and resolution framework capable of overcoming some of the typical limitations of long-term autonomous mobile outdoor robots. Detailed background information is available in my [master's thesis](https://github.com/tbohne/msc), in the context of which this framework was developed.**
 
-## Dependencies
+## General Dependencies
+- [mongodb_store](https://github.com/strands-project/mongodb_store): MongoDB tools for storing and analysing runs of ROS systems
+    - branch: `melodic-devel`
+- [plan_generation](https://github.com/tbohne/plan_generation):  ROS node that generates / provides action plans based on CSV data
+    - branch: `main`
+
+## Dependencies for the Prototype Scenario in the Simulation
 
 - [arox_docker](https://git.ni.dfki.de/arox/arox_docker): dockerization of the AROX (Autonomous Robotic Experimentation Platform)
     - branch: `noetic`
@@ -13,10 +19,7 @@
         - [arox_engine](https://git.ni.dfki.de/arox/arox_core/arox_engine): `feature_arox_battery`
         - [arox_performance_parameters ](https://git.ni.dfki.de/arox/arox_core/arox_performance_parameters): `feature_msc_setup_tim`
         - [map_langsenkamp](https://git.ni.dfki.de/zla/map_langsenkamp): `feature_lta_map`
-        - [execution_monitoring](https://github.com/tbohne/execution_monitoring): `main`
-        - [plan_generation](https://github.com/tbohne/plan_generation): `main`
         - [arox_docking](https://git.ni.dfki.de/arox/arox_core/arox_docking): `feature/python2_compatible`
-        - [mongodb_store](https://github.com/strands-project/mongodb_store): `melodic-devel`
 - [arox_description](https://git.ni.dfki.de/arox/arox_core/arox_description): ROS launch files and URDF model for the AROX system
     - branch: `feature_lta_spawn`
 - [container_description](https://git.ni.dfki.de/arox/container_description): ROS launch files and URDF model for the mobile container (charge station)
