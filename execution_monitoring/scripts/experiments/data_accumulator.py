@@ -296,13 +296,13 @@ class DataAccumulator:
         # query database with the specified category
         else:
             rospy.loginfo("showing database entries for category: %s", msg.data)
-            entries = self.msg_store.query(String._type)
+            entries = [(data, meta) for data, meta in self.msg_store.query(String._type) if meta['name'] == msg.data]
+
         for entry in entries:
             data, meta = entry
-            if meta['name'] == msg.data:
-                rospy.loginfo("data: %s", data.data)
-                rospy.loginfo("name: %s, inserted_at: %s", meta['name'], meta['inserted_at'])
-                rospy.loginfo("------------------------------")
+            rospy.loginfo("data: %s", data.data)
+            rospy.loginfo("name: %s, inserted_at: %s", meta['name'], meta['inserted_at'])
+            rospy.loginfo("------------------------------")
 
 
 def node():
