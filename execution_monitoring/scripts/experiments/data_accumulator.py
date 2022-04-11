@@ -290,7 +290,7 @@ class DataAccumulator:
         @param msg: callback message - specifying category to be displayed
         """
         # no category specified -> query entire database
-        if msg.data == "-":
+        if msg.data == "complete":
             rospy.loginfo("showing database entries:")
             entries = self.msg_store.query(String._type)
         # query database with the specified category
