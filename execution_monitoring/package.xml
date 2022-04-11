@@ -1,9 +1,8 @@
 <?xml version="1.0"?>
 <package format="2">
   <name>execution_monitoring</name>
-  <version>0.0.0</version>
-  <description>High level state machine providing plan execution and monitoring for LTA plant observation with a mobile robot.</description>
-
+  <version>1.0.0</version>
+  <description>Execution monitoring framework for long-term autonomous mobile outdoor robots.</description>
   <maintainer email="tbohne@uni-osnabrueck.de">Tim Bohne</maintainer>
   <license>MIT</license>
   <author email="tbohne@uni-osnabrueck.de">Tim Bohne</author>
