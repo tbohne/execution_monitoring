@@ -289,9 +289,18 @@ class DataAccumulator:
 
         @param msg: callback message - specifying category to be displayed
         """
-        all_poses = self.msg_store.query(String._type)
-        for i in all_poses:
-            data, meta = i
+
+        # no category specified -> query entire database
+        if msg.data == "":
+            rospy.loginfo("showing database entries:")
+            entries = self.msg_store.query(String._type)
+        # query database with the specified category
+        else:
+            rospy.loginfo("showing database entries for category: %s", msg.data)
+            entries = self.msg_store.query_named(msg.data, String._type)
+
+        for entry in entries:
+            data, meta = entry
             rospy.loginfo("data: %s", data.data)
             rospy.loginfo("name: %s, inserted_at: %s", meta['name'], meta['inserted_at'])
             rospy.loginfo("------------------------------")
