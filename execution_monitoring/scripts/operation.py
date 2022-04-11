@@ -302,7 +302,7 @@ class ExecutePlan(smach.State):
         rospy.loginfo("performing action %s with target pose: %s", action.name, str(action.pose))
         self.action_info_pub.publish("performing act. " + str(action.name) + " with target pose: " + str(action.pose))
 
-        action_goal = util.create_dtg_goal(action.pose, None)
+        action_goal = util.create_nav_goal(action.pose, None)
         self.drive_to_goal_client.wait_for_server()
         self.drive_to_goal_client.send_goal(action_goal)
         rospy.loginfo("goal sent, waiting for completion..")

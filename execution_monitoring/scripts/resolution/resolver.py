@@ -196,7 +196,7 @@ class DataManagementFailureResolver(GeneralFailureResolver):
         self.resolution_pub.publish("resolve full memory failure")
         # return to base + launch catastrophe
         # TODO: implement docking for config.DOCKING cases
-        action_goal = util.create_dtg_goal(config.BASE_POSE, None)
+        action_goal = util.create_nav_goal(config.BASE_POSE, None)
         self.drive_to_goal_client.wait_for_server()
         self.drive_to_goal_client.send_goal(action_goal)
         rospy.loginfo("goal sent, waiting for completion..")
@@ -747,7 +747,7 @@ class NavigationFailureResolver(GeneralFailureResolver):
         self.resolution_pub.publish("resolve navigation failure -- driving to recovery point")
         self.clear_costmaps()
 
-        action_goal = util.create_dtg_goal(config.RECOVERY_POINT_ONE, None)
+        action_goal = util.create_nav_goal(config.RECOVERY_POINT_ONE, None)
         self.drive_to_goal_client.wait_for_server()
         self.drive_to_goal_client.send_goal(action_goal)
         rospy.loginfo("goal sent, waiting for completion..")
