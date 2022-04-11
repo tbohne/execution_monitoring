@@ -36,9 +36,10 @@
 ## Gazebo Models
 
 [Models](https://cloud.dfki.de/owncloud/index.php/s/TBCzjPfZbzEpMfa) to be placed in `/.gazebo/models/`:
-- `charger_ground_patch`, `Corn`, `langsenkamp_simulation`, `Pillar_1`, `stop_sign`, `number[1, 2, 3, 4]`, `jersey_barrier`
+- `charger_ground_patch`, `Corn`, `langsenkamp_simulation`, `Pillar_1`
+- additionally: `stop_sign` and `jersey_barrier` from the `/models` directory of this repository
 
-## Usage - Baseline Simulation
+## Usage - Prototype Scenario in the Simulation
 
 - run simulation (with GUI): `roslaunch arox_description launch_arox_sim.launch gui:=true`
 - optional: [spawn container: `roslaunch container_description spawn.launch`]
@@ -47,26 +48,37 @@
 - run docker container named 'arox_msc': `aroxstartdocker arox_msc` (alias)
     - launch outdoor simulation: `roslaunch arox_launch arox_sim_outdoor.launch`
 
-## Plan Generation, Execution and Monitoring (Within Docker Container)
+## Usage - Execution Monitoring Framework (Within Docker Container)
 
-- launch complete framework: `roslaunch execution_monitoring execution_monitoring.launch`
-    - components that can be (de)activated in launch file:
-        - plan generation
-        - docking
-        - mongodb logging
-        - high-level SMACH
-        - dummy scanner
-        - failure sim nodes
-        - monitoring nodes
-        - failure resolution
-        - energy consumption model
-- access exploration GUI: `http://localhost/exploration_gui/`
+Launch complete framework: 
+```
+$ roslaunch execution_monitoring execution_monitoring.launch
+```
+### Components that can be (de)activated in the launch file:
+- plan generation
+- autonomous (un)docking
+- `MongoDB` logging
+- dummy scanner
+- failure resolution
+- failure simulation
+- monitoring nodes (individually)
+- energy consumption model
+- LTA experiments
+- `pointcloud-to-laserscan`
+
+## Exploration GUI
+
+`http://localhost/exploration_gui/`
 
 ## Settings for AROX Battery (Non-Defaults)
 
 - `discharge_rate`: 0.1
 - `battery_charging_level`: 100
-- configurable via `rosrun rqt_reconfigure rqt_reconfigure`
+
+Configurable via:
+```
+$ rosrun rqt_reconfigure rqt_reconfigure
+```
 
 ## Useful Topics to Monitor
 
@@ -75,28 +87,29 @@
 
 ## Control AROX
 
-- launch keyboard control: `rosrun teleop_twist_keyboard teleop_twist_keyboard.py`
+Launch keyboard control:
+```
+$ rosrun teleop_twist_keyboard teleop_twist_keyboard.py
+```
 
 ## Visualize Sensor Data
 
 - [rViz](https://wiki.ros.org/rviz)
     - fixed frame: `map`
-    - add sensors by topic, e.g. `/velodyne_point` to visualize the point cloud recorded by the Velodyne 3D-Lidar sensor
+    - add sensors by topic, e.g., `/velodyne_points` to visualize the point cloud recorded by the Velodyne 3D lidar sensor
     - or open the provided config `msc_conf.rviz`
 
 ## Open Container (Lower Ramp)
 
-- `rostopic pub -1 /container/rampA_position_controller/command std_msgs/Float64 "data: 1.57"`
+```
+$ rostopic pub -1 /container/rampA_position_controller/command std_msgs/Float64 "data: 1.57"
+```
 
 ## Clear Costmaps
 
-- `'rosservice call /move_base_flex/clear_costmaps "{}"`
-
-## Dependencies
-
-- [plan_generation](https://github.com/tbohne/plan_generation): `main`
-- [arox_navigation_flex](https://git.ni.dfki.de/arox/arox_core/arox_navigation_flex): `feature_msc_setup_tim`
-- [arox_performance_parameters ](https://git.ni.dfki.de/arox/arox_core/arox_performance_parameters): `feature_msc_setup_tim`
+```
+$ rosservice call /move_base_flex/clear_costmaps "{}"
+```
 
 ## Usage
 
