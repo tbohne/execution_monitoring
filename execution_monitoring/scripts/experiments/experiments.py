@@ -292,6 +292,10 @@ class Experiment:
                 rospy.loginfo("time since last fail sim: %s", (datetime.now() - self.sim_fail_time).total_seconds())
             rospy.sleep(config.EXPERIMENTS_CHECK_FREQ)
 
+        # could still be open to count
+        if self.sim_launched and self.expected_contingency == []:
+            self.correct_no_contingency_cnt += 1
+
         self.save_results((datetime.now() - start_time).total_seconds() / 60 / 60)
 
     def save_results(self, duration):
