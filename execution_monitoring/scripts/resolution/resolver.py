@@ -8,9 +8,7 @@ from arox_navigation_flex.msg import drive_to_goalAction
 from arox_performance_parameters.msg import arox_battery_params
 from arox_performance_parameters.msg import arox_operational_param
 from geometry_msgs.msg import Twist
-from mbf_msgs.msg import RecoveryAction, RecoveryGoal
 from std_msgs.msg import String, Bool, Float64
-from std_srvs.srv import Empty
 
 from execution_monitoring import config, util
 
@@ -503,28 +501,6 @@ class LocalizationFailureResolver(GeneralFailureResolver):
             self.resolution_pub.publish("problem resolved")
             self.success_pub.publish(True)
 
-    def clear_costmaps(self):
-        """
-        Clears the robot's global and local costmaps to eliminate unwanted artifacts.
-        """
-        rospy.wait_for_service('/move_base_flex/clear_costmaps')
-        clear_costmaps_service = rospy.ServiceProxy('/move_base_flex/clear_costmaps', Empty)
-        rec_client = actionlib.SimpleActionClient("move_base_flex/recovery", RecoveryAction)
-        rec_client.wait_for_server()
-
-        rospy.loginfo("clearing costmaps..")
-        self.robot_info_pub.publish("clearing costmaps..")
-        try:
-            clear_costmaps_service()
-        except rospy.ServiceException as e:
-            rospy.loginfo("error: %s", e)
-
-        clear_local_costmap_goal = RecoveryGoal('clear_costmap', 3)  # concurrency_slot 3
-        rec_client.send_goal(clear_local_costmap_goal)
-        res = rec_client.wait_for_result()
-        if res:
-            rospy.loginfo("cleared costmap..")
-
     def resolve_localization_failure(self):
         """
         Attempts to resolve the localization failure at hand.
@@ -548,7 +524,8 @@ class LocalizationFailureResolver(GeneralFailureResolver):
             twist.linear.x = 3.0
 
         rospy.loginfo("clearing costmaps..")
-        self.clear_costmaps()
+        self.robot_info_pub.publish("clearing costmaps..")
+        util.clear_costmaps()
         self.problem_resolved = True
 
 
@@ -679,7 +656,8 @@ class NavigationFailureResolver(GeneralFailureResolver):
         self.remove_obstacles_pub.publish("")
         # wait for obstacle removal before costmap clearance
         rospy.sleep(3)
-        self.clear_costmaps()
+        self.robot_info_pub.publish("clearing costmaps..")
+        util.clear_costmaps()
 
     def resolve_callback(self, msg):
         """
@@ -717,28 +695,6 @@ class NavigationFailureResolver(GeneralFailureResolver):
         while not self.problem_resolved:
             rospy.sleep(config.RESOLUTION_CHECK_FREQ)
 
-    def clear_costmaps(self):
-        """
-        Clears the robot's global and local costmaps to eliminate unwanted artifacts.
-        """
-        rospy.wait_for_service('/move_base_flex/clear_costmaps')
-        clear_costmaps_service = rospy.ServiceProxy('/move_base_flex/clear_costmaps', Empty)
-        rec_client = actionlib.SimpleActionClient("move_base_flex/recovery", RecoveryAction)
-        rec_client.wait_for_server()
-
-        rospy.loginfo("clearing costmaps..")
-        self.robot_info_pub.publish("clearing costmaps..")
-        try:
-            clear_costmaps_service()
-        except rospy.ServiceException as e:
-            rospy.loginfo("error: %s", e)
-
-        clear_local_costmap_goal = RecoveryGoal('clear_costmap', 3)  # concurrency_slot 3
-        rec_client.send_goal(clear_local_costmap_goal)
-        res = rec_client.wait_for_result()
-        if res:
-            rospy.loginfo("cleared costmap..")
-
     def resolve_nav_failure(self, msg):
         """
         Attempts to resolve navigation failures.
@@ -747,7 +703,8 @@ class NavigationFailureResolver(GeneralFailureResolver):
         """
         rospy.loginfo("resolve navigation failure.. driving to recovery point..")
         self.resolution_pub.publish("resolve navigation failure -- driving to recovery point")
-        self.clear_costmaps()
+        self.robot_info_pub.publish("clearing costmaps..")
+        util.clear_costmaps()
 
         action_goal = util.create_nav_goal(config.RECOVERY_POINT_ONE, None)
         self.drive_to_goal_client.wait_for_server()
@@ -766,7 +723,8 @@ class NavigationFailureResolver(GeneralFailureResolver):
             self.remove_obstacles_pub.publish("")
             # wait for obstacle removal before costmap clearance
             rospy.sleep(3)
-            self.clear_costmaps()
+            self.robot_info_pub.publish("clearing costmaps..")
+            util.clear_costmaps()
         elif self.drive_to_goal_client.get_state() == GoalStatus.SUCCEEDED:
             self.problem_resolved = True
 
@@ -876,34 +834,13 @@ class ChargingFailureResolver(GeneralFailureResolver):
             self.success_pub.publish(False)  # initiate catastrophe
             self.open_container()  # human would have opened the container -- in case it was closed
             rospy.sleep(5)  # clear costmap to perceive that the door is open now
-            self.clear_costmaps()
+            self.robot_info_pub.publish("clearing costmaps..")
+            util.clear_costmaps()
         else:
             rospy.loginfo("just trying again..")
             self.resolution_pub.publish("just trying again")
             self.problem_resolved = True
             self.docking_fail_cnt += 1
-
-    def clear_costmaps(self):
-        """
-        Clears the robot's global and local costmaps to eliminate unwanted artifacts.
-        """
-        rospy.wait_for_service('/move_base_flex/clear_costmaps')
-        clear_costmaps_service = rospy.ServiceProxy('/move_base_flex/clear_costmaps', Empty)
-        rec_client = actionlib.SimpleActionClient("move_base_flex/recovery", RecoveryAction)
-        rec_client.wait_for_server()
-
-        rospy.loginfo("clearing costmaps..")
-        self.robot_info_pub.publish("clearing costmaps..")
-        try:
-            clear_costmaps_service()
-        except rospy.ServiceException as e:
-            rospy.loginfo("error: %s", e)
-
-        clear_local_costmap_goal = RecoveryGoal('clear_costmap', 3)  # concurrency_slot 3
-        rec_client.send_goal(clear_local_costmap_goal)
-        res = rec_client.wait_for_result()
-        if res:
-            rospy.loginfo("cleared costmap..")
 
     def perform_minor_relocation(self):
         """
@@ -933,7 +870,8 @@ class ChargingFailureResolver(GeneralFailureResolver):
             self.open_container()
             # clear costmap to perceive that the door is open now
             rospy.sleep(5)
-            self.clear_costmaps()
+            self.robot_info_pub.publish("clearing costmaps..")
+            util.clear_costmaps()
         else:
             self.perform_minor_relocation()
             self.problem_resolved = True

@@ -1,11 +1,36 @@
 #!/usr/bin/env python
+import actionlib
 import numpy as np
 import rospy
 import tf2_geometry_msgs
 import tf2_ros
 from arox_navigation_flex.msg import drive_to_goalGoal as dtg_Goal
+from mbf_msgs.msg import RecoveryAction, RecoveryGoal
 from osgeo import osr
+from std_srvs.srv import Empty
 from tf.transformations import quaternion_from_euler
+
+
+def clear_costmaps():
+    """
+    Clears the robot's global and local costmaps to eliminate unwanted artifacts.
+    """
+    rospy.wait_for_service('/move_base_flex/clear_costmaps')
+    clear_costmaps_service = rospy.ServiceProxy('/move_base_flex/clear_costmaps', Empty)
+    rec_client = actionlib.SimpleActionClient("move_base_flex/recovery", RecoveryAction)
+    rec_client.wait_for_server()
+
+    rospy.loginfo("clearing costmaps..")
+    try:
+        clear_costmaps_service()
+    except rospy.ServiceException as e:
+        rospy.loginfo("error: %s", e)
+
+    clear_local_costmap_goal = RecoveryGoal('clear_costmap', 3)  # concurrency_slot 3
+    rec_client.send_goal(clear_local_costmap_goal)
+    res = rec_client.wait_for_result()
+    if res:
+        rospy.loginfo("cleared costmap..")
 
 
 def parse_mission_name(mission_name):

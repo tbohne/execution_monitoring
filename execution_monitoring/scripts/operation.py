@@ -10,12 +10,10 @@ from arox_navigation_flex.msg import drive_to_goalAction
 from arox_performance_parameters.msg import arox_battery_params
 from arox_performance_parameters.msg import arox_operational_param
 from geometry_msgs.msg import PoseStamped
-from mbf_msgs.msg import RecoveryAction, RecoveryGoal
 from nav_msgs.msg import Odometry
 from plan_generation.msg import action
 from plan_generation.srv import get_plan
 from std_msgs.msg import String, UInt16, Bool
-from std_srvs.srv import Empty
 
 from execution_monitoring import config, util
 from execution_monitoring.msg import ScanAction, ScanGoal
@@ -516,7 +514,8 @@ class ExecutePlan(smach.State):
                 # after undocking is completed, reactivate localization monitoring
                 self.loc_pub.publish(True)
                 # clear costmaps due to ramp movement
-                self.clear_costmaps()
+                self.robot_info_pub.publish("clearing costmaps..")
+                util.clear_costmaps()
                 return True
             else:
                 rospy.loginfo("undocking failed..")
@@ -527,28 +526,6 @@ class ExecutePlan(smach.State):
             self.charge_fail_pub.publish(config.CHARGING_FAILURES[1])
             rospy.sleep(config.ERROR_SLEEP_TIME)
         return False
-
-    def clear_costmaps(self):
-        """
-        Clears the robot's global and local costmaps to eliminate unwanted artifacts.
-        """
-        rospy.wait_for_service('/move_base_flex/clear_costmaps')
-        clear_costmaps_service = rospy.ServiceProxy('/move_base_flex/clear_costmaps', Empty)
-        rec_client = actionlib.SimpleActionClient("move_base_flex/recovery", RecoveryAction)
-        rec_client.wait_for_server()
-
-        rospy.loginfo("clearing costmaps..")
-        self.robot_info_pub.publish("clearing costmaps..")
-        try:
-            clear_costmaps_service()
-        except rospy.ServiceException as e:
-            rospy.loginfo("error: %s", e)
-
-        clear_local_costmap_goal = RecoveryGoal('clear_costmap', 3)  # concurrency_slot 3
-        rec_client.send_goal(clear_local_costmap_goal)
-        res = rec_client.wait_for_result()
-        if res:
-            rospy.loginfo("cleared costmap..")
 
     def intermediate_recharge_goal(self, userdata):
         """
