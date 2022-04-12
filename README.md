@@ -15,6 +15,7 @@ Fully integrated plan execution, monitoring and resolution framework capable of 
     - *for internet connection monitoring*
 - [**PyOWM**](https://pypi.org/project/pyowm/): Python wrapper around *OpenWeatherMap* API
     - *for weather monitoring*
+    - *set up `src/execution_monitoring/secret_config.py` containing `OWM_API_KEY = YOUR_OWM_API_KEY`*
 
 ## Dependencies for the Prototype Scenario in the Simulation
 
@@ -41,7 +42,7 @@ Fully integrated plan execution, monitoring and resolution framework capable of 
 - [**gazebo_langsenkamp**](https://git.ni.dfki.de/zla/gazebo_langsenkamp): Langsenkamp world (test field)
     - branch: `feature_msc_setup_tim`
 
-## Gazebo Models
+### Gazebo Models
 
 [Models](https://cloud.dfki.de/owncloud/index.php/s/TBCzjPfZbzEpMfa) to be placed in `/.gazebo/models/`:
 - `charger_ground_patch`, `Corn`, `langsenkamp_simulation`, `Pillar_1`
@@ -50,7 +51,7 @@ Fully integrated plan execution, monitoring and resolution framework capable of 
 ## Usage - Prototype Scenario in the Simulation
 
 - run simulation (with GUI): `roslaunch arox_description launch_arox_sim.launch gui:=true`
-- optional: [spawn container: `roslaunch container_description spawn.launch`]
+- <u>optional:</u> spawn container: `roslaunch container_description spawn.launch`
 - spawn AROX: `roslaunch arox_description spawn.launch`
 - run AROX controllers: `roslaunch arox_description run_controllers.launch`
 - run docker container named 'arox_msc': `aroxstartdocker arox_msc` (alias)
@@ -88,6 +89,27 @@ $ rosrun execution_monitoring operator_communication.py
 
 *low level (operational model):*
 ![](img/SMACH_low_level.png)
+
+-----------------------------
+
+## Show Database Entries
+
+Complete database:
+```
+$ rostopic pub -1 /show_db_entries std_msgs/String "complete"
+```
+
+Entries for one category:
+```
+$ rostopic pub -1 /show_db_entries std_msgs/String "CATEGORY_NAME"
+```
+
+Access database after mission is completed:
+- path for the database `PATH_TO_DB` can be configured in the launch file
+- run `MongoDB` server with the generated database: `mongod --dbpath PATH_TO_DB --storageEngine=wiredTiger`
+- use `MongoDB` client to connect and examine the logged data
+
+-----------------------------
 
 ## Exploration GUI
 
@@ -153,6 +175,8 @@ $ rostopic pub -1 "/catastrophe_preemption" std_msgs/String catastrophe
 ```
 $ rosrun smach_viewer smach_viewer.py
 ```
+
+-----------------------------
 
 ## Application to other ROS Systems / Extensibility
 
@@ -230,6 +254,8 @@ scanning, traversing, waiting, docking, undocking, charging, contingency, catast
 
 - all active goals should be interruptible via a message on `/interrupt_active_goals`, e.g., by implementing the actions as `SimpleActionServer`
 - the outcomes must be compatible with the architecture shown above, i.e., `minor_complication`, `critical_complication`, `end_of_episode` and `preempted`
+
+-----------------------------
 
 ## Experiments - Simulation of LTA Challenges
 
