@@ -143,6 +143,67 @@ $ rosrun smach_viewer smach_viewer.py
 - *high level (plan execution + monitoring):* ![](img/SMACH_high_level.png)
 - *low level (operational model):* ![](img/SMACH_low_level.png)
 
+## Application to other ROS Systems / Extensibility
+
+The framework is in principle applicable to other ROS systems if the introduced slight constraints in terms of information provision based on the defined ROS messages and topics are met. In addition, some minor requirements must be fulfilled in order to be able to utilize the resolution attempts. To get a detailed overview of what is required it is advisable to read the corresponding sections in the [**thesis**](https://github.com/tbohne/msc) (cf. sec. 3.5, 3.6, 6.1).
+
+A further important note with regard to the general applicability of the framework is that **each monitoring node can easily be removed**, i.e., deactivated. Presently, this can be achieved by simply removing the option from the framework’s launch file. Analogously, **custom monitoring nodes can be added to the framework** by simply adding the nodes to the launch file and supporting the described architecture by publishing to `/contingency_preemption` / `/catastrophe_preemption` in case of failure, etc. Thus, the idea is that context-dependent special solutions can be easily added, removed and replaced by other specific solutions.
+
+The general way of responding to new custom failure cases included this way would be to define custom error cases in `config.py`, check for those in the execution of `CATASTROPHE` / `CONTINGENCY` in `high_level_smach.py` and add a custom resolver to `resolver.py`.
+
+It is planned to further simplify the customization options in the future.
+
+### TL;DR
+
+Requirements for monitoring:
+- *Power Management*
+    - battery watchdog module that publishes the expected states `"CONT"`, `"CATO"`, `"NORM"` on `/watchdog`
+    - indicate fully charged battery via `/fully_charged`
+- *Drastic Weather Change*
+    - provide `NavSatFix` data on `/fix`
+    - internet connection for API access
+- *Sensor (Perception) Failure*
+    - indicate scan action via `/scan_action`
+    - provide configurable topic (`config.py`) at which `LaserScan` / `PointCloud2` data is to be expected
+- *WiFi Connection Failures*
+    - if not using a Linux system, provide OS-specific WiFi monitor equivalent to the one in `/os_specific` that creates `WiFi.msg` data and publishes on `/wifi_connectivity_info`
+- *Internet Connection Failures*
+    - internet connection
+- *GNSS Connection Failures*
+    - publish `NavSatFix` messages on `/fix`
+- *Data Management*
+    - indicate scan actions via `/scan_action` and their completion via `/scan_completed`
+    - `config.py`: configure `MONITOR_DRIVE` as well as `SCAN_PATH`
+- *Plan Deployment Failure*
+    - information whether a plan has been received, i.e., a mission is being executed, is retrieved via a configurable topic, by default `/arox/ongoing_operation` (cf. `config.py`)
+    - communicate explicit plan retrieval fails via `/plan_retrieval_failure`
+        - pre-defined codes:
+            - 0: plan retrieval service unavailable
+            - 1: empty plan
+            - 2: infeasible plan
+    - use [plan_generation](https://github.com/tbohne/plan_generation) and configure the list of actions in `config.py`
+- *Navigation Failure*
+    - any navigation framework that is compatible with the general `actionlib_msgs/GoalStatus` is compatible with the introduced monitoring
+    - specify `GOAL_STATUS_TOPIC` under which the `GoalStatusArray` messages appear
+    - `NavSatFix` messages are again expected to appear on `/fix` to track progress in cases of sustained recovery
+    - `/explicit_nav_failure` can be used to report explicit navigation errors
+- *Incorrect or Inaccurate Localization*
+    - localization must be based on sensor fusion of IMU, odometry and GNSS data, and it must provide the corresponding sensor information on `/imu_data`, `/odom`, and `/odometry/gps` (types: `sensor_msgs/Imu.msg` and `nav_msgs/Odometry.msg`)
+    - `/odometry/gps` - GNSS information converted to the same format as the odometry data
+    - navigation based on `actionlib_msgs/GoalStatus.msg`, e.g., `move_base` or `move_base_flex`
+    - Kinematics also play a role; in general, it should be a wheeled robot with differential drive. While an Ackermann drive would also be permissible, others, such as omni-drive robots, are not compatible because they would violate certain assumptions used in the monitoring approaches, such as in the orientation interpolation based on GNSS data.
+- longer explanations as well as the requirements for the resolution methods can be found in the corresponding sections of the [**thesis**](https://github.com/tbohne/msc) (cf. sec. 3.5, 3.6, 6.1)
+
+### Replacement of the Operational State Machine
+
+In order for another robotic system to use the monitoring framework without using the operational model used in this thesis, the embedded `OPERATION` state machine shown below would have to be replaced by the system’s own operational state machine, which is either also implemented as `SMACH` or at least wrapped by one.
+There are some assumptions that such an operational state machine must satisfy:
+- communicate information about the mode of the system via `/arox/ongoing_operation` in the form of `arox_operational_param.msg` (`string operation_mode`, `int32 total_tasks`, `int32 ongoing_task`, `int32 rewards_gained`)
+    - naming scheme due to compatibility with the battery watchdog module
+- available modes: `scanning`, `traversing`, `waiting`, `docking`, `undocking`, `charging`, `contingency` and `catastrophe`
+- all active goals should be interruptible via a message on `/interrupt_active_goals`, e.g., by implementing the actions as `SimpleActionServer`
+- the outcomes must be compatible with the architecture shown below, i.e., `minor_complication`, `critical_complication`, `end_of_episode` and `preempted`
+
 ## Experiments - Simulation of LTA Challenges
 
 Each failure can be simulated by publishing on the respective topic, e.g., `rostopic pub -1 /toggle_simulated_total_sensor_failure std_msgs/String fail`.
