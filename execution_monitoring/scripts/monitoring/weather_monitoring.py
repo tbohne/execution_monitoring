@@ -111,7 +111,7 @@ class WeatherMonitoring:
         rospy.Subscriber('/toggle_low_temp_sim', String, self.low_temp_callback, queue_size=1)
         rospy.Subscriber('/toggle_thunderstorm_sim', String, self.thunderstorm_callback, queue_size=1)
         rospy.Subscriber('/toggle_sunset_sim', String, self.sunset_callback, queue_size=1)
-        rospy.Subscriber('arox/ongoing_operation', arox_operational_param, self.operation_callback, queue_size=1)
+        rospy.Subscriber(config.OPERATION_TOPIC, arox_operational_param, self.operation_callback, queue_size=1)
         self.launch_weather_monitoring()
 
     def operation_callback(self, msg):

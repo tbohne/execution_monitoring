@@ -23,7 +23,7 @@ EXP_PATH = "/home/docker/catkin_ws/src/execution_monitoring/execution_monitoring
 MISSION_FAIL_MSG = "MISSION FAIL: exceeded idle time limit during plan execution"
 
 # crucial topics
-OPERATION_TOPIC = "arox/ongoing_operation"
+OPERATION_TOPIC = "/arox/ongoing_operation"
 GOAL_STATUS_TOPIC = "/move_base_flex/exe_path/status"
 #############################################################################
 #############################################################################

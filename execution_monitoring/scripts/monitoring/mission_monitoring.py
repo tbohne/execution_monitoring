@@ -22,7 +22,7 @@ class MissionMonitor:
         self.time_of_last_op = datetime.now()
         self.open_tasks = 0
         self.catastrophe_pub = rospy.Publisher('/catastrophe_preemption', String, queue_size=1)
-        rospy.Subscriber("/arox/ongoing_operation", arox_operational_param, self.operation_callback, queue_size=1)
+        rospy.Subscriber(config.OPERATION_TOPIC, arox_operational_param, self.operation_callback, queue_size=1)
         self.mission_check()
 
     def mission_check(self):

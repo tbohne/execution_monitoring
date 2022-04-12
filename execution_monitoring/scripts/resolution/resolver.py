@@ -195,7 +195,6 @@ class DataManagementFailureResolver(GeneralFailureResolver):
                       + " but it can drive back to the base in preparation..")
         self.resolution_pub.publish("resolve full memory failure")
         # return to base + launch catastrophe
-        # TODO: implement docking for config.DOCKING cases
         action_goal = util.create_nav_goal(config.BASE_POSE, None)
         self.drive_to_goal_client.wait_for_server()
         self.drive_to_goal_client.send_goal(action_goal)
@@ -542,7 +541,7 @@ class PlanDeploymentFailureResolver(GeneralFailureResolver):
         self.success_pub = rospy.Publisher('/resolve_plan_deployment_failure_success', Bool, queue_size=1)
         self.activate_plan_service_pub = rospy.Publisher('/activate_plan_service', String, queue_size=1)
         rospy.Subscriber('/resolve_plan_deployment_failure', String, self.resolve_callback, queue_size=1)
-        rospy.Subscriber('arox/ongoing_operation', arox_operational_param, self.operation_callback, queue_size=1)
+        rospy.Subscriber(config.OPERATION_TOPIC, arox_operational_param, self.operation_callback, queue_size=1)
 
     def operation_callback(self, msg):
         """

@@ -49,7 +49,7 @@ class PhysicsController:
         rospy.Subscriber(config.GOAL_STATUS_TOPIC, GoalStatusArray, self.nav_status_callback, queue_size=1)
         rospy.Subscriber('/fix', NavSatFix, self.gnss_callback, queue_size=1)
         rospy.Subscriber('/imu_data', Imu, self.imu_callback, queue_size=1)
-        rospy.Subscriber("/arox/ongoing_operation", arox_operational_param, self.operation_callback)
+        rospy.Subscriber(config.OPERATION_TOPIC, arox_operational_param, self.operation_callback)
 
         # SIM TOPICS
         rospy.Subscriber('/yaw_divergence', String, self.yaw_divergence_callback, queue_size=1)

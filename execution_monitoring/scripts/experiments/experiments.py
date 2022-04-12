@@ -106,7 +106,7 @@ class Experiment:
 
         rospy.Subscriber("/contingency_preemption", String, self.contingency_callback)
         rospy.Subscriber("/catastrophe_preemption", String, self.catastrophe_callback)
-        rospy.Subscriber("/arox/ongoing_operation", arox_operational_param, self.operation_callback)
+        rospy.Subscriber(config.OPERATION_TOPIC, arox_operational_param, self.operation_callback)
         rospy.Subscriber("/arox/battery_param", arox_battery_params, self.battery_callback)
         rospy.Subscriber('/sim_info', String, self.sim_info_callback, queue_size=1)
         rospy.Subscriber('/odometry/filtered_odom', Odometry, self.filtered_odom_callback, queue_size=1)

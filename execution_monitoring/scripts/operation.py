@@ -36,7 +36,7 @@ class Idle(smach.State):
         self.exception_pub = rospy.Publisher('/plan_retrieval_failure', UInt16, queue_size=1)
         self.action_info_pub = rospy.Publisher('/action_info', String, queue_size=1)
         self.robot_info_pub = rospy.Publisher('/robot_info', String, queue_size=1)
-        self.operation_pub = rospy.Publisher('arox/ongoing_operation', arox_operational_param, queue_size=1)
+        self.operation_pub = rospy.Publisher(config.OPERATION_TOPIC, arox_operational_param, queue_size=1)
         rospy.Subscriber("/end_of_episode", String, self.end_of_episode_callback, queue_size=1)
 
     def end_of_episode_callback(self, msg):
@@ -162,7 +162,7 @@ class ExecutePlan(smach.State):
         self.docking_client = actionlib.SimpleActionClient('dock_to_charging_station', DockAction)
         self.undocking_client = actionlib.SimpleActionClient('undock_from_charging_station', UndockAction)
 
-        self.operation_pub = rospy.Publisher('arox/ongoing_operation', arox_operational_param, queue_size=1)
+        self.operation_pub = rospy.Publisher(config.OPERATION_TOPIC, arox_operational_param, queue_size=1)
         self.nav_fail_pub = rospy.Publisher('/explicit_nav_failure', String, queue_size=1)
         self.charge_fail_pub = rospy.Publisher('/explicit_charging_failure', String, queue_size=1)
         self.charge_action_pub = rospy.Publisher('/charge_action', String, queue_size=1)
