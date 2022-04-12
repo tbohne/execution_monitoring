@@ -148,8 +148,11 @@ $ rosrun smach_viewer smach_viewer.py
 
 ## Architecture
 
-- *high level (plan execution + monitoring):* ![](img/SMACH_high_level.png)
-- *low level (operational model):* ![](img/SMACH_low_level.png)
+*high level (plan execution + monitoring):*
+![](img/SMACH_high_level.png)
+
+*low level (operational model):*
+![](img/SMACH_low_level.png)
 
 ## Application to other ROS Systems / Extensibility
 
