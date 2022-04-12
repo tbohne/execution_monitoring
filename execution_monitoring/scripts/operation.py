@@ -443,7 +443,7 @@ class ExecutePlan(smach.State):
         elif action.name == "wait_in_shelter":
             return self.perform_wait_in_shelter_action(action)
         elif action.name == "charge":
-            self.perform_charge_action(action, next_action)
+            return self.perform_charge_action(action, next_action)
         else:
             rospy.loginfo("error - unknown action: %s", action.name)
         return False
