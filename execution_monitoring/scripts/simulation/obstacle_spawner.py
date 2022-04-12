@@ -13,55 +13,6 @@ from tf.transformations import quaternion_from_euler, euler_from_quaternion
 
 from execution_monitoring import config
 
-STOP_SIGN_POSES_SCENE_ONE = [
-    [30.702585, -23.646406, 0.671698, 0.0, 0.0, 0.619839],
-    [31.195600, -23.287600, 0.671698, 0.0, 0.0, 0.619839],
-    [31.688100, -22.930900, 0.671698, 0.0, 0.0, 0.619839],
-    [32.183200, -22.573900, 0.671698, 0.0, 0.0, 0.619839],
-    [32.677800, -22.216500, 0.671698, 0.0, 0.0, 0.619839],
-    [33.175500, -21.848200, 0.671698, 0.0, 0.0, 0.619839]
-]
-
-STOP_SIGN_POSES_SCENE_TWO = [
-    [35.508858, -2.809350, 0.671698, 0.0, 0.0, 0.693925],
-    [35.988500, -2.413980, 0.671698, 0.0, 0.0, 0.693925],
-    [36.459300, -2.011220, 0.671698, 0.0, 0.0, 0.693925],
-    [36.957800, -1.602300, 0.671698, 0.0, 0.0, 0.693925]
-]
-
-STOP_SIGN_POSES_SCENE_THREE = [
-    [20.724546, -4.331711, 0.671698, 0.0, 0.0, 1.311019]
-]
-
-STOP_SIGN_POSES_SCENE_FOUR = [
-    [0.382557, -2.998463, 1.468006, 0.0, 0.0, 2.896465],
-    [-0.218533, -2.857140, 1.468010, 0.0, 0.0, 2.896465],
-    [-0.821764, -2.707880, 1.468010, 0.0, 0.0, 2.896465],
-    [-1.425310, -2.558510, 1.468010, 0.0, 0.0, 2.896465]
-]
-
-BARRIER_POSES_SCENE_ONE = [
-    [28.351700, -23.712500, 0.782270, 0.0, 0.0, 0.0],
-    [33.595978, -19.534710, 0.833558, 0.0, 0.0, 1.393767]
-]
-
-BARRIER_POSES_SCENE_TWO = [
-    [33.112300, -3.033610, 0.833558, 0.0, 0.0, 0.0],
-    [37.379513, 0.590976, 0.833558, 0.0, 0.0, -1.769417]
-]
-
-BARRIER_POSES_SCENE_THREE = [
-    [20.170605, -6.542426, 0.833558, 0.0, 0.0, 1.377083]
-]
-
-BARRIER_POSES_SCENE_FOUR = [
-    [2.577835, -4.190211, 1.411332, 0.0, 0.0, -0.519839],
-    [-3.797018, -2.632295, 1.411332, 0.0, 0.0, 0.041027]
-]
-
-STOP_SIGN_MODEL = "/home/docker/catkin_ws/src/execution_monitoring/models/stop_sign/model.sdf"
-BARRIER_MODEL = "/home/docker/catkin_ws/src/execution_monitoring/models/jersey_barrier/model.sdf"
-
 
 class ObstacleSpawner:
     """
@@ -156,22 +107,22 @@ class ObstacleSpawner:
             try:
                 spawn_model_client = rospy.ServiceProxy('/gazebo/spawn_sdf_model', SpawnModel)
 
-                self.spawn_object('barrier_right', spawn_model_client, BARRIER_MODEL,
+                self.spawn_object('barrier_right', spawn_model_client, config.BARRIER_MODEL,
                                   pos_x + (config.DIST_TO_ROBOT * math.cos(math.radians(90) + yaw)),
                                   pos_y + (config.DIST_TO_ROBOT * math.sin(math.radians(90) + yaw)),
                                   config.BARRIER_HEIGHT, 0.0, 0.0, yaw)
 
-                self.spawn_object('barrier_left', spawn_model_client, BARRIER_MODEL,
+                self.spawn_object('barrier_left', spawn_model_client, config.BARRIER_MODEL,
                                   pos_x + (config.DIST_TO_ROBOT * math.cos(math.radians(270) + yaw)),
                                   pos_y + (config.DIST_TO_ROBOT * math.sin(math.radians(270) + yaw)),
                                   config.BARRIER_HEIGHT, 0.0, 0.0, yaw)
 
-                self.spawn_object('barrier_front', spawn_model_client, BARRIER_MODEL,
+                self.spawn_object('barrier_front', spawn_model_client, config.BARRIER_MODEL,
                                   pos_x + (config.DIST_TO_ROBOT * math.cos(math.radians(0) + yaw)),
                                   pos_y + (config.DIST_TO_ROBOT * math.sin(math.radians(0) + yaw)),
                                   config.BARRIER_HEIGHT, 0.0, 0.0, yaw + math.pi / 2)
 
-                self.spawn_object('barrier_back', spawn_model_client, BARRIER_MODEL,
+                self.spawn_object('barrier_back', spawn_model_client, config.BARRIER_MODEL,
                                   pos_x + (config.DIST_TO_ROBOT * math.cos(math.radians(180) + yaw)),
                                   pos_y + (config.DIST_TO_ROBOT * math.sin(math.radians(180) + yaw)),
                                   config.BARRIER_HEIGHT, 0.0, 0.0, yaw + math.pi / 2)
@@ -238,23 +189,23 @@ class ObstacleSpawner:
         if msg.data == "scene_one":
             rospy.loginfo("spawning scenario one obstacles..")
             self.sim_info_pub.publish("obstacle spawner: spawning scenario one obstacles")
-            sign_poses = STOP_SIGN_POSES_SCENE_ONE
-            barrier_poses = BARRIER_POSES_SCENE_ONE
+            sign_poses = config.STOP_SIGN_POSES_SCENE_ONE
+            barrier_poses = config.BARRIER_POSES_SCENE_ONE
         elif msg.data == "scene_two":
             rospy.loginfo("spawning scenario two obstacles..")
             self.sim_info_pub.publish("obstacle spawner: spawning scenario two obstacles")
-            sign_poses = STOP_SIGN_POSES_SCENE_TWO
-            barrier_poses = BARRIER_POSES_SCENE_TWO
+            sign_poses = config.STOP_SIGN_POSES_SCENE_TWO
+            barrier_poses = config.BARRIER_POSES_SCENE_TWO
         elif msg.data == "scene_three":
             rospy.loginfo("spawning scenario three obstacles..")
             self.sim_info_pub.publish("obstacle spawner: spawning scenario three obstacles")
-            sign_poses = STOP_SIGN_POSES_SCENE_THREE
-            barrier_poses = BARRIER_POSES_SCENE_THREE
+            sign_poses = config.STOP_SIGN_POSES_SCENE_THREE
+            barrier_poses = config.BARRIER_POSES_SCENE_THREE
         elif msg.data == "scene_four":
             rospy.loginfo("spawning scenario four obstacles..")
             self.sim_info_pub.publish("obstacle spawner: spawning scenario four obstacles")
-            sign_poses = STOP_SIGN_POSES_SCENE_FOUR
-            barrier_poses = BARRIER_POSES_SCENE_FOUR
+            sign_poses = config.STOP_SIGN_POSES_SCENE_FOUR
+            barrier_poses = config.BARRIER_POSES_SCENE_FOUR
         else:
             rospy.loginfo("unknown scene: %s", msg.data)
             rospy.loginfo("using default scene (one)..")
@@ -264,10 +215,14 @@ class ObstacleSpawner:
             spawn_model_client = rospy.ServiceProxy('/gazebo/spawn_sdf_model', SpawnModel)
             # spawn stop signs
             for i in range(len(sign_poses)):
-                self.spawn_object('stop_sign_' + msg.data + str(i), spawn_model_client, STOP_SIGN_MODEL, *sign_poses[i])
+                self.spawn_object(
+                    'stop_sign_' + msg.data + str(i), spawn_model_client, config.STOP_SIGN_MODEL, *sign_poses[i]
+                )
             # spawn barriers
             for i in range(len(barrier_poses)):
-                self.spawn_object('barrier_' + msg.data + str(i), spawn_model_client, BARRIER_MODEL, *barrier_poses[i])
+                self.spawn_object(
+                    'barrier_' + msg.data + str(i), spawn_model_client, config.BARRIER_MODEL, *barrier_poses[i]
+                )
         except rospy.ServiceException as e:
             print("service call failed: ", e)
 
