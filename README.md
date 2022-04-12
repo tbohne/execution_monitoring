@@ -235,56 +235,56 @@ Each failure case can be simulated by publishing on the respective topic, e.g.:
 $ rostopic pub -1 /toggle_simulated_total_sensor_failure std_msgs/String fail
 ```
 
-|Category                   | Failure                                                 | Topic                                                                   |
-|---------------------------|---------------------------------------------------------|-------------------------------------------------------------------------|
-| Sensor Failures           | **total sensor failure**                                | `/toggle_simulated_total_sensor_failure`                                |
-| Sensor Failures           | **empty list of range values**                          | `/toggle_simulated_empty_ranges`                                        |
-| Sensor Failures           | **predominantly impermissible values**                  | `/toggle_simulated_impermissible_ranges`                                |
-| Sensor Failures           | **repeated scan**                                       | `/toggle_simulated_scan_repetition`                                     |
-| WiFi Failures             | **poor link quality**                                   | `/toggle_simulated_bad_wifi_link`                                       |
-| WiFi Failures             | **poor signal**                                         | `/toggle_simulated_bad_wifi_signal`                                     |
-| WiFi Failures             | **poor bit rate**                                       | `/toggle_simulated_bad_wifi_bit_rate`                                   |
-| WiFi Failures             | **disconnect**                                          | `/toggle_simulated_wifi_disconnect`                                     |
-| Internet Failures         | **disconnect**                                          | `/sim_internet_connection_failure`                                      |
-| Internet Failures         | **bad download**                                        | `/toggle_simulated_bad_download`                                        |
-| Internet Failures         | **bad upload**                                          | `/toggle_simulated_bad_upload`                                          |
-| GNSS Failures             | **disconnect / timeout**                                | `/toggle_simulated_timeout_failure`                                     |
-| GNSS Failures             | **good quality**                                        | `/set_simulated_good_quality`                                           |
-| GNSS Failures             | **medium quality**                                      | `/set_simulated_med_quality`                                            |
-| GNSS Failures             | **low quality**                                         | `/set_simulated_low_quality`                                            |
-| GNSS Failures             | **unknown status**                                      | `/set_simulated_unknown_status`                                         |
-| GNSS Failures             | **no fix**                                              | `/set_simulated_no_fix`                                                 |
-| GNSS Failures             | **no RTK**                                              | `/set_simulated_no_rtk`                                                 |
-| GNSS Failures             | **unknown service**                                     | `/toggle_simulated_unknown_service`                                     |
-| GNSS Failures             | **infeasible lat / lng**                                | `/toggle_simulated_infeasible_lat_lng`                                  |
-| GNSS Failures             | **variance history failure**                            | `/toggle_simulated_variance_history_failure`                            |
-| GNSS Failures             | **high deviation**                                      | `/toggle_simulated_high_deviation`                                      |
-| Drastic Weather Changes   | **heavy rain**                                          | `/toggle_rain_sim`                                                      |
-| Drastic Weather Changes   | **heavy snow**                                          | `/toggle_snow_sim`                                                      |
-| Drastic Weather Changes   | **gale**                                                | `/toggle_wind_sim`                                                      |
-| Drastic Weather Changes   | **low temperature**                                     | `/toggle_low_temp_sim`                                                  |
-| Drastic Weather Changes   | **thunderstorm**                                        | `/toggle_thuderstorm_sim`                                               |
-| Drastic Weather Changes   | **sunset**                                              | `/toggle_sunset_sim`                                                    |
-| Data Management Failures  | **full memory**                                         | `/sim_full_disk_failure`                                                |
-| Data Management Failures  | **scan logging failure**                                | `/toggle_simulated_scan_logging_failure`                                |
-| Localization Failures     | **odometry-GNSS distance divergence (type 1)**          | `/wheel_movement_without_pos_change`                                    |
-| Localization Failures     | **odometry-GNSS distance divergence (type 2)**          | `/pos_change_without_wheel_movement`                                    |
-| Localization Failures     | **interpolated GNSS and IMU / odometry yaw divergence** | `/yaw_divergence`                                                       |
-| Localization Failures     | **IMU acceleration although no active nav goal**        | `/moving_although_standing_still_imu`                                   |
-| Localization Failures     | **odometry twist although no active nav goal**          | `/moving_although_standing_still_odom`                                  |
-| Plan Deployment Failures  | **extended idle time**                                  | `/sim_extended_idle_time`                                               |
-| Plan Deployment Failures  | **unavailable plan service**                            | `/toggle_unavailable_plan_service`                                      |
-| Plan Deployment Failures  | **empty plan**                                          | `/sim_empty_plan`                                                       |
-| Plan Deployment Failures  | **infeasible plan**                                     | `/sim_infeasible_plan`                                                  |
-| Navigation Failures       | **static obstacles**                                    | `/spawn_static_obstacles std_msgs/String scene_[one, two, three, four]` |
-| Navigation Failures       | **robot prison**                                        | `/spawn_robot_prison`                                                   |
-| Navigation Failures       | **navigation failure**                                  | `/trigger_nav_fail`                                                     |
-| Charging Failures         | **undocking failure (raised ramp)**                     | `/sim_undocking_failure`                                                |
-| Charging Failures         | **docking failure (raised ramp)**                       | `/sim_docking_failure_raised_ramp`                                      |
-| Charging Failures         | **docking failure (wrong base pose)**                   | `/sim_docking_failure_base_pose`                                        |
-| Charging Failures         | **charging failure**                                    | `/sim_charging_failure`                                                 |
-| Power Management Failures | **contingency**                                         | `/sim_power_management_contingency`                                     |
-| Power Management Failures | **catastrophe**                                         | `/sim_power_management_catastrophe`                                     |
+|Category                                        | Failure                                                          | Topic                                                                   |
+|------------------------------------------------|------------------------------------------------------------------|-------------------------------------------------------------------------|
+| Sensor Failures                                | **total sensor failure**                                         | `/toggle_simulated_total_sensor_failure`                                |
+| Sensor Failures                                | **empty list of range values**                                   | `/toggle_simulated_empty_ranges`                                        |
+| Sensor Failures                                | **predominantly impermissible values**                           | `/toggle_simulated_impermissible_ranges`                                |
+| Sensor Failures                                | **repeated scan**                                                | `/toggle_simulated_scan_repetition`                                     |
+| WiFi Failures                                  | **poor link quality**                                            | `/toggle_simulated_bad_wifi_link`                                       |
+| WiFi Failures                                  | **poor signal**                                                  | `/toggle_simulated_bad_wifi_signal`                                     |
+| WiFi Failures                                  | **poor bit rate**                                                | `/toggle_simulated_bad_wifi_bit_rate`                                   |
+| WiFi Failures                                  | **disconnect**                                                   | `/toggle_simulated_wifi_disconnect`                                     |
+| Internet Failures                              | **disconnect**                                                   | `/sim_internet_connection_failure`                                      |
+| Internet Failures                              | **bad download**                                                 | `/toggle_simulated_bad_download`                                        |
+| Internet Failures                              | **bad upload**                                                   | `/toggle_simulated_bad_upload`                                          |
+| GNSS Failures                                  | **disconnect / timeout**                                         | `/toggle_simulated_timeout_failure`                                     |
+| GNSS Failures                                  | **good quality**                                                 | `/set_simulated_good_quality`                                           |
+| GNSS Failures                                  | **medium quality**                                               | `/set_simulated_med_quality`                                            |
+| GNSS Failures                                  | **low quality**                                                  | `/set_simulated_low_quality`                                            |
+| GNSS Failures                                  | **unknown status**                                               | `/set_simulated_unknown_status`                                         |
+| GNSS Failures                                  | **no fix**                                                       | `/set_simulated_no_fix`                                                 |
+| GNSS Failures                                  | **no RTK**                                                       | `/set_simulated_no_rtk`                                                 |
+| GNSS Failures                                  | **unknown service**                                              | `/toggle_simulated_unknown_service`                                     |
+| GNSS Failures                                  | **infeasible lat / lng**                                         | `/toggle_simulated_infeasible_lat_lng`                                  |
+| GNSS Failures                                  | **variance history failure**                                     | `/toggle_simulated_variance_history_failure`                            |
+| GNSS Failures                                  | **high deviation**                                               | `/toggle_simulated_high_deviation`                                      |
+| Drastic Weather Changes                        | **heavy rain**                                                   | `/toggle_rain_sim`                                                      |
+| Drastic Weather Changes                        | **heavy snow**                                                   | `/toggle_snow_sim`                                                      |
+| Drastic Weather Changes                        | **gale**                                                         | `/toggle_wind_sim`                                                      |
+| Drastic Weather Changes                        | **low temperature**                                              | `/toggle_low_temp_sim`                                                  |
+| Drastic Weather Changes                        | **thunderstorm**                                                 | `/toggle_thuderstorm_sim`                                               |
+| Drastic Weather Changes                        | **sunset**                                                       | `/toggle_sunset_sim`                                                    |
+| Data Management Failures                       | **full memory**                                                  | `/sim_full_disk_failure`                                                |
+| Data Management Failures                       | **scan logging failure**                                         | `/toggle_simulated_scan_logging_failure`                                |
+| Localization Failures                          | **odometry-GNSS distance divergence (type 1)**                   | `/wheel_movement_without_pos_change`                                    |
+| Localization Failures                          | **odometry-GNSS distance divergence (type 2)**                   | `/pos_change_without_wheel_movement`                                    |
+| Localization Failures                          | **interpolated GNSS and IMU / odometry yaw divergence**          | `/yaw_divergence`                                                       |
+| Localization Failures                          | **IMU acceleration although no active nav goal**                 | `/moving_although_standing_still_imu`                                   |
+| Localization Failures                          | **odometry twist although no active nav goal**                   | `/moving_although_standing_still_odom`                                  |
+| Plan Deployment Failures                       | **extended idle time**                                           | `/sim_extended_idle_time`                                               |
+| Plan Deployment Failures                       | **unavailable plan service**                                     | `/toggle_unavailable_plan_service`                                      |
+| Plan Deployment Failures                       | **empty plan**                                                   | `/sim_empty_plan`                                                       |
+| Plan Deployment Failures                       | **infeasible plan**                                              | `/sim_infeasible_plan`                                                  |
+| Navigation Failures                            | **static obstacles**                                             | `/spawn_static_obstacles std_msgs/String scene_[one, two, three, four]` |
+| Navigation Failures                            | **robot prison**                                                 | `/spawn_robot_prison`                                                   |
+| Navigation Failures                            | **navigation failure**                                           | `/trigger_nav_fail`                                                     |
+| Charging Failures                              | **undocking failure (raised ramp)**                              | `/sim_undocking_failure`                                                |
+| Charging Failures                              | **docking failure (raised ramp)**                                | `/sim_docking_failure_raised_ramp`                                      |
+| Charging Failures                              | **docking failure (wrong base pose)**                            | `/sim_docking_failure_base_pose`                                        |
+| Charging Failures                              | **charging failure**                                             | `/sim_charging_failure`                                                 |
+| Power Management Failures                      | **contingency**                                                  | `/sim_power_management_contingency`                                     |
+| Power Management Failures                      | **catastrophe**                                                  | `/sim_power_management_catastrophe`                                     |
 
 <u>Notes:</u>
 - **IMU acceleration although no active nav goal**:
