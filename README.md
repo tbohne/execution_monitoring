@@ -82,6 +82,12 @@ $ roslaunch execution_monitoring execution_monitoring.launch
 $ rosrun execution_monitoring operator_communication.py
 ```
 
+## Configuration of Setup, Monitoring, Resolution and Simulation
+
+```
+src/execution_monitoring/config.py
+```
+
 ## Architecture
 
 *high level (plan execution + monitoring):*
