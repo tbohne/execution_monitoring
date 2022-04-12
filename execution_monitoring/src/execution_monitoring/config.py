@@ -15,6 +15,9 @@ DOCKING_BASE_POSE = [52.3203930281, 8.15361381961, 180]
 MISSION_IDLE_LIMIT = 900
 # frequency at which new simulations are considered (sleep time in experiments loop)
 EXPERIMENTS_CHECK_FREQ = 120
+# used to avoid timing issues
+SHORT_DELAY = 2  # in seconds
+
 # directory in which the experimental results are stored
 EXP_PATH = "/home/docker/catkin_ws/src/execution_monitoring/execution_monitoring/experiments/"
 MISSION_FAIL_MSG = "MISSION FAIL: exceeded idle time limit during plan execution"
@@ -168,7 +171,8 @@ DOCKING_FAIL_THRESH = 1
 UNDOCKING_FAIL_THRESH = 1
 # time in seconds after which charging without an increase in the charge level
 # is considered a failure
-CHARGING_FAILURE_TIME = 10
+CHARGING_FAILURE_TIME = 10  # in seconds
+WAIT_BEFORE_DEACTIVATING_LOC_MON = 5  # in seconds
 
 CHARGING_FAILURES = {
     0: "docking failure - explicit docking smach failure",

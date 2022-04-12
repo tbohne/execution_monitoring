@@ -76,7 +76,7 @@ class Idle(smach.State):
         except rospy.ROSException as e:
             rospy.loginfo("exception during plan retrieval: %s", e)
             self.exception_pub.publish(config.PLAN_RETRIEVAL_TIMEOUT_CODE)
-            rospy.sleep(2)
+            rospy.sleep(config.SHORT_DELAY)
             return None
 
     def execute(self, userdata):
@@ -115,13 +115,13 @@ class Idle(smach.State):
             if len(plan) == 0:
                 rospy.loginfo("empty plan..")
                 self.exception_pub.publish(config.EMPTY_PLAN_CODE)
-                rospy.sleep(2)
+                rospy.sleep(config.SHORT_DELAY)
                 return "waiting_for_plan"
             for i in range(len(plan)):
                 if plan[i].name not in config.FEASIBLE_ACTIONS:
                     rospy.loginfo("infeasible action: %s", plan[i].name)
                     self.exception_pub.publish(config.INFEASIBLE_PLAN_CODE)
-                    rospy.sleep(2)
+                    rospy.sleep(config.SHORT_DELAY)
                     return "waiting_for_plan"
 
             userdata.output_plan = plan
@@ -464,7 +464,7 @@ class ExecutePlan(smach.State):
         rospy.loginfo("goal sent, waiting for completion..")
 
         # possibility to consider simulated localization failures
-        rospy.sleep(5)
+        rospy.sleep(config.WAIT_BEFORE_DEACTIVATING_LOC_MON)
         # localization monitoring has to be deactivated here, as it does not make sense inside of the container
         self.deactivate_localization_pub.publish("")
         # success just means that the smach execution has been successful, not the docking itself
@@ -664,7 +664,7 @@ class ExecutePlan(smach.State):
             if action_successfully_performed:
                 rospy.loginfo("%s action successfully completed - executing rest of plan..", a.name)
                 self.robot_info_pub.publish("action " + a.name + " successfully completed - executing rest of plan..")
-                rospy.sleep(2)
+                rospy.sleep(config.SHORT_DELAY)
                 if self.introduce_nav_goal and self.intermediate_nav_goal_pose is not None:
                     self.intermediate_nav_goal(userdata)
                 self.completed_tasks += 1

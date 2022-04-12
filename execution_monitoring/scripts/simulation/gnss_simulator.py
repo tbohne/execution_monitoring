@@ -168,7 +168,7 @@ class GNSSSimulator:
         self.gnss_sub.unregister()
         self.sim_info_pub.publish("GNSS simulator: sim GNSS timeout")
         while not self.timeout_fail_successful:
-            rospy.sleep(2)
+            rospy.sleep(config.SHORT_DELAY)
         self.timeout_fail_successful = False
         self.gnss_sub = rospy.Subscriber('/fix_plugin', NavSatFix, self.sim_gps_callback, queue_size=1)
 

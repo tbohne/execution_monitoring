@@ -90,7 +90,7 @@ class WeatherFailureResolver(GeneralFailureResolver):
         """
         rospy.loginfo("launch weather failure resolver..")
         rospy.loginfo("type of weather failure: %s", msg.data)
-        rospy.sleep(2)
+        rospy.sleep(config.SHORT_DELAY)
         self.resolution_pub.publish("launch weather failure resolver -- type of weather failure: " + msg.data)
         self.problem_resolved = False
 
@@ -158,7 +158,7 @@ class DataManagementFailureResolver(GeneralFailureResolver):
         @param msg: callback message - type of data management failure
         """
         rospy.loginfo("launch data management failure resolver..")
-        rospy.sleep(2)
+        rospy.sleep(config.SHORT_DELAY)
         self.resolution_pub.publish("launch data management failure resolver -- type of failure: " + msg.data)
         rospy.loginfo("type of data management failure: %s", msg.data)
         self.problem_resolved = False
@@ -246,7 +246,7 @@ class ConnectionResolver(GeneralFailureResolver):
         """
         rospy.loginfo("launch connection failure resolver..")
         rospy.loginfo("type of connection failure: %s", msg.data)
-        rospy.sleep(2)
+        rospy.sleep(config.SHORT_DELAY)
         self.resolution_pub.publish("launch connection failure resolver -- type of connection failure: " + msg.data)
         self.problem_resolved = False
 
@@ -365,7 +365,7 @@ class PowerManagementFailureResolver(GeneralFailureResolver):
         rospy.loginfo("launch power management failure resolver..")
         rospy.loginfo("type of power management failure: %s", msg.data)
         self.reset_discharge_rate_pub.publish(msg)
-        rospy.sleep(2)
+        rospy.sleep(config.SHORT_DELAY)
         self.resolution_pub.publish("launch power management failure resolver -- type of issue: " + msg.data)
         self.problem_resolved = False
 
@@ -426,7 +426,7 @@ class SensorFailureResolver(GeneralFailureResolver):
         """
         rospy.loginfo("launch sensor failure resolver..")
         rospy.loginfo("type of sensor failure: %s", msg.data)
-        rospy.sleep(2)
+        rospy.sleep(config.SHORT_DELAY)
         self.resolution_pub.publish("launch sensor failure resolver -- type of sensor failure: " + msg.data)
         self.problem_resolved = False
 
@@ -584,7 +584,7 @@ class PlanDeploymentFailureResolver(GeneralFailureResolver):
         """
         rospy.loginfo("launch plan deployment failure resolver..")
         rospy.loginfo("type of plan deployment failure: %s", msg.data)
-        rospy.sleep(2)
+        rospy.sleep(config.SHORT_DELAY)
         self.resolution_pub.publish("launch plan deployment failure resolver -- type of failure: " + msg.data)
         self.problem_resolved = False
 
@@ -689,7 +689,7 @@ class NavigationFailureResolver(GeneralFailureResolver):
         """
         rospy.loginfo("launch navigation failure resolver..")
         rospy.loginfo("type of navigation failure: %s", msg.data)
-        rospy.sleep(2)
+        rospy.sleep(config.SHORT_DELAY)
         self.resolution_pub.publish("launch navigation failure resolver -- type of navigation failure: " + msg.data)
         self.problem_resolved = False
 
@@ -820,7 +820,7 @@ class ChargingFailureResolver(GeneralFailureResolver):
         """
         rospy.loginfo("launch charging failure resolver..")
         rospy.loginfo("type of charging failure: %s", msg.data)
-        rospy.sleep(2)
+        rospy.sleep(config.SHORT_DELAY)
         self.resolution_pub.publish("launch charging failure resolver -- type of failure: " + msg.data)
         self.problem_resolved = False
 
