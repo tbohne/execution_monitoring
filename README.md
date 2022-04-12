@@ -5,15 +5,15 @@ Fully integrated plan execution, monitoring and resolution framework capable of 
 ## General Dependencies
 
 - [**plan_generation**](https://github.com/tbohne/plan_generation):  ROS node that generates / provides action plans based on CSV data
-- [**mongodb_store**](https://wiki.ros.org/mongodb_store): MongoDB tools for storing and analysing runs of ROS systems
+- [**mongodb_store**](https://wiki.ros.org/mongodb_store): MongoDB tools for storing and analyzing runs of ROS systems
     - *when using the logging component*
-- [**pointcloud_to_laserscan**](https://wiki.ros.org/pointcloud_to_laserscan): Converts a 3D point cloud into a 2D laser scan
+- [**pointcloud_to_laserscan**](https://wiki.ros.org/pointcloud_to_laserscan): Converts 3D point clouds into 2D laser scans
     - *when working with `PointCloud2`*
 - [**psutil**](https://pypi.org/project/psutil/): Cross-platform library for process and system monitoring in Python
     - *for data management monitoring*
 - [**speedtest-cli**](https://pypi.org/project/speedtest-cli/): Command line interface for testing internet bandwidth using *speedtest.net*
     - *for internet connection monitoring*
-- [**PyOWM**](https://pypi.org/project/pyowm/): Python wrapper around *OpenWeatherMap* web APIs
+- [**PyOWM**](https://pypi.org/project/pyowm/): Python wrapper around *OpenWeatherMap* API
     - *for weather monitoring*
 
 ## Dependencies for the Prototype Scenario in the Simulation
@@ -58,10 +58,10 @@ Fully integrated plan execution, monitoring and resolution framework capable of 
 
 ## Usage - Execution Monitoring Framework (Within Docker Container)
 
-*Launch complete framework:*
 ```
 $ roslaunch execution_monitoring execution_monitoring.launch
 ```
+
 ### <u>Components that can be (de)activated in the launch file:</u>
 
 - plan generation
@@ -74,6 +74,12 @@ $ roslaunch execution_monitoring execution_monitoring.launch
 - energy consumption model
 - LTA experiments
 - pointcloud to laserscan converter
+
+## Robot-Human Communication Module
+
+```
+$ rosrun execution_monitoring operator_communication.py
+```
 
 ## Exploration GUI
 
@@ -118,12 +124,6 @@ $ rostopic pub -1 /container/rampA_position_controller/command std_msgs/Float64 
 
 ```
 $ rosservice call /move_base_flex/clear_costmaps "{}"
-```
-
-## Robot-Human Communication Module
-
-```
-$ rosrun execution_monitoring operator_communication.py
 ```
 
 ## Send 'End-of-Episode' Signal
