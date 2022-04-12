@@ -153,7 +153,7 @@ $ rosrun smach_viewer smach_viewer.py
 
 ## Application to other ROS Systems / Extensibility
 
-The framework is in principle applicable to other ROS systems if the introduced slight constraints in terms of information provision based on the defined ROS messages and topics are met. In addition, some minor requirements must be fulfilled in order to be able to utilize the resolution attempts. To get a detailed overview of what is required it is advisable to read the corresponding sections in the [**thesis**](https://github.com/tbohne/msc) (cf. sec. 3.5, 3.6, 6.1).
+The framework is in principle applicable to other ROS systems if the introduced slight constraints in terms of information provision based on the defined ROS messages and topics are met. In addition, some minor requirements must be fulfilled in order to be able to utilize the resolution attempts. To get a detailed overview of the requirements, it is advisable to read the relevant sections in the [**thesis**](https://github.com/tbohne/msc) (cf. sec. 3.5, 3.6, 6.1).
 
 A further important note with regard to the general applicability of the framework is that **each monitoring node can easily be removed**, i.e., deactivated. Presently, this can be achieved by simply removing the option from the framework’s launch file. Analogously, **custom monitoring nodes can be added to the framework** by simply adding the nodes to the launch file and supporting the described architecture by publishing to `/contingency_preemption` / `/catastrophe_preemption` in case of failure, etc. Thus, the idea is that context-dependent special solutions can be easily added, removed and replaced by other specific solutions.
 
@@ -193,28 +193,47 @@ Requirements for monitoring:
 - *Navigation Failure*
     - any navigation framework that is compatible with the general `actionlib_msgs/GoalStatus` is compatible with the introduced monitoring
     - specify `GOAL_STATUS_TOPIC` under which the `GoalStatusArray` messages appear
-    - `NavSatFix` messages are again expected to appear on `/fix` to track progress in cases of sustained recovery
+    - `NavSatFix` messages are expected to appear on `/fix` to track progress in cases of sustained recovery
     - `/explicit_nav_failure` can be used to report explicit navigation errors
 - *Incorrect or Inaccurate Localization*
-    - localization must be based on sensor fusion of IMU, odometry and GNSS data, and it must provide the corresponding sensor information on `/imu_data`, `/odom`, and `/odometry/gps` (types: `sensor_msgs/Imu.msg` and `nav_msgs/Odometry.msg`)
+    - localization must be based on sensor fusion of IMU, odometry and GNSS data
+    - provide the corresponding sensor information on `/imu_data`, `/odom` and `/odometry/gps` (types: `sensor_msgs/Imu.msg` and `nav_msgs/Odometry.msg`)
     - `/odometry/gps` - GNSS information converted to the same format as the odometry data
     - navigation based on `actionlib_msgs/GoalStatus.msg`, e.g., `move_base` or `move_base_flex`
     - Kinematics also play a role; in general, it should be a wheeled robot with differential drive. While an Ackermann drive would also be permissible, others, such as omni-drive robots, are not compatible because they would violate certain assumptions used in the monitoring approaches, such as in the orientation interpolation based on GNSS data.
-- longer explanations as well as the requirements for the resolution methods can be found in the corresponding sections of the [**thesis**](https://github.com/tbohne/msc) (cf. sec. 3.5, 3.6, 6.1)
+
+Longer explanations as well as the requirements for the resolution methods can be found in the corresponding sections of the [**thesis**](https://github.com/tbohne/msc) (cf. sec. 3.5, 3.6, 6.1).
 
 ### Replacement of the Operational State Machine
 
-In order for another robotic system to use the monitoring framework without using the operational model used in this thesis, the embedded `OPERATION` state machine shown below would have to be replaced by the system’s own operational state machine, which is either also implemented as `SMACH` or at least wrapped by one.
-There are some assumptions that such an operational state machine must satisfy:
-- communicate information about the mode of the system via `/arox/ongoing_operation` in the form of `arox_operational_param.msg` (`string operation_mode`, `int32 total_tasks`, `int32 ongoing_task`, `int32 rewards_gained`)
-    - naming scheme due to compatibility with the battery watchdog module
-- available modes: `scanning`, `traversing`, `waiting`, `docking`, `undocking`, `charging`, `contingency` and `catastrophe`
+In order for another robotic system to use the monitoring framework without using the operational model used in this thesis, the embedded `OPERATION` state machine shown above would have to be replaced by the system’s own operational state machine, which is either also implemented as `SMACH` or at least wrapped by one.
+There are some assumptions that such an operational state machine must satisfy:  
+
+Communicate information about the mode of the system via `/arox/ongoing_operation` in the following form:
+```
+arox_operational_param.msg
+
+string operation_mode
+int32 total_tasks
+int32 ongoing_task
+int32 rewards_gained
+```
+*[naming scheme due to compatibility with the battery watchdog module]*
+
+Available modes:
+```
+scanning, traversing, waiting, docking, undocking, charging, contingency, catastrophe
+```
+
 - all active goals should be interruptible via a message on `/interrupt_active_goals`, e.g., by implementing the actions as `SimpleActionServer`
-- the outcomes must be compatible with the architecture shown below, i.e., `minor_complication`, `critical_complication`, `end_of_episode` and `preempted`
+- the outcomes must be compatible with the architecture shown above, i.e., `minor_complication`, `critical_complication`, `end_of_episode` and `preempted`
 
 ## Experiments - Simulation of LTA Challenges
 
-Each failure can be simulated by publishing on the respective topic, e.g., `rostopic pub -1 /toggle_simulated_total_sensor_failure std_msgs/String fail`.
+Each failure case can be simulated by publishing on the respective topic, e.g.:
+```
+$ rostopic pub -1 /toggle_simulated_total_sensor_failure std_msgs/String fail
+```
 
 |Category                   | Failure                                                 | Topic                                                                   |
 |---------------------------|---------------------------------------------------------|-------------------------------------------------------------------------|
@@ -267,14 +286,12 @@ Each failure can be simulated by publishing on the respective topic, e.g., `rost
 | Power Management Failures | **contingency**                                         | `/sim_power_management_contingency`                                     |
 | Power Management Failures | **catastrophe**                                         | `/sim_power_management_catastrophe`                                     |
 
-<u>Requirements:</u>
+<u>Notes:</u>
 - **IMU acceleration although no active nav goal**:
-    - only working if both the active and passive history is complete (e.g. 1500)
+    - *only working if both the active and passive history is complete (e.g. 1500)*
 - **full memory**: 
     -  prepare full USB flash drive
-    - find out device: `fdisk -l`, e.g. `/dev/sdd1`
-        - if necessary: `lsblk -f`
-        - `umount /dev/sdd1 MOUNTPOINT`
+    - find out device: `fdisk -l`, e.g., `/dev/sdd1`
     - create directory for flash drive: `mkdir /mnt/usb`
     - mount flash drive: `mount /dev/sdd1 /mnt/usb`
     - set `MONITOR_DRIVE` to `/mnt/usb`
