@@ -3,34 +3,42 @@
 Fully integrated plan execution, monitoring and resolution framework capable of overcoming some of the typical limitations of long-term autonomous mobile outdoor robots. Detailed background information is available in my [**master's thesis**](https://github.com/tbohne/msc), in the context of which this framework was developed.
 
 ## General Dependencies
-- [mongodb_store](https://github.com/strands-project/mongodb_store): MongoDB tools for storing and analysing runs of ROS systems
-    - branch: `melodic-devel`
-- [plan_generation](https://github.com/tbohne/plan_generation):  ROS node that generates / provides action plans based on CSV data
-    - branch: `main`
+
+- [**plan_generation**](https://github.com/tbohne/plan_generation):  ROS node that generates / provides action plans based on CSV data
+- [**mongodb_store**](https://wiki.ros.org/mongodb_store): MongoDB tools for storing and analysing runs of ROS systems
+    - *when using the logging component*
+- [**pointcloud_to_laserscan**](https://wiki.ros.org/pointcloud_to_laserscan): Converts a 3D point cloud into a 2D laser scan
+    - *when working with `PointCloud2`*
+- [**psutil**](https://pypi.org/project/psutil/): Cross-platform library for process and system monitoring in Python
+    - *for data management monitoring*
+- [**speedtest-cli**](https://pypi.org/project/speedtest-cli/): Command line interface for testing internet bandwidth using *speedtest.net*
+    - *for internet connection monitoring*
+- [**PyOWM**](https://pypi.org/project/pyowm/): Python wrapper around *OpenWeatherMap* web APIs
+    - *for weather monitoring*
 
 ## Dependencies for the Prototype Scenario in the Simulation
 
-- [arox_docker](https://git.ni.dfki.de/arox/arox_docker): dockerization of the AROX (Autonomous Robotic Experimentation Platform)
+- [**arox_docker**](https://git.ni.dfki.de/arox/arox_docker): Dockerization of the AROX (Autonomous Robotic Experimentation Platform)
     - branch: `noetic`
-    - compatible branches within docker container:
-        - [arox_navigation_flex](https://git.ni.dfki.de/arox/arox_core/arox_navigation_flex): `feature_msc_setup_tim`
-        - [arox_launch](https://git.ni.dfki.de/arox/arox_core/arox_launch): `feature_msc_setup_tim`
-        - [arox_indoor_navi](https://git.ni.dfki.de/arox/arox_core/arox_indoor_navi): `sim_launch_detection_config`
-        - [arox_engine](https://git.ni.dfki.de/arox/arox_core/arox_engine): `feature_lta_engine`
-        - [arox_performance_parameters ](https://git.ni.dfki.de/arox/arox_core/arox_performance_parameters): `feature_msc_setup_tim`
-        - [map_langsenkamp](https://git.ni.dfki.de/zla/map_langsenkamp): `feature_lta_map`
-        - [arox_docking](https://git.ni.dfki.de/arox/arox_core/arox_docking): `feature/python2_compatible`
-- [arox_description](https://git.ni.dfki.de/arox/arox_core/arox_description): ROS launch files and URDF model for the AROX system
+    - *packages and compatible branches within the docker container:*
+        - [**arox_navigation_flex**](https://git.ni.dfki.de/arox/arox_core/arox_navigation_flex): `feature_msc_setup_tim`
+        - [**arox_launch**](https://git.ni.dfki.de/arox/arox_core/arox_launch): `feature_msc_setup_tim`
+        - [**arox_indoor_navi**](https://git.ni.dfki.de/arox/arox_core/arox_indoor_navi): `sim_launch_detection_config`
+        - [**arox_engine**](https://git.ni.dfki.de/arox/arox_core/arox_engine): `feature_lta_engine`
+        - [**arox_performance_parameters**](https://git.ni.dfki.de/arox/arox_core/arox_performance_parameters): `feature_msc_setup_tim`
+        - [**map_langsenkamp**](https://git.ni.dfki.de/zla/map_langsenkamp): `feature_lta_map`
+        - [**arox_docking**](https://git.ni.dfki.de/arox/arox_core/arox_docking): `feature/python2_compatible`
+- [**arox_description**](https://git.ni.dfki.de/arox/arox_core/arox_description): ROS launch files and URDF model for the AROX system
     - branch: `feature_msc_setup_tim`
-- [container_description](https://git.ni.dfki.de/arox/container_description): ROS launch files and URDF model for the mobile container (charge station)
+- [**container_description**](https://git.ni.dfki.de/arox/container_description): ROS launch files and URDF model for the mobile container (charge station)
     - branch: `feature_msc_setup_tim`
-- [innok_heros_description](https://git.ni.dfki.de/arox/innok_heros/innok_heros_description): URDF description for Innok Heros robot
+- [**innok_heros_description**](https://git.ni.dfki.de/arox/innok_heros/innok_heros_description): URDF description for Innok Heros robot
     - branch: `arox_noetic`
-- [innok_heros_driver](https://git.ni.dfki.de/arox/innok_heros/innok_heros_driver): ROS driver for the Innok Heros robot platform
+- [**innok_heros_driver**](https://git.ni.dfki.de/arox/innok_heros/innok_heros_driver): ROS driver for the Innok Heros robot platform
     - branch: `master`
-- [velodyne_simulator](https://bitbucket.org/DataspeedInc/velodyne_simulator/src/master/): URDF and gazebo plugin to provide simulated data from Velodyne laser scanners
+- [**velodyne_simulator**](https://bitbucket.org/DataspeedInc/velodyne_simulator/src/master/): URDF and gazebo plugin to provide simulated data from Velodyne laser scanners
     - branch: `master`
-- [gazebo_langsenkamp](https://git.ni.dfki.de/zla/gazebo_langsenkamp): Langsenkamp world (test field)
+- [**gazebo_langsenkamp**](https://git.ni.dfki.de/zla/gazebo_langsenkamp): Langsenkamp world (test field)
     - branch: `feature_msc_setup_tim`
 
 ## Gazebo Models
@@ -50,7 +58,7 @@ Fully integrated plan execution, monitoring and resolution framework capable of 
 
 ## Usage - Execution Monitoring Framework (Within Docker Container)
 
-Launch complete framework: 
+*Launch complete framework:*
 ```
 $ roslaunch execution_monitoring execution_monitoring.launch
 ```
