@@ -81,6 +81,14 @@ $ roslaunch execution_monitoring execution_monitoring.launch
 $ rosrun execution_monitoring operator_communication.py
 ```
 
+## Architecture
+
+*high level (plan execution + monitoring):*
+![](img/SMACH_high_level.png)
+
+*low level (operational model):*
+![](img/SMACH_low_level.png)
+
 ## Exploration GUI
 
 `http://localhost/exploration_gui/`
@@ -145,14 +153,6 @@ $ rostopic pub -1 "/catastrophe_preemption" std_msgs/String catastrophe
 ```
 $ rosrun smach_viewer smach_viewer.py
 ```
-
-## Architecture
-
-*high level (plan execution + monitoring):*
-![](img/SMACH_high_level.png)
-
-*low level (operational model):*
-![](img/SMACH_low_level.png)
 
 ## Application to other ROS Systems / Extensibility
 
