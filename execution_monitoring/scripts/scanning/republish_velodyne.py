@@ -26,13 +26,13 @@ class RepublishVelodyne:
         self.simulate_scan_repetition = False
         self.previous_scan = None
 
-        self.scan_pub = rospy.Publisher("/RIEGL", LaserScan, queue_size=1)
+        self.scan_pub = rospy.Publisher(config.SCAN_TOPIC, LaserScan, queue_size=1)
         self.sim_info_pub = rospy.Publisher('/sim_info', String, queue_size=1)
 
-        rospy.Subscriber("/toggle_simulated_total_sensor_failure", String, self.sensor_fail_callback, queue_size=1)
-        rospy.Subscriber("/toggle_simulated_empty_ranges", String, self.toggle_empty_ranges_callback, queue_size=1)
-        rospy.Subscriber("/toggle_simulated_impermissible_ranges", String, self.invalid_ranges_callback, queue_size=1)
-        rospy.Subscriber("/toggle_simulated_scan_repetition", String, self.scan_repetition_callback, queue_size=1)
+        rospy.Subscriber('/toggle_simulated_total_sensor_failure', String, self.sensor_fail_callback, queue_size=1)
+        rospy.Subscriber('/toggle_simulated_empty_ranges', String, self.toggle_empty_ranges_callback, queue_size=1)
+        rospy.Subscriber('/toggle_simulated_impermissible_ranges', String, self.invalid_ranges_callback, queue_size=1)
+        rospy.Subscriber('/toggle_simulated_scan_repetition', String, self.scan_repetition_callback, queue_size=1)
         rospy.Subscriber('/scan_action', String, self.action_callback, queue_size=1)
 
     def sensor_fail_callback(self, msg):

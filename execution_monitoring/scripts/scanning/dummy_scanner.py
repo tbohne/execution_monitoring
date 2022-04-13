@@ -60,7 +60,7 @@ class DummyScanner:
         try:
             self.perform_action_pub.publish("action")
             # create a new subscription to the topic, receive one message, then unsubscribe
-            scan = rospy.wait_for_message("/RIEGL", LaserScan, timeout=config.SCAN_TIME_LIMIT)
+            scan = rospy.wait_for_message(config.SCAN_TOPIC, LaserScan, timeout=config.SCAN_TIME_LIMIT)
         except rospy.ROSException as e:
             rospy.loginfo("problem retrieving laser scan: %s", e)
         rospy.sleep(config.SCAN_TIME)

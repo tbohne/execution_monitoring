@@ -32,9 +32,9 @@ class InternetConnectionMonitor:
         self.robot_info_pub = rospy.Publisher('/robot_info', String, queue_size=1)
 
         rospy.Subscriber('/re_init_internet_monitoring', String, self.re_init, queue_size=1)
-        rospy.Subscriber("/toggle_simulated_bad_download", String, self.toggle_bad_download_callback, queue_size=1)
-        rospy.Subscriber("/toggle_simulated_bad_upload", String, self.toggle_bad_upload_callback, queue_size=1)
-        rospy.Subscriber("/sim_internet_connection_failure", String, self.connection_fail_callback, queue_size=1)
+        rospy.Subscriber('/toggle_simulated_bad_download', String, self.toggle_bad_download_callback, queue_size=1)
+        rospy.Subscriber('/toggle_simulated_bad_upload', String, self.toggle_bad_upload_callback, queue_size=1)
+        rospy.Subscriber('/sim_internet_connection_failure', String, self.connection_fail_callback, queue_size=1)
 
         self.connect_to_speedtest()
 

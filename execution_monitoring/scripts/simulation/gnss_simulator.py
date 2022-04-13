@@ -37,19 +37,19 @@ class GNSSSimulator:
         # `libhector_gazebo_ros_gps.so` -> gazebo plugin that simulates GPS data
         self.gnss_sub = rospy.Subscriber('/fix_plugin', NavSatFix, self.sim_gps_callback, queue_size=1)
 
-        rospy.Subscriber("/toggle_simulated_timeout_failure", String, self.toggle_timeout_callback, queue_size=1)
-        rospy.Subscriber("/set_simulated_good_quality", String, self.set_good_quality_callback, queue_size=1)
-        rospy.Subscriber("/set_simulated_med_quality", String, self.set_med_quality_callback, queue_size=1)
-        rospy.Subscriber("/set_simulated_low_quality", String, self.set_low_quality_callback, queue_size=1)
-        rospy.Subscriber("/set_simulated_unknown_status", String, self.set_unknown_status_callback, queue_size=1)
-        rospy.Subscriber("/set_simulated_no_fix", String, self.set_no_fix_callback, queue_size=1)
-        rospy.Subscriber("/set_simulated_no_rtk", String, self.set_no_rtk_callback, queue_size=1)
-        rospy.Subscriber("/toggle_simulated_unknown_service", String, self.toggle_unknown_service, queue_size=1)
-        rospy.Subscriber("/toggle_simulated_infeasible_lat_lng", String, self.toggle_infeasible_lat_lng, queue_size=1)
-        rospy.Subscriber("/toggle_simulated_variance_history_failure", String, self.toggle_var_hist_fail, queue_size=1)
-        rospy.Subscriber("/toggle_simulated_high_deviation", String, self.toggle_high_dev_callback, queue_size=1)
-        rospy.Subscriber("/toggle_simulated_teleport", String, self.toggle_sim_teleport_callback, queue_size=1)
-        rospy.Subscriber("/contingency_preemption", String, self.contingency_callback, queue_size=1)
+        rospy.Subscriber('/toggle_simulated_timeout_failure', String, self.toggle_timeout_callback, queue_size=1)
+        rospy.Subscriber('/set_simulated_good_quality', String, self.set_good_quality_callback, queue_size=1)
+        rospy.Subscriber('/set_simulated_med_quality', String, self.set_med_quality_callback, queue_size=1)
+        rospy.Subscriber('/set_simulated_low_quality', String, self.set_low_quality_callback, queue_size=1)
+        rospy.Subscriber('/set_simulated_unknown_status', String, self.set_unknown_status_callback, queue_size=1)
+        rospy.Subscriber('/set_simulated_no_fix', String, self.set_no_fix_callback, queue_size=1)
+        rospy.Subscriber('/set_simulated_no_rtk', String, self.set_no_rtk_callback, queue_size=1)
+        rospy.Subscriber('/toggle_simulated_unknown_service', String, self.toggle_unknown_service, queue_size=1)
+        rospy.Subscriber('/toggle_simulated_infeasible_lat_lng', String, self.toggle_infeasible_lat_lng, queue_size=1)
+        rospy.Subscriber('/toggle_simulated_variance_history_failure', String, self.toggle_var_hist_fail, queue_size=1)
+        rospy.Subscriber('/toggle_simulated_high_deviation', String, self.toggle_high_dev_callback, queue_size=1)
+        rospy.Subscriber('/toggle_simulated_teleport', String, self.toggle_sim_teleport_callback, queue_size=1)
+        rospy.Subscriber('/contingency_preemption', String, self.contingency_callback, queue_size=1)
 
     def contingency_callback(self, msg):
         """

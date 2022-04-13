@@ -36,10 +36,10 @@ class WiFiMonitor:
         self.simulate_bad_wifi_signal = False
         self.simulate_bad_wifi_bit_rate = False
         self.simulate_wifi_disconnect = False
-        rospy.Subscriber("/toggle_simulated_bad_wifi_link", String, self.bad_wifi_link_callback, queue_size=1)
-        rospy.Subscriber("/toggle_simulated_bad_wifi_signal", String, self.bad_wifi_signal_callback, queue_size=1)
-        rospy.Subscriber("/toggle_simulated_bad_wifi_bit_rate", String, self.bad_wifi_bit_rate_callback, queue_size=1)
-        rospy.Subscriber("/toggle_simulated_wifi_disconnect", String, self.wifi_disconnect_callback, queue_size=1)
+        rospy.Subscriber('/toggle_simulated_bad_wifi_link', String, self.bad_wifi_link_callback, queue_size=1)
+        rospy.Subscriber('/toggle_simulated_bad_wifi_signal', String, self.bad_wifi_signal_callback, queue_size=1)
+        rospy.Subscriber('/toggle_simulated_bad_wifi_bit_rate', String, self.bad_wifi_bit_rate_callback, queue_size=1)
+        rospy.Subscriber('/toggle_simulated_wifi_disconnect', String, self.wifi_disconnect_callback, queue_size=1)
         self.wifi_info_pub = rospy.Publisher('/wifi_connectivity_info', WiFi, queue_size=1)
         self.monitor_wifi()
 

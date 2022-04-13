@@ -40,7 +40,7 @@ class Idle(smach.State):
         self.action_info_pub = rospy.Publisher('/action_info', String, queue_size=1)
         self.robot_info_pub = rospy.Publisher('/robot_info', String, queue_size=1)
         self.operation_pub = rospy.Publisher(config.OPERATION_TOPIC, arox_operational_param, queue_size=1)
-        rospy.Subscriber("/end_of_episode", String, self.end_of_episode_callback, queue_size=1)
+        rospy.Subscriber('/end_of_episode', String, self.end_of_episode_callback, queue_size=1)
 
     def end_of_episode_callback(self, msg):
         """
@@ -177,7 +177,7 @@ class ExecutePlan(smach.State):
         self.deactivate_localization_pub = rospy.Publisher('/deactivate_localization_monitoring', String, queue_size=1)
         self.loc_pub = rospy.Publisher('/resolve_localization_failure_success', Bool, queue_size=1)
 
-        rospy.Subscriber("/odometry/filtered_odom", Odometry, self.odom_callback, queue_size=1)
+        rospy.Subscriber('/odometry/filtered_odom', Odometry, self.odom_callback, queue_size=1)
         rospy.Subscriber('/interrupt_active_goals', String, self.interrupt_active_goals, queue_size=1)
         rospy.Subscriber(config.BATTERY_TOPIC, arox_battery_params, self.battery_callback, queue_size=1)
         rospy.Subscriber('introduce_intermediate_nav_goal', String, self.introduce_intermediate_nav_goal, queue_size=1)

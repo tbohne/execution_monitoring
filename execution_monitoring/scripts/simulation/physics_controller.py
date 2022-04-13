@@ -45,7 +45,7 @@ class PhysicsController:
 
         self.unpause = rospy.ServiceProxy('/gazebo/unpause_physics', Empty)
         self.pause = rospy.ServiceProxy('/gazebo/pause_physics', Empty)
-        self.cmd_vel_pub = rospy.Publisher("/cmd_vel", Twist, queue_size=1)
+        self.cmd_vel_pub = rospy.Publisher('/cmd_vel', Twist, queue_size=1)
         self.sim_info_pub = rospy.Publisher('/sim_info', String, queue_size=1)
 
         # INFO / DATA TOPICS

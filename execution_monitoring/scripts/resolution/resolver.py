@@ -25,8 +25,8 @@ class FallbackResolver:
 
     def __init__(self):
         self.problem_resolved = False
-        self.human_operator_pub = rospy.Publisher("/request_help", String, queue_size=1)
-        self.fallback_pub = rospy.Publisher("/fallback_success", Bool, queue_size=1)
+        self.human_operator_pub = rospy.Publisher('/request_help', String, queue_size=1)
+        self.fallback_pub = rospy.Publisher('/fallback_success', Bool, queue_size=1)
         self.resolution_pub = rospy.Publisher('/resolution', String, queue_size=1)
         rospy.Subscriber('/request_fallback', String, self.request_fallback, queue_size=1)
 
@@ -55,7 +55,7 @@ class GeneralFailureResolver(object):
         self.fallback_pub = rospy.Publisher('/request_fallback', String, queue_size=1)
         self.resolution_pub = rospy.Publisher('/resolution', String, queue_size=1)
         self.robot_info_pub = rospy.Publisher('/robot_info', String, queue_size=1)
-        rospy.Subscriber("/fallback_success", Bool, self.fallback_callback, queue_size=1)
+        rospy.Subscriber('/fallback_success', Bool, self.fallback_callback, queue_size=1)
 
     def fallback_callback(self, msg):
         """
@@ -482,7 +482,7 @@ class LocalizationFailureResolver(GeneralFailureResolver):
     def __init__(self):
         super(LocalizationFailureResolver, self).__init__()
         self.success_pub = rospy.Publisher('/resolve_localization_failure_success', Bool, queue_size=1)
-        self.cmd_vel_pub = rospy.Publisher("/cmd_vel", Twist, queue_size=1)
+        self.cmd_vel_pub = rospy.Publisher('/cmd_vel', Twist, queue_size=1)
         rospy.Subscriber('/resolve_localization_failure', String, self.resolve_callback, queue_size=1)
 
     def resolve_callback(self, msg):
@@ -743,7 +743,7 @@ class ChargingFailureResolver(GeneralFailureResolver):
         self.docking_fail_cnt = 0
         self.undocking_fail_cnt = 0
         self.charge_fail_cnt = 0
-        self.cmd_vel_pub = rospy.Publisher("/cmd_vel", Twist, queue_size=1)
+        self.cmd_vel_pub = rospy.Publisher('/cmd_vel', Twist, queue_size=1)
         self.success_pub = rospy.Publisher('/resolve_charging_failure_success', Bool, queue_size=1)
         self.insert_goal_pub = rospy.Publisher('introduce_intermediate_nav_goal', String, queue_size=1)
         rospy.Subscriber('/resolve_charging_failure', String, self.resolve_callback, queue_size=1)
