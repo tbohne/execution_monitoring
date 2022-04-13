@@ -1,4 +1,7 @@
 #!/usr/bin/env python
+# -*- coding: utf-8 -*-
+# @author Tim Bohne
+
 from pathlib import Path
 
 import psutil

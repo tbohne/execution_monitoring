@@ -1,4 +1,7 @@
 #!/usr/bin/env python
+# -*- coding: utf-8 -*-
+# @author Tim Bohne
+
 import rospy
 from arox_performance_parameters.msg import arox_battery_params
 from std_msgs.msg import String, Bool

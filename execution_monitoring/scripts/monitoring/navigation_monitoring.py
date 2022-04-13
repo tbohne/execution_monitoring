@@ -1,4 +1,7 @@
 #!/usr/bin/env python
+# -*- coding: utf-8 -*-
+# @author Tim Bohne
+
 import rospy
 from actionlib_msgs.msg import GoalStatusArray, GoalStatus
 from geopy import distance

@@ -1,4 +1,7 @@
 #!/usr/bin/env python
+# -*- coding: utf-8 -*-
+# @author Tim Bohne
+
 import errno
 import json
 from datetime import datetime

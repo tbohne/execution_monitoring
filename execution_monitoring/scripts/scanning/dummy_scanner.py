@@ -1,4 +1,7 @@
 #!/usr/bin/env python
+# -*- coding: utf-8 -*-
+# @author Tim Bohne
+
 import actionlib
 import rospy
 from sensor_msgs.msg import LaserScan

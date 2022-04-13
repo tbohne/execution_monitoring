@@ -1,4 +1,7 @@
 #!/usr/bin/env python
+# -*- coding: utf-8 -*-
+# @author Tim Bohne
+
 import dynamic_reconfigure.client
 import rospy
 from std_msgs.msg import String
