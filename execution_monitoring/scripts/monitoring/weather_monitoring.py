@@ -245,7 +245,7 @@ class WeatherMonitoring:
     def monitor_rain_volume(self, rain_vol):
         """
         Monitors the current rain volume.
-        The limits are based on the American Meteorological Society’s Glossary of Meteorology.
+        The limits are based on the American Meteorological Society's Glossary of Meteorology.
 
         :param rain_vol: rain volume per hour in mm
         :return: false if contingency, else true
@@ -264,7 +264,7 @@ class WeatherMonitoring:
     def monitor_snow_volume(self, snow_vol):
         """
         Monitors the current snow volume.
-        The limits are based on the American Meteorological Society’s Glossary of Meteorology.
+        The limits are based on the American Meteorological Society's Glossary of Meteorology.
 
         :param snow_vol: snow volume per hour in mm
         :return: false if contingency, else true
@@ -283,7 +283,7 @@ class WeatherMonitoring:
     def monitor_wind(self, gust_speed, speed):
         """
         Monitors the current wind speed. Wind speed classification limits are based on wind speed estimates from the
-        US Department of Commerce’s National Weather Service.
+        US Department of Commerce's National Weather Service.
 
         :param gust_speed: gust speed in m/s
         :param speed: general wind speed in m/s
