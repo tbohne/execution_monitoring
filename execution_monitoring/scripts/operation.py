@@ -179,7 +179,7 @@ class ExecutePlan(smach.State):
 
         rospy.Subscriber("/odometry/filtered_odom", Odometry, self.odom_callback, queue_size=1)
         rospy.Subscriber('/interrupt_active_goals', String, self.interrupt_active_goals, queue_size=1)
-        rospy.Subscriber('/arox/battery_param', arox_battery_params, self.battery_callback, queue_size=1)
+        rospy.Subscriber(config.BATTERY_TOPIC, arox_battery_params, self.battery_callback, queue_size=1)
         rospy.Subscriber('introduce_intermediate_nav_goal', String, self.introduce_intermediate_nav_goal, queue_size=1)
         rospy.Subscriber('introduce_intermediate_recharge_goal', String, self.intro_inter_recharge_goal, queue_size=1)
         rospy.Subscriber('introduce_intermediate_shelter_goal', String, self.intro_inter_shelter_goal, queue_size=1)

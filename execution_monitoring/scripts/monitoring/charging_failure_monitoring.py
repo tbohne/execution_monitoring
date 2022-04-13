@@ -22,7 +22,7 @@ class ChargingFailureMonitoring:
 
         rospy.Subscriber('/explicit_charging_failure', String, self.explicit_failure_callback, queue_size=1)
         rospy.Subscriber('/charge_action', String, self.charge_monitoring, queue_size=1)
-        rospy.Subscriber('/arox/battery_param', arox_battery_params, self.battery_callback, queue_size=1)
+        rospy.Subscriber(config.BATTERY_TOPIC, arox_battery_params, self.battery_callback, queue_size=1)
         rospy.Subscriber('/resolve_charging_failure_success', Bool, self.resolve_callback, queue_size=1)
 
     def resolve_callback(self, msg):

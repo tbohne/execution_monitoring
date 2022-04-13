@@ -747,7 +747,7 @@ class ChargingFailureResolver(GeneralFailureResolver):
         self.success_pub = rospy.Publisher('/resolve_charging_failure_success', Bool, queue_size=1)
         self.insert_goal_pub = rospy.Publisher('introduce_intermediate_nav_goal', String, queue_size=1)
         rospy.Subscriber('/resolve_charging_failure', String, self.resolve_callback, queue_size=1)
-        rospy.Subscriber('/arox/battery_param', arox_battery_params, self.battery_callback, queue_size=1)
+        rospy.Subscriber(config.BATTERY_TOPIC, arox_battery_params, self.battery_callback, queue_size=1)
         rospy.Subscriber(config.GOAL_STATUS_TOPIC, GoalStatusArray, self.nav_status_callback, queue_size=1)
 
     def nav_status_callback(self, nav_status):

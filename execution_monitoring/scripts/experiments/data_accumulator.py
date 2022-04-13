@@ -46,7 +46,7 @@ class DataAccumulator:
         rospy.Subscriber('/action_info', String, self.action_info_callback, queue_size=1)
         rospy.Subscriber('/operator_communication', String, self.operator_communication_callback, queue_size=1)
         rospy.Subscriber('/resolution', String, self.resolution_callback, queue_size=1)
-        rospy.Subscriber('/arox/battery_param', arox_battery_params, self.battery_callback, queue_size=1)
+        rospy.Subscriber(config.BATTERY_TOPIC, arox_battery_params, self.battery_callback, queue_size=1)
 
     def battery_callback(self, msg):
         """
