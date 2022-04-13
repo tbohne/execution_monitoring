@@ -51,7 +51,7 @@ Fully integrated plan execution, monitoring and resolution framework capable of 
 ## Usage - Prototype Scenario in the Simulation
 
 - run simulation (with GUI): `roslaunch arox_description launch_arox_sim.launch gui:=true`
-- <u>optional:</u> spawn container: `roslaunch container_description spawn.launch`
+- *optional* [spawn container: `roslaunch container_description spawn.launch`]
 - spawn AROX: `roslaunch arox_description spawn.launch`
 - run AROX controllers: `roslaunch arox_description run_controllers.launch`
 - run docker container named 'arox_msc': `aroxstartdocker arox_msc` (alias)
@@ -235,7 +235,7 @@ Requirements for monitoring:
     - navigation based on `actionlib_msgs/GoalStatus.msg`, e.g., `move_base` or `move_base_flex`
     - Kinematics also play a role; in general, it should be a wheeled robot with differential drive. While an Ackermann drive would also be permissible, others, such as omni-drive robots, are not compatible because they would violate certain assumptions used in the monitoring approaches, such as in the orientation interpolation based on GNSS data.
 
-Longer explanations as well as the requirements for the resolution methods can be found in the corresponding sections of the [**thesis**](https://github.com/tbohne/msc) (cf. sec. 3.5, 3.6, 6.1).
+More detailed explanations as well as the requirements for the resolution procedures can be found in the corresponding sections of the [**thesis**](https://github.com/tbohne/msc) (cf. sec. 3.5, 3.6, 6.1).
 
 ### Replacement of the Operational State Machine
 
