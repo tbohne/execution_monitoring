@@ -362,6 +362,8 @@ FEASIBLE_MAX_TEMP = 40  # in deg. C
 FEASIBLE_MIN_TEMP = -5  # in deg. C
 MIN_DIST_TO_SUNSET = 15  # in minutes
 WEATHER_MONITORING_FREQUENCY = 15  # in seconds
+WEATHER_LOG_FREQ = 50  # every n monitoring iterations
+
 
 WEATHER_FAILURES = {
     0: "moderate rain - continuing work",
@@ -449,6 +451,14 @@ FEW_CLOUDS = 801
 SCATTERED_CLOUDS = 802
 BROKEN_CLOUDS = 803
 OVERCAST_CLOUDS = 804
+
+RAIN_SIM_VAL = 8  # mm/h
+SNOW_SIM_VAL = 4  # mm/h
+WIND_SIM_VAL = 27  # m/s
+TEMP_MIN_SIM = -9  # deg. C
+TEMP_MAX_SIM = -2  # deg. C
+TEMP_SIM = -5  # deg. C
+SIM_WEATHER_CODE = 221
 #############################################################################
 #############################################################################
 #############################################################################

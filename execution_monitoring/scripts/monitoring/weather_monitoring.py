@@ -216,23 +216,23 @@ class WeatherMonitoring:
 
         if self.sim_rain:
             self.sim_info_pub.publish("weather monitoring: sim rain")
-            rain = {'1h': 8}
+            rain = {'1h': config.RAIN_SIM_VAL}
             self.sim_rain = False
         if self.sim_snow:
             self.sim_info_pub.publish("weather monitoring: sim snow")
-            snow = {'1h': 4}
+            snow = {'1h': config.SNOW_SIM_VAL}
             self.sim_snow = False
         if self.sim_wind:
             self.sim_info_pub.publish("weather monitoring: sim wind")
-            wind['gust'] = wind['speed'] = 27
+            wind['gust'] = wind['speed'] = config.WIND_SIM_VAL
             self.sim_wind = False
         if self.sim_temp:
             self.sim_info_pub.publish("weather monitoring: sim low temperature")
-            temp = {'temp_min': -9, 'temp_max': -2, 'temp': -5}
+            temp = {'temp_min': config.TEMP_MIN_SIM, 'temp_max': config.TEMP_MAX_SIM, 'temp': config.TEMP_SIM}
             self.sim_temp = False
         if self.code_sim:
             self.sim_info_pub.publish("weather monitoring: sim weather code RAGGED_THUNDERSTORM")
-            code = 221
+            code = config.SIM_WEATHER_CODE
             self.code_sim = False
         if self.sunset_sim:
             self.sim_info_pub.publish("weather monitoring: sim sunset")
@@ -245,6 +245,7 @@ class WeatherMonitoring:
     def monitor_rain_volume(self, rain_vol):
         """
         Monitors the current rain volume.
+        The limits are based on the American Meteorological Society’s Glossary of Meteorology.
 
         :param rain_vol: rain volume per hour in mm
         :return: false if contingency, else true
@@ -263,6 +264,7 @@ class WeatherMonitoring:
     def monitor_snow_volume(self, snow_vol):
         """
         Monitors the current snow volume.
+        The limits are based on the American Meteorological Society’s Glossary of Meteorology.
 
         :param snow_vol: snow volume per hour in mm
         :return: false if contingency, else true
@@ -280,7 +282,8 @@ class WeatherMonitoring:
 
     def monitor_wind(self, gust_speed, speed):
         """
-        Monitors the current wind speed.
+        Monitors the current wind speed. Wind speed classification limits are based on wind speed estimates from the
+        US Department of Commerce’s National Weather Service.
 
         :param gust_speed: gust speed in m/s
         :param speed: general wind speed in m/s
@@ -440,7 +443,7 @@ class WeatherMonitoring:
                 rospy.loginfo("monitoring weather for: %s", observation.get_location().get_name())
                 self.robot_info_pub.publish("monitoring weather for: " + observation.get_location().get_name())
                 weather_data = self.parse_weather_data(observation.get_weather())
-                if cnt % 50 == 0:
+                if cnt % config.WEATHER_LOG_FREQ == 0:
                     weather_data.log_complete_info()
                 self.monitor_weather_data(weather_data)
             rospy.sleep(config.WEATHER_MONITORING_FREQUENCY)
@@ -454,7 +457,7 @@ def node():
     rospy.init_node('weather_monitoring')
     rospy.wait_for_message('SMACH_running', String)
     rospy.loginfo("launch weather monitoring..")
-    rospy.sleep(5)
+    rospy.sleep(config.WAIT_SLEEP_TIME)
     WeatherMonitoring()
     rospy.spin()
 
