@@ -11,9 +11,9 @@ from execution_monitoring import config
 
 class RepublishVelodyne:
     """
-    Minimalistic class that republishes a Velodyne scan under the "/RIEGL" topic after a scan action has been
+    Minimalistic class that republishes a Velodyne scan under the SCAN_TOPIC after a scan action has been
     initiated. Since the Velodyne lidar sensor is already part of the simulation and the type of incoming data is
-    essentially the same, a scan action just leads to one republished Velodyne scan under the "/RIEGL" topic. Thus,
+    essentially the same, a scan action just leads to one republished Velodyne scan under SCAN_TOPIC. Thus,
     the idea is that the Velodyne sensor briefly pretends to be a RIEGL sensor. This approach has the useful side
     effect of making it relatively easy to simulate sensor failures by simply stopping to republish the Velodyne after
     a scan action.

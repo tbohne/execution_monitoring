@@ -14,7 +14,6 @@ class ChargingFailureSimulator:
     def __init__(self):
         self.sim_undocking_fail = False
         self.sim_info_pub = rospy.Publisher('/sim_info', String, queue_size=1)
-
         rospy.Subscriber('/sim_undocking_failure', String, self.undocking_fail_callback, queue_size=1)
         rospy.Subscriber('/sim_docking_failure_raised_ramp', String, self.docking_fail_callback, queue_size=1)
         rospy.Subscriber('/charge_action', String, self.charge_callback, queue_size=1)

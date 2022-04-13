@@ -285,8 +285,8 @@ class WeatherMonitoring:
 
     def monitor_wind(self, gust_speed, speed):
         """
-        Monitors the current wind speed. Wind speed classification limits are based on wind speed estimates from the
-        US Department of Commerce's National Weather Service.
+        Monitors the current wind speed. Wind speed classification limits are based on wind
+        speed estimates from the US Department of Commerce's National Weather Service.
 
         :param gust_speed: gust speed in m/s
         :param speed: general wind speed in m/s

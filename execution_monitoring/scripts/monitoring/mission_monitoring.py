@@ -16,7 +16,7 @@ class MissionMonitor:
     Simple mission monitoring.
 
     For evaluation purposes, let a failed mission be defined as a mission that exceeds a user-configurable timeout
-    without publishing a message to "/arox/ongoing_operation" , although the previous message contained a value of
+    without publishing a message to OPERATION_TOPIC, although the previous message contained a value of
     total_tasks that is greater than one, indicating that the current plan is not completed and thus that the robot has
     been stuck in that task for a time greater than the threshold.
     """

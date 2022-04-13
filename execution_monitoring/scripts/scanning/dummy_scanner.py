@@ -69,8 +69,7 @@ class DummyScanner:
             rospy.loginfo("recorded scan..")
             if self.mission_name == "":
                 self.mission_name = "unknown"
-                rospy.loginfo("no mission name published - storing scans in %s",
-                              config.SCAN_PATH + self.mission_name + ".txt")
+                rospy.loginfo("no mission name - storing scans in %s", config.SCAN_PATH + self.mission_name + ".txt")
 
             if not self.simulate_scan_logging_failure:
                 try:

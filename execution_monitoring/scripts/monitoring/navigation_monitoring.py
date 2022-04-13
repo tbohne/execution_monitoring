@@ -35,17 +35,17 @@ class NavigationMonitoring:
         self.resolution_failure_pub = rospy.Publisher('/resolution_failure', String, queue_size=1)
         self.interrupt_reason_pub = rospy.Publisher('/interrupt_reason', String, queue_size=1)
 
-        rospy.Subscriber(config.GOAL_STATUS_TOPIC, GoalStatusArray, self.nav_status_callback, queue_size=1)
         rospy.Subscriber('/fix', NavSatFix, self.gnss_update, queue_size=1)
         rospy.Subscriber('/resolve_navigation_failure_success', Bool, self.resolved_callback, queue_size=1)
         rospy.Subscriber('/explicit_nav_failure', String, self.explicit_fail_callback, queue_size=1)
+        rospy.Subscriber(config.GOAL_STATUS_TOPIC, GoalStatusArray, self.nav_status_callback, queue_size=1)
 
         self.navigation_monitoring()
 
     def explicit_fail_callback(self, msg):
         """
-        Callback that receives information about explicit navigation failures communicated by the operational state
-        machine.
+        Callback that receives information about explicit navigation failures communicated
+        by the operational state machine.
 
         @param msg: callback message
         """

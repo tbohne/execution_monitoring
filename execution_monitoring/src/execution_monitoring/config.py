@@ -68,6 +68,9 @@ PREEMPTION_SLEEP_TIME = 10
 # frequency with which it is checked whether the robot should stop waiting
 # in the shelter
 WAIT_SLEEP_TIME = 5
+OBSTACLE_REMOVAL_DELAY = 3
+
+LOCALIZATION_RES_X_TWIST = 3.0
 #############################################################################
 #############################################################################
 #############################################################################
@@ -585,6 +588,18 @@ GNSS_COVARIANCE_TYPE_UNKNOWN = 0
 GNSS_COVARIANCE_TYPE_APPROXIMATED = 1
 GNSS_COVARIANCE_TYPE_DIAGONAL_KNOWN = 2
 GNSS_COVARIANCE_TYPE_KNOWN = 3
+
+# SIM
+GOOD_QUALITY_COVARIANCE_SIM = [6, 0.0, 0.0, 0.0, 6, 0.0, 0.0, 0.0, 6]
+UNKNOWN_STATUS_SIM = 5
+UNKNOWN_SERVICE_SIM = 3
+INFEASIBLE_LAT_SIM = -120
+INFEASIBLE_LNG_SIM = 200
+VAR_HISTORY_SIM_START_VAL = 1.0
+VAR_HISTORY_SIM_INC_VAL = 10.0
+HIGH_STANDARD_DEV_VAL = 101
+GNSS_JUMP_VAL = 0.0001
+
 #############################################################################
 #############################################################################
 #############################################################################

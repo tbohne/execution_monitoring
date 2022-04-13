@@ -515,15 +515,14 @@ class LocalizationFailureResolver(GeneralFailureResolver):
         self.resolution_pub.publish("driving the robot a few meters back and forth to recalibrate the localization"
                                     + " using different GNSS positions")
 
-        # TODO: should pay attention to obstacles etc.
         twist = Twist()
-        twist.linear.x = -3.0
+        twist.linear.x = -config.LOCALIZATION_RES_X_TWIST
         rate = rospy.Rate(4)
         for _ in range(2):
             for _ in range(4):
                 self.cmd_vel_pub.publish(twist)
                 rate.sleep()
-            twist.linear.x = 3.0
+            twist.linear.x = config.LOCALIZATION_RES_X_TWIST
 
         rospy.loginfo("clearing costmaps..")
         self.robot_info_pub.publish("clearing costmaps..")
@@ -657,7 +656,7 @@ class NavigationFailureResolver(GeneralFailureResolver):
         # solved -- obstacles removed
         self.remove_obstacles_pub.publish("")
         # wait for obstacle removal before costmap clearance
-        rospy.sleep(3)
+        rospy.sleep(config.OBSTACLE_REMOVAL_DELAY)
         self.robot_info_pub.publish("clearing costmaps..")
         util.clear_costmaps()
 
@@ -724,7 +723,7 @@ class NavigationFailureResolver(GeneralFailureResolver):
             # solved -- obstacles removed
             self.remove_obstacles_pub.publish("")
             # wait for obstacle removal before costmap clearance
-            rospy.sleep(3)
+            rospy.sleep(config.OBSTACLE_REMOVAL_DELAY)
             self.robot_info_pub.publish("clearing costmaps..")
             util.clear_costmaps()
         elif self.drive_to_goal_client.get_state() == GoalStatus.SUCCEEDED:
@@ -835,7 +834,7 @@ class ChargingFailureResolver(GeneralFailureResolver):
             self.resolution_pub.publish("already tried autonomous resolution before -- calling human operator for help")
             self.success_pub.publish(False)  # initiate catastrophe
             self.open_container()  # human would have opened the container -- in case it was closed
-            rospy.sleep(5)  # clear costmap to perceive that the door is open now
+            rospy.sleep(config.OBSTACLE_REMOVAL_DELAY)  # clear costmap to perceive that the door is open now
             self.robot_info_pub.publish("clearing costmaps..")
             util.clear_costmaps()
         else:
@@ -850,13 +849,13 @@ class ChargingFailureResolver(GeneralFailureResolver):
         """
         self.resolution_pub.publish("driving robot back and forth -- minor relocation")
         twist = Twist()
-        twist.linear.x = 3.0
+        twist.linear.x = config.LOCALIZATION_RES_X_TWIST
         rate = rospy.Rate(2)
         for _ in range(2):
             for _ in range(2):
                 self.cmd_vel_pub.publish(twist)
                 rate.sleep()
-            twist.linear.x = -3.0
+            twist.linear.x = -config.LOCALIZATION_RES_X_TWIST
 
     def resolve_undocking_failure(self):
         """
@@ -871,7 +870,7 @@ class ChargingFailureResolver(GeneralFailureResolver):
             rospy.loginfo("sending command to open container front..")
             self.open_container()
             # clear costmap to perceive that the door is open now
-            rospy.sleep(5)
+            rospy.sleep(config.OBSTACLE_REMOVAL_DELAY)
             self.robot_info_pub.publish("clearing costmaps..")
             util.clear_costmaps()
         else:
