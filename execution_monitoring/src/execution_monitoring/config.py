@@ -15,19 +15,36 @@ DOCKING_BASE_POSE = [52.3203930281, 8.15361381961, 180]
 
 # maximum idle time without error in seconds
 MISSION_IDLE_LIMIT = 900
-# frequency at which new simulations are considered (sleep time in experiments loop)
-EXPERIMENTS_CHECK_FREQ = 120
+MISSION_FAIL_MSG = "MISSION FAIL: exceeded idle time limit during plan execution"
+
+DATA_ACC_GNSS_TIMEOUT = 10  # in seconds
 # used to avoid timing issues
 SHORT_DELAY = 2  # in seconds
-
-# directory in which the experimental results are stored
-EXP_PATH = "/home/docker/catkin_ws/src/execution_monitoring/execution_monitoring/experiments/"
-MISSION_FAIL_MSG = "MISSION FAIL: exceeded idle time limit during plan execution"
 
 # crucial topics
 OPERATION_TOPIC = "/arox/ongoing_operation"
 GOAL_STATUS_TOPIC = "/move_base_flex/exe_path/status"
 BATTERY_TOPIC = "/arox/battery_param"
+#############################################################################
+#############################################################################
+#############################################################################
+
+#############################################################################
+################################ EXPERIMENTS ################################
+#############################################################################
+# frequency at which new simulations are considered
+# (sleep time in experiments loop)
+EXPERIMENTS_CHECK_FREQ = 120  # in seconds
+
+# directory in which the experimental results are stored
+EXP_PATH = "/home/docker/catkin_ws/src/execution_monitoring/execution_monitoring/experiments/"
+
+RANDOM_FAIL_FREQUENCY = 250  # random fail every 250s (lower bound + depends on RTF)
+SEED = 42  # for random failure selection
+EXPERIMENT_DURATION = 18000  # 5 hours
+IDX = 0  # to identify the experiment run (e.g. in a set of runs)
+PLAN_LENGTH = 34  # length of the plan that defines one mission (number of tasks)
+SIM_FAILURES = True  # whether there should be random failure simulation every n seconds
 #############################################################################
 #############################################################################
 #############################################################################

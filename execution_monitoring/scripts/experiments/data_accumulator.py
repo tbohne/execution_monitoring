@@ -40,12 +40,12 @@ class DataAccumulator:
         rospy.Subscriber('/show_db_entries', String, self.show_db_entries, queue_size=1)
         rospy.Subscriber('/contingency_preemption', String, self.contingency_callback, queue_size=1)
         rospy.Subscriber('/catastrophe_preemption', String, self.catastrophe_callback, queue_size=1)
-        rospy.Subscriber(config.OPERATION_TOPIC, arox_operational_param, self.operation_callback, queue_size=1)
         rospy.Subscriber('/robot_info', String, self.info_callback, queue_size=1)
         rospy.Subscriber('/sim_info', String, self.sim_info_callback, queue_size=1)
         rospy.Subscriber('/action_info', String, self.action_info_callback, queue_size=1)
         rospy.Subscriber('/operator_communication', String, self.operator_communication_callback, queue_size=1)
         rospy.Subscriber('/resolution', String, self.resolution_callback, queue_size=1)
+        rospy.Subscriber(config.OPERATION_TOPIC, arox_operational_param, self.operation_callback, queue_size=1)
         rospy.Subscriber(config.BATTERY_TOPIC, arox_battery_params, self.battery_callback, queue_size=1)
 
     def battery_callback(self, msg):
@@ -181,7 +181,7 @@ class DataAccumulator:
         """
         nav_sat_fix = None
         try:
-            nav_sat_fix = rospy.wait_for_message('/fix', NavSatFix, timeout=10)
+            nav_sat_fix = rospy.wait_for_message('/fix', NavSatFix, timeout=config.DATA_ACC_GNSS_TIMEOUT)
         except IOError as e:
             if e.errno == errno.EPIPE:
                 if config.VERBOSE_LOGGING:

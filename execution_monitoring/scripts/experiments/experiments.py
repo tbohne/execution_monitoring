@@ -16,6 +16,8 @@ from std_msgs.msg import String
 
 from execution_monitoring import config, util
 
+TF_BUFFER = None
+
 CATA_TOPIC_MSG_MAPPING = {
     # prerequisite: prepare full USB flash drive + mount it under config.FULL_DRIVE, e.g., "/mnt/usb"
     "/sim_full_disk_failure": config.DATA_MANAGEMENT_FAILURES[0],
@@ -68,20 +70,14 @@ CONT_TOPIC_MSG_MAPPING = {
     "/sim_power_management_contingency": config.POWER_MANAGEMENT_FAILURES[0]
 }
 
-RANDOM_FAIL_FREQUENCY = 250  # random fail every 250s (lower bound + depends on RTF)
-SEED = 42  # for random failure selection
-EXPERIMENT_DURATION = 18000  # 5 hours
-IDX = 0  # to identify the experiment run (e.g. in a set of runs)
-PLAN_LENGTH = 34  # length of the plan that defines one mission (number of tasks)
-SIM_FAILURES = True  # whether there should be random failure simulation every n seconds
-TF_BUFFER = None  # transformation buffer
-
 
 class Experiment:
+    """
+    Provides systematic evaluation tools for the developed monitoring solutions.
+    """
 
     def __init__(self):
-        global SEED
-        random.seed(SEED)
+        random.seed(config.SEED)
         self.correct_contingency_cnt = 0
         self.correct_no_contingency_cnt = 0
         self.false_positive_cnt = 0
@@ -182,7 +178,7 @@ class Experiment:
         self.completed_tasks = msg.rewards_gained
 
         # new mission
-        if msg.total_tasks == PLAN_LENGTH:
+        if msg.total_tasks == config.PLAN_LENGTH:
             self.mission_cycle += 1
 
     def battery_callback(self, msg):
@@ -282,18 +278,17 @@ class Experiment:
         """
         Runs an LTA experiment.
         """
-        global SIM_FAILURES, EXPERIMENT_DURATION, RANDOM_FAIL_FREQUENCY
         start_time = datetime.now()
 
         while not rospy.is_shutdown() and self.catastrophe_cnt == 0 and (
-                datetime.now() - start_time).total_seconds() < EXPERIMENT_DURATION:
+                datetime.now() - start_time).total_seconds() < config.EXPERIMENT_DURATION:
 
-            cooldown_satisfied = (datetime.now() - self.sim_fail_time).total_seconds() >= RANDOM_FAIL_FREQUENCY
+            cooldown_satisfied = (datetime.now() - self.sim_fail_time).total_seconds() >= config.RANDOM_FAIL_FREQUENCY
             # only initiate new failure simulation after a certain time has passed + the previous one is completed
-            if SIM_FAILURES and cooldown_satisfied and self.sim_launched:
+            if config.SIM_FAILURES and cooldown_satisfied and self.sim_launched:
                 self.simulate_random_failure()
 
-            if SIM_FAILURES and config.VERBOSE_LOGGING:
+            if config.SIM_FAILURES and config.VERBOSE_LOGGING:
                 rospy.loginfo("time since last fail sim: %s", (datetime.now() - self.sim_fail_time).total_seconds())
             rospy.sleep(config.EXPERIMENTS_CHECK_FREQ)
 
@@ -309,12 +304,12 @@ class Experiment:
 
         @param duration: experiment duration
         """
-        global RANDOM_FAIL_FREQUENCY, SEED, IDX, EXPERIMENT_DURATION
-        name = str(RANDOM_FAIL_FREQUENCY) + "_" + str(SEED) + "_" + str(IDX)  # notation (frequency_seed_idx)
-        completed = duration >= (EXPERIMENT_DURATION / 60 / 60) and self.catastrophe_cnt == 0
+        # notation (frequency_seed_idx)
+        name = str(config.RANDOM_FAIL_FREQUENCY) + "_" + str(config.SEED) + "_" + str(config.IDX)
+        completed = duration >= (config.EXPERIMENT_DURATION / 60 / 60) and self.catastrophe_cnt == 0
         try:
             with open(config.EXP_PATH + "results.csv", 'a') as out_file:
-                if IDX == 0:  # first entry --> write CSV header
+                if config.IDX == 0:  # first entry --> write CSV header
                     out_file.write("experiment,duration,correct_contingencies,false_positives,false_negatives,"
                                    + "correct_no_contingency,unexpected_contingencies,completed,completed_tasks,"
                                    + "charge_cycles,mission_cycles,total_dist,simulated_problems,traverse_time,"
