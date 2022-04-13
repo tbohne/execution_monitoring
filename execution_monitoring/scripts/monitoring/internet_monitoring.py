@@ -84,7 +84,7 @@ class InternetConnectionMonitor:
         rospy.loginfo("reinitializing internet monitoring node: %s", msg.data)
         self.robot_info_pub.publish("reinitializing internet monitoring node")
         # wait for transition back to normal operation before trying to establish connection
-        rospy.sleep(5)
+        rospy.sleep(config.WAIT_SLEEP_TIME)
         self.connect_to_speedtest()
 
     def generate_msg(self, down, up):

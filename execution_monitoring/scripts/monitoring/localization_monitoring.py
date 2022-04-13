@@ -37,10 +37,10 @@ class LocalizationMonitoring:
         rospy.Subscriber('/odom', Odometry, self.odom_callback, queue_size=1)
         rospy.Subscriber('/odometry/filtered_odom', Odometry, self.filtered_odom_callback, queue_size=1)
         rospy.Subscriber('/odometry/gps', Odometry, self.gps_as_odom_callback, queue_size=1)
-        rospy.Subscriber(config.GOAL_STATUS_TOPIC, GoalStatusArray, self.mbf_status_callback, queue_size=1)
         rospy.Subscriber('/resolve_localization_failure_success', Bool, self.re_init, queue_size=1)
         rospy.Subscriber('/deactivate_localization_monitoring', String, self.deactivate, queue_size=1)
         rospy.Subscriber('/activate_localization_monitoring', String, self.activate, queue_size=1)
+        rospy.Subscriber(config.GOAL_STATUS_TOPIC, GoalStatusArray, self.nav_status_callback, queue_size=1)
         self.init()
 
     def init_vars(self):
@@ -57,7 +57,7 @@ class LocalizationMonitoring:
         self.gps_as_odom_data_second_latest = None
         self.initial_GPS = None
         self.initial_odom = None
-        self.mbf_status = None
+        self.nav_status = None
         self.active_imu_data = collections.deque([], config.IMU_ENTRIES)
         self.passive_imu_data = collections.deque([], config.IMU_ENTRIES)
         self.lin_acc_active_history = collections.deque([], config.LIN_ACC_HISTORY_LEN)
@@ -100,25 +100,25 @@ class LocalizationMonitoring:
         if msg.data:
             rospy.loginfo("reinitializing localization monitoring..")
             self.robot_info_pub.publish("reinitializing localization monitoring")
-            rospy.sleep(10)
+            rospy.sleep(config.RE_INIT_DELAY)
             self.init()
         else:
             # resolution failure -- aggravation
             self.interrupt_reason_pub.publish(config.LOCALIZATION_CATA)
             self.aggravate_pub.publish(config.LOCALIZATION_CATA)
 
-    def mbf_status_callback(self, mbf_status):
+    def nav_status_callback(self, nav_status):
         """
-        Move base flex status callback -- keeps track of the current status of navigation and transitions.
+        Navigation status callback -- keeps track of the current status of navigation and transitions.
 
-        @param mbf_status: navigation status
+        @param nav_status: navigation status
         """
-        if self.active_monitoring and len(mbf_status.status_list) > 0:
+        if self.active_monitoring and len(nav_status.status_list) > 0:
             # the last element in the list is the latest (most recent)
-            self.mbf_status = mbf_status.status_list[-1].status
-            if self.mbf_status != self.status_before:
+            self.nav_status = nav_status.status_list[-1].status
+            if self.nav_status != self.status_before:
                 self.status_switch_time = datetime.now()
-                self.status_before = self.mbf_status
+                self.status_before = self.nav_status
 
     def localization_monitoring(self):
         """
@@ -195,7 +195,7 @@ class LocalizationMonitoring:
         dist = math.sqrt(vector_x ** 2 + vector_y ** 2)
 
         # the interpolation is only reasonable if the robot moves
-        if self.mbf_status == GoalStatus.ACTIVE and dist > config.DIST_THRESH_FOR_INTERPOLATION_BETWEEN_GNSS_POS:
+        if self.nav_status == GoalStatus.ACTIVE and dist > config.DIST_THRESH_FOR_INTERPOLATION_BETWEEN_GNSS_POS:
             angle = math.atan2(vector_y, vector_x)
             quaternion = tf.transformations.quaternion_from_euler(0, 0, angle)
             gnss_orientation_z = quaternion[2]
@@ -326,8 +326,8 @@ class LocalizationMonitoring:
         @param name: "filtered odometry" or "odometry"
         """
         # if the robot is not moving, the corresponding odom values should be ~0.0
-        if self.mbf_status != GoalStatus.ACTIVE and self.mbf_status != GoalStatus.ABORTED \
-                and self.mbf_status != GoalStatus.PREEMPTED:
+        if self.nav_status != GoalStatus.ACTIVE and self.nav_status != GoalStatus.ABORTED \
+                and self.nav_status != GoalStatus.PREEMPTED:
 
             # linear twist
             if abs(odom_data.twist.twist.linear.x) > config.NOT_MOVING_LINEAR_TWIST_UB \
@@ -384,7 +384,6 @@ class LocalizationMonitoring:
             if self.status_switch_time else None
         if time_since_switch is None or time_since_switch < config.STATUS_SWITCH_DELAY:
             return
-
         if self.odom_data:
             self.odometry_twist_monitoring(odom_data, name)
             if not filtered:
@@ -431,9 +430,9 @@ class LocalizationMonitoring:
 
             if switch_time and switch_time > config.STATUS_SWITCH_DELAY:
                 # aborted state should not be recorded at all
-                if self.mbf_status == GoalStatus.SUCCEEDED:
+                if self.nav_status == GoalStatus.SUCCEEDED:
                     self.passive_imu_data.appendleft(imu)
-                elif self.mbf_status == GoalStatus.ACTIVE:
+                elif self.nav_status == GoalStatus.ACTIVE:
                     self.active_imu_data.appendleft(imu)
 
 

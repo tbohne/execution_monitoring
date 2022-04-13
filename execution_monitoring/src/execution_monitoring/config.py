@@ -301,6 +301,7 @@ SENSOR_CATA = "sensor resolution failed -- catastrophe"
 # monitoring delay in seconds after a transition from one navigational status
 # to another (e.g. ACTIVE -> SUCCEEDED)
 STATUS_SWITCH_DELAY = 4
+RE_INIT_DELAY = 10  # in seconds
 
 # thresholds in meters for different categories of estimated distance
 # divergences between GNSS and odometry

@@ -88,8 +88,7 @@ class DataMonitoring:
         try:
             with open(config.SCAN_PATH + self.mission_name + config.SCAN_FILE_EXTENSION, 'r') as scan_log_file:
                 for line in scan_log_file.readlines():
-                    # new scan begins
-                    if "header" in line:
+                    if "header" in line:  # new scan begins
                         scan_cnt += 1
         except Exception as e:
             rospy.loginfo("unable to read scan log: %s", e)
