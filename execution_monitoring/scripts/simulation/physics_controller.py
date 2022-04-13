@@ -49,9 +49,9 @@ class PhysicsController:
         self.sim_info_pub = rospy.Publisher('/sim_info', String, queue_size=1)
 
         # INFO / DATA TOPICS
-        rospy.Subscriber(config.GOAL_STATUS_TOPIC, GoalStatusArray, self.nav_status_callback, queue_size=1)
         rospy.Subscriber('/fix', NavSatFix, self.gnss_callback, queue_size=1)
         rospy.Subscriber('/imu_data', Imu, self.imu_callback, queue_size=1)
+        rospy.Subscriber(config.GOAL_STATUS_TOPIC, GoalStatusArray, self.nav_status_callback, queue_size=1)
         rospy.Subscriber(config.OPERATION_TOPIC, arox_operational_param, self.operation_callback)
 
         # SIM TOPICS
@@ -136,7 +136,7 @@ class PhysicsController:
         self.sim_info_pub.publish("physics controller: sim unplanned odometry movement via cmd_vel")
         self.sim_moving_although_standing_still_odom = False
         twist = Twist()
-        twist.linear.x = 3.0
+        twist.linear.x = config.LOCALIZATION_RES_X_TWIST
         self.cmd_vel_pub.publish(twist)
 
     def moving_although_standing_still_imu(self):
@@ -147,11 +147,11 @@ class PhysicsController:
         rospy.loginfo("physics controller: sim unplanned IMU movement via gravity manipulation")
         self.sim_info_pub.publish("physics controller: sim unplanned IMU movement via gravity manipulation")
         self.sim_moving_although_standing_still_imu = False
-        self.change_gravity(0.0, 5.5, -9.81)
+        self.change_gravity(0.0, config.MOVING_ALTHOUGH_STANDING_STILL_Y_GRAVITY, config.GRAVITY)
         rospy.loginfo("changing gravity..")
         rospy.sleep(1)
         rospy.loginfo("changing gravity back to normal..")
-        self.change_gravity(0.0, 0.0, -9.81)
+        self.change_gravity(0.0, 0.0, config.GRAVITY)
 
     def yaw_divergence(self):
         """
@@ -164,23 +164,25 @@ class PhysicsController:
 
         if self.pose_list:
             yaw_deg = self.pose_list[2]
-            if yaw_deg + 50 > 180:
-                yaw_deg = -180 + ((yaw_deg + 50) % 180)
+            if yaw_deg + config.YAW_DIV_INCREASE > 180:
+                yaw_deg = -180 + ((yaw_deg + config.YAW_DIV_INCREASE) % 180)
             else:
-                yaw_deg += 50
+                yaw_deg += config.YAW_DIV_INCREASE
 
         twist = Twist()
         cnt = 0
-        while abs(self.pose_list[2] - yaw_deg) > 10:
-            if cnt == 45:
-                self.change_gravity(2.5, 2.5, 0.2)
+        while abs(self.pose_list[2] - yaw_deg) > config.YAW_DIV_INCREASE_TOLERANCE:
+            if cnt == config.YAW_DIV_SIM_LOOP_CNT:
+                self.change_gravity(
+                    config.YAW_DIV_SIM_GRAVITY_X, config.YAW_DIV_SIM_GRAVITY_Y, config.YAW_DIV_SIM_GRAVITY_Z
+                )
                 rospy.loginfo("changing gravity..")
             twist.angular.z = np.radians(180) if yaw_deg > 0 else -np.radians(180)
             self.cmd_vel_pub.publish(twist)
             cnt += 1
-            rospy.sleep(0.01)
+            rospy.sleep(config.YAW_DIV_SIM_LOOP_SLEEP)
 
-        self.change_gravity(0.0, 0.0, -9.81)
+        self.change_gravity(0.0, 0.0, config.GRAVITY)
         rospy.loginfo("changing gravity back to normal..")
 
     def pos_change_without_wheel_movement(self):
@@ -191,13 +193,12 @@ class PhysicsController:
         rospy.loginfo("physics controller: sim pos change without wheel rotations")
         self.sim_info_pub.publish("physics controller: sim pos change without wheel rotations")
         x = 0.0
-        y = 8.0
-        z = -9.81
-        # necessary to start movement
-        rospy.sleep(0.05)
+        y = config.POS_CHANGE_WITHOUT_WHEEL_MOVEMENT_Y_GRAVITY
+        z = config.GRAVITY
+        rospy.sleep(0.05)  # necessary to start movement
         self.change_gravity(x, y, z)
         rospy.loginfo("changing gravity in y direction to: %s", y)
-        rospy.sleep(1)
+        rospy.sleep(config.POS_CHANGE_WITHOUT_WHEEL_MOVEMENT_SLEEP)
         y = 0.0
         self.change_gravity(x, y, z)
         rospy.loginfo("changing gravity back to normal")
@@ -212,14 +213,14 @@ class PhysicsController:
         rospy.loginfo("physics controller: sim wheel rotations without pos change")
         self.sim_info_pub.publish("physics controller: sim wheel rotations without pos change")
         x = y = 0.0
-        z = 0.4  # let robot hover a bit
+        z = config.HOVER_GRAVITY  # let robot hover a bit
         self.change_gravity(x, y, z)
         rospy.loginfo("changing gravity in z direction to: %s", z)
-        rospy.sleep(0.2)
-        z = -0.1  # prevent it from flying away
+        rospy.sleep(config.HOVER_SLEEP)
+        z = config.SMALL_NEGATIVE_GRAVITY  # prevent it from flying away
         self.change_gravity(x, y, z)
         rospy.loginfo("changing gravity in z direction to: %s", z)
-        rospy.sleep(0.2)
+        rospy.sleep(config.HOVER_SLEEP)
         z = 0.0  # wait in zero gravity
         self.change_gravity(x, y, z)
         rospy.loginfo("changing gravity in z direction to: %s", z)
@@ -231,7 +232,7 @@ class PhysicsController:
                 rospy.sleep(0.01)
             else:
                 rospy.sleep(0.001)
-        z = -9.81  # back to normal
+        z = config.GRAVITY  # back to normal
         rospy.loginfo("changing back to normal gravity..")
         self.change_gravity(x, y, z)
         self.sim_wheel_movement_without_pos_change = False
@@ -287,7 +288,7 @@ class PhysicsController:
         self.gravity = Vector3()
         self.gravity.x = 0.0
         self.gravity.y = 0.0
-        self.gravity.z = -9.81
+        self.gravity.z = config.GRAVITY
 
         self.ode_config = ODEPhysics()
         self.ode_config.sor_pgs_precon_iters = 0

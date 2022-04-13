@@ -35,8 +35,8 @@ class ObstacleSpawner:
         rospy.Subscriber('/spawn_robot_prison', String, self.spawn_robot_prison, queue_size=1)
         rospy.Subscriber('/trigger_nav_fail', String, self.trigger_nav_fail, queue_size=1)
         rospy.Subscriber('/fix', NavSatFix, self.gnss_update, queue_size=1)
-        rospy.Subscriber(config.GOAL_STATUS_TOPIC, GoalStatusArray, self.nav_status_callback, queue_size=1)
         rospy.Subscriber('/clear_spawned_obstacles', String, self.delete_spawned_obstacles, queue_size=1)
+        rospy.Subscriber(config.GOAL_STATUS_TOPIC, GoalStatusArray, self.nav_status_callback, queue_size=1)
 
     def nav_status_callback(self, nav_status):
         """

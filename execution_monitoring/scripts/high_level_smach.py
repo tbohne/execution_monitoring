@@ -113,7 +113,7 @@ class Contingency(smach.State):
 
         while not self.successfully_resolved and not self.aggravate:
             # waiting for resolution / aggravation
-            rospy.sleep(5)
+            rospy.sleep(config.ERROR_SLEEP_TIME)
 
         if self.successfully_resolved:
             rospy.loginfo("contingency solved, continuing normal operation..")
@@ -208,7 +208,7 @@ class Catastrophe(smach.State):
 
         while not self.successfully_resolved:
             # waiting for handling of catastrophe situation
-            rospy.sleep(5)
+            rospy.sleep(config.ERROR_SLEEP_TIME)
 
         rospy.loginfo("catastrophe processed, shutting down..")
         self.robot_info_pub.publish("catastrophe processed, shutting down")

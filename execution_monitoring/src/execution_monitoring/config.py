@@ -76,6 +76,30 @@ LOCALIZATION_RES_X_TWIST = 3.0
 #############################################################################
 
 #############################################################################
+############################# PHYSICS CONTROLLER ############################
+#############################################################################
+GRAVITY = -9.81  # m/s^2
+MOVING_ALTHOUGH_STANDING_STILL_Y_GRAVITY = 5.5  # m/s^2
+POS_CHANGE_WITHOUT_WHEEL_MOVEMENT_Y_GRAVITY = 8.0  # m/s^2
+HOVER_GRAVITY = 0.4  # m/s^2
+SMALL_NEGATIVE_GRAVITY = -0.1  # m/s^2
+YAW_DIV_SIM_GRAVITY_X = 2.5  # m/s^2
+YAW_DIV_SIM_GRAVITY_Y = 2.5  # m/s^2
+YAW_DIV_SIM_GRAVITY_Z = 0.2  # m/s^2
+
+YAW_DIV_INCREASE = 50  # deg.
+YAW_DIV_INCREASE_TOLERANCE = 10  # deg.
+
+POS_CHANGE_WITHOUT_WHEEL_MOVEMENT_SLEEP = 1  # seconds
+HOVER_SLEEP = 0.2  # seconds
+YAW_DIV_SIM_LOOP_SLEEP = 0.01  # seconds
+
+YAW_DIV_SIM_LOOP_CNT = 45
+#############################################################################
+#############################################################################
+#############################################################################
+
+#############################################################################
 ############################## OBSTACLE SPAWNER #############################
 #############################################################################
 # height of the barrier models to be spawned as static obstacles
