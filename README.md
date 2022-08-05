@@ -41,6 +41,8 @@ Fully integrated plan execution, monitoring and resolution framework capable of 
     - branch: `master`
 - [**gazebo_langsenkamp**](https://git.ni.dfki.de/zla/gazebo_langsenkamp): Langsenkamp world (test field)
     - branch: `feature_msc_setup_tim`
+- [**hector_gazebo_plugins**](https://wiki.ros.org/hector_gazebo_plugins): contains a 6wd differential drive plugin, an IMU sensor plugin, an earth magnetic field sensor plugin, a GPS sensor plugin and a sonar ranger plugin
+    - install: `apt-get install ros-noetic-hector-gazebo`
 
 ### Gazebo Models
 
