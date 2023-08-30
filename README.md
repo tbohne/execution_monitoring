@@ -1,5 +1,8 @@
 # Execution Monitoring Framework
 
+![unstable](https://img.shields.io/badge/stability-unstable-orange)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+
 Fully integrated plan execution, monitoring and resolution framework capable of overcoming some of the typical limitations of long-term autonomous mobile outdoor robots. Detailed background information is available in my [**master's thesis**](https://github.com/tbohne/msc), in the context of which this framework was developed.
 
 ## General Dependencies
@@ -332,3 +335,37 @@ $ rostopic pub -1 /toggle_simulated_total_sensor_failure std_msgs/String fail
     - create directory for flash drive: `mkdir /mnt/usb`
     - mount flash drive: `mount /dev/sdd1 /mnt/usb`
     - set `MONITOR_DRIVE` to `/mnt/usb`
+
+## Related Publications
+
+```bibtex
+@inproceedings{Bohne:06_2023,
+    author = {Bohne, Tim and Kisliuk, Benjamin},
+    title = {Execution Monitoring for Long-Term Autonomous Mobile Robots in Outdoor Scenarios},
+    booktitle = {Workshop on Robot Execution Failures and Failure Management Strategies at ICRA 2023. IEEE International Conference on Robotics and Automation (ICRA-2023), Embracing the future: Making robots for humans, befindet sich ICRA 2023, May 29-June 2, London, United Kingdom},
+    year = {2023},
+    month = {6},
+    organization = {IEEE}
+}
+
+@inproceedings{Bohne:02_2023,
+    author = {Tim Bohne and Gurunatraj Parthasarathy and Benjamin Kisliuk},
+    title = {A systematic approach to the development of long-term autonomous robotic systems for agriculture},
+    booktitle = {43. GIL-Jahrestagung, Resiliente Agri-Food-Systeme, 13.-14. Februar 2023, Osnabr{\"{u}}ck, Germany},
+    series = {{LNI}},
+    volume = {{P-330}},
+    pages = {285--290},
+    publisher = {Gesellschaft f{\"{u}}r Informatik e.V.},
+    year = {2023},
+    url = {https://dl.gi.de/handle/20.500.12116/40260},
+    biburl = {https://dblp.org/rec/conf/gil/BohnePK23.bib},
+    bibsource = {dblp computer science bibliography, https://dblp.org}
+}
+
+@mastersthesis{Bohne:2022,
+    author = {Bohne, Tim},
+    year = {2022},
+    month = {04},
+    title = {Execution Monitoring for Long-Term Autonomous Plant Observation with a Mobile Robot}
+}
+```
